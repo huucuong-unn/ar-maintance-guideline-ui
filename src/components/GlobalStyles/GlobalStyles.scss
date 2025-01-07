@@ -1,0 +1,35 @@
+@import 'normalize.css';
+
+:root {
+    --primary: red; //example
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+html {
+    font-size: 14px !important;
+}
+
+body {
+    line-height: 1.5;
+    text-rendering: optimizeSpeed;
+}
+
+.css-md26zr-MuiInputBase-root-MuiOutlinedInput-root {
+    border-radius: 24px !important;
+}
+
+.css-igs3ac {
+    border-radius: 24px !important;
+}
+
+.css-1x5jdmq:-webkit-autofill {
+    border-radius: 24px !important;
+}
+
+.MuiInputBase-input MuiOutlinedInput-input css-1x5jdmq {
+    border-radius: 24px !important;
+}
