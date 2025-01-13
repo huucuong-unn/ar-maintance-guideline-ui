@@ -11,7 +11,6 @@ export default function CardCourse({ title, description, image, viewers, lessons
     return (
         <Card
             sx={{
-                height: 320,
                 textAlign: 'left',
                 borderRadius: '16px',
                 transition: 'transform 0.3s, box-shadow 0.3s',

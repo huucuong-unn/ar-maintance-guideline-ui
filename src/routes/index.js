@@ -15,12 +15,11 @@ import PaymentsManagement from '~/pages/new/PaymentsManagement';
 import PaymentSuccess from '~/pages/new/PaymentSuccess';
 import RegisterUser from '~/pages/new/RegisterUser';
 import ResetPassword from '~/pages/new/ResetPassword';
+import TestPage from '~/pages/new/TestPage';
 import UserProfile from '~/pages/new/UserProfile';
 import NotAuthorized from '~/pages/NotAuthorized';
 import FooterHome from '~/parts/FooterHome';
 import Header from '~/parts/Header';
-import CardSlider from '~/components/new/CardSlider';
-import TestPage from '~/pages/new/TestPage';
 
 const publicRoutes = [
     //new
@@ -35,7 +34,6 @@ const publicRoutes = [
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
     { path: '/profile/:userId', component: UserProfile, layout: FullLayout },
-    { path: '/test/slider', component: CardSlider, layout: FullLayout },
 
     { path: '/NotAuthorized', component: NotAuthorized, layout: null },
 
