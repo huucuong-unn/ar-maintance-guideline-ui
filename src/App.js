@@ -1,10 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { adminRoutes, companyRoutes, publicRoutes, studentRoutes } from '~/routes';
-import DefaultLayout from './components/Layouts/DefaultLayout';
-import { Fragment, useEffect } from 'react';
-import { generateToken, messaging } from './firebase';
 import { onMessage } from 'firebase/messaging';
+import { Fragment, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { generateToken, messaging } from './firebase';
+import FullLayout from './components/Layouts/FullLayout';
+import { adminRoutes, publicRoutes } from './routes';
 import ProtectedRoutes from './components/ProtectedRoutes';
 function App() {
     useEffect(() => {
@@ -22,7 +22,7 @@ function App() {
                 <Routes>
                     {publicRoutes.map((route, index) => {
                         const Page = route.component;
-                        let Layout = DefaultLayout;
+                        let Layout = FullLayout;
 
                         if (route.layout) {
                             Layout = route.layout;
@@ -44,7 +44,7 @@ function App() {
                     <Route element={<ProtectedRoutes roleName={'admin'} />}>
                         {adminRoutes.map((route, index) => {
                             const Page = route.component;
-                            let Layout = DefaultLayout;
+                            let Layout = FullLayout;
 
                             if (route.layout) {
                                 Layout = route.layout;

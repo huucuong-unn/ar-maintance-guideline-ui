@@ -187,8 +187,7 @@ export default function LoginUser() {
                                 WELCOME BACK!
                             </Typography>
                             <Typography sx={{ textAlign: 'center', marginTop: '12px' }}>
-                                Hãy tiếp tục hành trình tối ưu hóa CV và thư xin việc của bạn với sự hỗ trợ từ AI. Chúng
-                                tôi luôn ở đây để giúp bạn chuẩn bị tốt nhất cho cơ hội thực tập và việc làm mơ ước
+                                Login for keep learning 📚
                             </Typography>
                             <Box sx={{ width: '100%', typography: 'body1', mt: 2 }}>
                                 <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
@@ -208,13 +207,13 @@ export default function LoginUser() {
                                         required
                                         fullWidth
                                         name="password"
-                                        label="Mật khẩu"
+                                        label="Password"
                                         type="password"
                                         id="password"
                                         autoComplete="current-password"
                                     />
                                     <Link to="/forgot-password" style={{ textDecoration: 'none' }}>
-                                        <Typography sx={{ textAlign: 'right' }}>Quên mật khẩu</Typography>
+                                        <Typography sx={{ textAlign: 'right' }}>Forgot your password?</Typography>
                                     </Link>
                                     <Button
                                         type="submit"
@@ -233,9 +232,9 @@ export default function LoginUser() {
                                             },
                                         }}
                                     >
-                                        Đăng nhập
+                                        Login
                                     </Button>
-                                    {/* <Divider>Hoặc đăng nhập với</Divider>
+                                    <Divider>Or continue with</Divider>
                                     <Box sx={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                                         <GoogleOAuthProvider clientId={clientId}>
                                             <GoogleLogin
@@ -243,23 +242,7 @@ export default function LoginUser() {
                                                 onFailure={handleGoogleLoginFailure}
                                             />
                                         </GoogleOAuthProvider>
-                                    </Box> */}
-
-                                    <Grid
-                                        container
-                                        sx={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}
-                                    >
-                                        <Grid item sx={{ gap: '4px' }}>
-                                            Bạn chưa có tài khoản?
-                                            <Link
-                                                to="/register"
-                                                variant="body2"
-                                                style={{ color: '#051D40', textDecoration: 'none', fontWeight: 'bold' }}
-                                            >
-                                                {' Đăng ký ngay'}
-                                            </Link>
-                                        </Grid>
-                                    </Grid>
+                                    </Box>
                                 </Box>
                             </Box>
                         </Box>

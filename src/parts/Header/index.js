@@ -1,18 +1,15 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import './Header.scss';
-import logo from '~/assets/images/logo.png';
-import React, { useEffect, useState } from 'react';
-import storageService from '~/components/StorageService/storageService';
-import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip } from '@mui/material';
 import { Logout } from '@mui/icons-material';
+import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, TextField, Tooltip } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import logo from '~/assets/images/logo.png';
+import storageService from '~/components/StorageService/storageService';
+import './Header.scss';
 
 const NAV_ITEMS = [
-    { name: 'Trang chủ', path: '/' },
-    { name: 'AI Resume Checker', path: '/ai-resume' },
-    { name: 'AI Cover Letter', path: '/ai-coverletter' },
-    { name: 'Các gói đăng ký  🎉', path: '/offer' },
-    { name: 'Blog', path: '/blog' },
-    { name: 'Về Tortee', path: '/about-us' },
+    { name: 'Home', path: '/' },
+    { name: 'My Learning', path: '/' },
+    { name: 'Online Degrees', path: '/' },
 ];
 
 function Header() {
@@ -69,7 +66,7 @@ function Header() {
         <div
             style={{
                 display: 'flex',
-                gap: 30,
+                gap: 10,
                 width: '100%',
                 height: '80px',
                 fontSize: '18px',
@@ -89,11 +86,11 @@ function Header() {
                     <img src={logo} alt="Logo" style={{ width: '120px' }} />
                 </Link>
             </div>
-            <div>
+            <div style={{ width: '70%' }}>
                 <ul
                     style={{
                         display: 'flex',
-                        gap: 50,
+                        gap: 30,
                         height: '100%',
                         listStyleType: 'none',
                         marginBottom: 0,
@@ -101,7 +98,7 @@ function Header() {
                     }}
                 >
                     {NAV_ITEMS.map((item) => (
-                        <li key={item.name}>
+                        <li key={item.name} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <NavLink
                                 to={item.path}
                                 style={({ isActive }) => ({
@@ -115,6 +112,18 @@ function Header() {
                             </NavLink>
                         </li>
                     ))}
+                    <li style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '50%' }}>
+                        <TextField
+                            margin="normal"
+                            fullWidth
+                            id="position"
+                            label="Search"
+                            name="position"
+                            autoComplete="position"
+                            sx={{ margin: 'auto auto' }}
+                            onChange={(e) => console.log(e.target.value)}
+                        />
+                    </li>
                 </ul>
             </div>
             {userInfo ? (
@@ -180,7 +189,7 @@ function Header() {
                             ) : (
                                 <Avatar src="https://cdn-icons-png.flaticon.com/128/12340/12340380.png" />
                             )}
-                            Thông tin cá nhân
+                            Profile
                         </MenuItem>
                         <MenuItem>{userInfo?.planType} Member</MenuItem>
                         <Divider />
@@ -188,17 +197,14 @@ function Header() {
                             <ListItemIcon>
                                 <Logout fontSize="small" />
                             </ListItemIcon>
-                            Đăng xuất
+                            Logout
                         </MenuItem>
                     </Menu>
                 </React.Fragment>
             ) : (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Link to="/login" className="button btn-outline">
-                        Đăng nhập
-                    </Link>
-                    <Link to="/register" className="button btn-filled">
-                        Đăng ký
+                        Login
                     </Link>
                 </div>
             )}
