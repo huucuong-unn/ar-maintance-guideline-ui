@@ -22,6 +22,8 @@ export default function CardCourse({ title, description, image, viewers, lessons
                 opacity: 0.9,
                 display: 'flex',
                 flexDirection: 'column',
+                height: '320px',
+                border: '1px solid #02F18D',
             }}
         >
             <CardMedia

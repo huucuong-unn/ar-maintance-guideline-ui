@@ -8,8 +8,7 @@ import './Header.scss';
 
 const NAV_ITEMS = [
     { name: 'Home', path: '/' },
-    { name: 'My Learning', path: '/' },
-    { name: 'Online Degrees', path: '/' },
+    { name: 'My Learning', path: '/my-learning' },
 ];
 
 function Header() {

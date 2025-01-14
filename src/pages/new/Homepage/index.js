@@ -8,6 +8,7 @@ import { Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import homepageBackgroundBlack from '~/assets/images/blog.webp';
 import homepageBackgroundWhite from '~/assets/images/findyourplan.webp';
+import internshipProgramBackground from '~/assets/images/internshipprogram.webp';
 import CardCourse from '~/components/CardCourse';
 
 export default function Homepage() {
@@ -320,7 +321,7 @@ export default function Homepage() {
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    backgroundImage: `url(${homepageBackgroundWhite})`,
+                    backgroundImage: `url(${internshipProgramBackground})`,
                     height: '100%',
                     width: '100%',
                     display: 'flex',

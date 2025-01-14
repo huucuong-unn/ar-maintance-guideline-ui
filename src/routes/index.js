@@ -20,6 +20,7 @@ import UserProfile from '~/pages/new/UserProfile';
 import NotAuthorized from '~/pages/NotAuthorized';
 import FooterHome from '~/parts/FooterHome';
 import Header from '~/parts/Header';
+import MyLearning from '~/pages/new/MyLearning';
 
 const publicRoutes = [
     //new
@@ -34,6 +35,7 @@ const publicRoutes = [
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
     { path: '/profile/:userId', component: UserProfile, layout: FullLayout },
+    { path: '/my-learning', component: MyLearning, layout: FullLayout },
 
     { path: '/NotAuthorized', component: NotAuthorized, layout: null },
 
