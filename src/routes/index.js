@@ -21,6 +21,7 @@ import NotAuthorized from '~/pages/NotAuthorized';
 import FooterHome from '~/parts/FooterHome';
 import Header from '~/parts/Header';
 import MyLearning from '~/pages/new/MyLearning';
+import AdminTestPage from '~/pages/new/BaseAdmin';
 
 const publicRoutes = [
     //new
@@ -42,6 +43,7 @@ const publicRoutes = [
     { path: '/test/footer', component: FooterHome, layout: null },
     { path: '/test/header', component: Header, layout: null },
     { path: '/test/test-page', component: TestPage, layout: null },
+    { path: '/test/admin-test', component: AdminTestPage, layout: null },
 ];
 
 const adminRoutes = [
