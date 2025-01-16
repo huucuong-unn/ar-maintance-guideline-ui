@@ -64,8 +64,8 @@ export default function MyLearning() {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundImage: `url(${homepageBackgroundWhite})`,
-                    minHeight: '1000px',
                     width: '100%',
+                    minHeight: '100vh',
                 }}
             >
                 <TabContext value={value}>
