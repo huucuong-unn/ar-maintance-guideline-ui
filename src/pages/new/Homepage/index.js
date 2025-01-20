@@ -9,7 +9,9 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import homepageBackgroundBlack from '~/assets/images/blog.webp';
 import homepageBackgroundWhite from '~/assets/images/findyourplan.webp';
 import internshipProgramBackground from '~/assets/images/internshipprogram.webp';
+import blogBackground from '~/assets/images/blog.webp';
 import CardCourse from '~/components/CardCourse';
+import FAQ from '~/components/FAQ';
 
 export default function Homepage() {
     const cardData = [
@@ -431,6 +433,26 @@ export default function Homepage() {
                     </Box>
                 </Box>
             </Box>
+
+            <Grid
+                container
+                component="main"
+                item
+                sx={{
+                    backgroundRepeat: 'no-repeat',
+                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundImage: `url(${blogBackground})`,
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <FAQ />
+            </Grid>
         </Grid>
     );
 }

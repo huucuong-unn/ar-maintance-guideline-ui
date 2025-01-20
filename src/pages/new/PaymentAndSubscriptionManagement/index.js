@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import AccountAPI from '~/API/AccountAPI';
+import PaymentAPI from '~/API/PaymentAPI';
 
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 
@@ -21,28 +21,27 @@ function Copyright(props) {
 
 const defaultTheme = createTheme();
 
-export default function AccountsManagement() {
+export default function PaymentAndSubscriptionManagement() {
     const paginationModel = { page: 0, pageSize: 5 };
 
     const columns = [
         { field: 'id', headerName: 'No.', width: 70 },
-        { field: 'name', headerName: 'Name', width: 200 },
         { field: 'email', headerName: 'Email', width: 200 },
-        { field: 'dob', headerName: 'Date of Birth', width: 200 },
-        { field: 'remainReviewCVTimes', headerName: 'Remaining Review CV Times', width: 200 },
-        { field: 'role', headerName: 'Role', width: 200 },
+        { field: 'total', headerName: 'Total (vnđ)', width: 200 },
+        { field: 'tierName', headerName: 'Plan Type', width: 200 },
+        { field: 'createdDate', headerName: 'Created At', width: 200 },
+        { field: 'status', headerName: 'Status', width: 200 },
     ];
 
     const [rows, setRows] = useState([]);
 
     useEffect(() => {
-        const fetchBlogs = async () => {
+        const fetchPayments = async () => {
             try {
-                const response = await AccountAPI.getAllAccount();
+                const response = await PaymentAPI.getPayments();
                 var i = 0;
                 for (i = 0; i < response.length; i++) {
                     response[i].id = i + 1;
-                    response[i].dob = response[i].dob ? formatDate(response[i].dob) : '';
                 }
                 setRows(response);
                 console.log(response);
@@ -50,18 +49,8 @@ export default function AccountsManagement() {
                 console.log('Failed to fetch accounts: ', error);
             }
         };
-        fetchBlogs();
+        fetchPayments();
     }, []);
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        // Get the UTC date parts
-        const day = date.getUTCDate().toString().padStart(2, '0');
-        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
-        const year = date.getUTCFullYear();
-
-        return `${day}/${month}/${year}`; // Format to dd/mm/yyyy
-    };
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -96,7 +85,7 @@ export default function AccountsManagement() {
                         left: '20%',
                     }}
                 >
-                    Accounts Management
+                    Payment & Subscription
                 </Typography>
                 <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
                     <Box

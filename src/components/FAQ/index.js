@@ -42,7 +42,7 @@ export default function FAQ() {
                     color: 'white',
                 }}
             >
-                🧐 CÁC CÂU HỎI THƯỜNG GẶP 🧐
+                🧐 Frequently asked questions 🧐
             </Typography>
             <Box sx={{ width: '100%' }}>
                 <Accordion
@@ -61,7 +61,7 @@ export default function FAQ() {
                         id="panel1d-header"
                     >
                         <Typography component="h3" variant="subtitle2" fontSize="24px" fontWeight="700">
-                            1. TORTEE là gì?
+                            1. What types of courses are offered on this platform?
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -71,9 +71,10 @@ export default function FAQ() {
                             sx={{ maxWidth: { sm: '100%', md: '70%', fontSize: '18px' } }}
                             fontSize="16px"
                         >
-                            TORTEE là nền tảng AI hỗ trợ sinh viên và các chuyên gia trẻ trong việc tối ưu hóa CV và tạo
-                            thư xin việc cá nhân hóa, giúp bạn tăng cơ hội thành công khi ứng tuyển các vị trí thực tập
-                            và công việc đầu tiên.
+                            Our platform offers a wide range of business-related courses, including topics such as
+                            leadership, project management, marketing strategies, financial analysis, entrepreneurship,
+                            and more. Whether you're a beginner or an experienced professional, we have something for
+                            you.
                         </Typography>
                     </AccordionDetails>
                 </Accordion>
@@ -93,7 +94,7 @@ export default function FAQ() {
                         id="panel2d-header"
                     >
                         <Typography component="h3" variant="subtitle2" fontSize="24px" fontWeight="700">
-                            2. Tính năng AI Resume Checker hoạt động như thế nào?
+                            2. How can I access the courses?
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -102,9 +103,9 @@ export default function FAQ() {
                             gutterBottom
                             sx={{ maxWidth: { sm: '100%', md: '70%', fontSize: '18px' } }}
                         >
-                            Tính năng AI Resume Checker phân tích CV của bạn chỉ trong vài giây và đưa ra những gợi ý cụ
-                            thể về cách tối ưu hóa bố cục, nội dung và từ khóa phù hợp với công việc bạn ứng tuyển. Bạn
-                            chỉ cần tải lên CV và nhận phản hồi ngay lập tức.
+                            Once you sign up, you'll get immediate access to all the courses. You can watch videos,
+                            download materials, and engage in interactive activities at your own pace, anytime,
+                            anywhere.
                         </Typography>
                     </AccordionDetails>
                 </Accordion>
@@ -124,7 +125,7 @@ export default function FAQ() {
                         id="panel3d-header"
                     >
                         <Typography component="h3" variant="subtitle2" fontSize="24px" fontWeight="700">
-                            3. TORTEE có thể giúp tôi viết thư xin việc không?
+                            3. Are there any certifications or credentials provided?
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -133,8 +134,9 @@ export default function FAQ() {
                             gutterBottom
                             sx={{ maxWidth: { sm: '100%', md: '70%', fontSize: '18px' } }}
                         >
-                            Có! Tính năng Write Cover Letter của TORTEE sẽ giúp bạn tạo ra một thư xin việc cá nhân hóa,
-                            phù hợp với từng công việc dựa trên mô tả công việc và thông tin cá nhân của bạn.
+                            Yes! Upon successful completion of a course, you'll receive a certificate that can be added
+                            to your resume or shared on LinkedIn. Some of our courses are also accredited, meaning the
+                            certification can help with professional development.
                         </Typography>
                     </AccordionDetails>
                 </Accordion>
@@ -154,7 +156,7 @@ export default function FAQ() {
                         id="panel4d-header"
                     >
                         <Typography component="h3" variant="subtitle2" fontSize="24px" fontWeight="700">
-                            4. TORTEE có mất phí không?
+                            4. Can I access the courses on mobile devices?
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -163,9 +165,9 @@ export default function FAQ() {
                             gutterBottom
                             sx={{ maxWidth: { sm: '100%', md: '70%', fontSize: '18px' } }}
                         >
-                            TORTEE hoạt động theo mô hình freemium. Bạn có thể sử dụng các tính năng cơ bản hoàn toàn
-                            miễn phí, và nếu muốn truy cập vào các tính năng cao cấp như phân tích chi tiết CV hoặc viết
-                            thư xin việc nâng cao, bạn có thể đăng ký gói dịch vụ trả phí.
+                            Absolutely! Our platform is mobile-friendly, so you can access your courses on smartphones
+                            and tablets. There’s also an app available for both iOS and Android devices for a seamless
+                            learning experience on the go.
                         </Typography>
                     </AccordionDetails>
                 </Accordion>
@@ -185,7 +187,7 @@ export default function FAQ() {
                         id="panel4d-header"
                     >
                         <Typography component="h3" variant="subtitle2" fontSize="24px" fontWeight="700">
-                            5. Làm thế nào để tôi bắt đầu sử dụng TORTEE?
+                            5. What if I have questions or need support during a course?
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -194,8 +196,9 @@ export default function FAQ() {
                             gutterBottom
                             sx={{ maxWidth: { sm: '100%', md: '70%', fontSize: '18px' } }}
                         >
-                            Bạn chỉ cần đăng ký tài khoản miễn phí trên trang web hoặc ứng dụng của TORTEE, sau đó tải
-                            lên CV của mình để bắt đầu sử dụng các công cụ tối ưu hóa CV và tạo thư xin việc.
+                            We offer 24/7 customer support through live chat, email, and community forums. Additionally,
+                            many courses have Q&A sections where instructors and fellow students can answer questions,
+                            ensuring you always get the support you need.
                         </Typography>
                     </AccordionDetails>
                 </Accordion>

@@ -7,79 +7,51 @@ export default function FooterHome() {
         <footer className="site-footer">
             <div className="container">
                 <div className="row">
-                    <div className="col-sm-12 col-md-6">
+                    <div className="col col-6">
                         <h1>tortee</h1>
-                        <p className="text-justify">
-                            Hãy tiếp tục hành trình tối ưu hóa CV và thư xin việc của bạn với sự hỗ trợ từ AI. Chúng tôi
-                            luôn ở đây để giúp bạn chuẩn bị tốt nhất cho cơ hội thực tập và việc làm mơ ước
-                        </p>
                     </div>
 
-                    <div className="col-xs-6 col-md-2">
-                        <h6>Về Tortee</h6>
+                    <div className="col col-2">
+                        <h6>About Us</h6>
                         <ul className="footer-links">
                             <li>
-                                <a href="http://scanfcode.com/category/c-language/">Our Story</a>
+                                <a href="#">Our Story</a>
                             </li>
                             <li>
-                                <a href="http://scanfcode.com/category/front-end-development/">Why Us</a>
+                                <a href="#">Why Us</a>
                             </li>
                             <li>
-                                <a href="http://scanfcode.com/category/back-end-development/">Term of Use</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/category/java-programming-language/">Privacy Policy</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/category/android/">FAQs</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/category/templates/">Contact Us</a>
+                                <a href="#">Term of Use</a>
                             </li>
                         </ul>
                     </div>
 
-                    <div className="col-xs-6 col-md-2">
-                        <h6>Các Tính Năng</h6>
+                    <div className="col col-2">
+                        <h6>Features</h6>
                         <ul className="footer-links">
                             <li>
-                                <a href="http://scanfcode.com/category/c-language/">C</a>
+                                <a href="#">C</a>
                             </li>
                             <li>
-                                <a href="http://scanfcode.com/category/front-end-development/">UI Design</a>
+                                <a href="#">UI Design</a>
                             </li>
                             <li>
-                                <a href="http://scanfcode.com/category/back-end-development/">PHP</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/category/java-programming-language/">Java</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/category/android/">Android</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/category/templates/">Templates</a>
+                                <a href="#">PHP</a>
                             </li>
                         </ul>
                     </div>
 
-                    <div className="col-xs-6 col-md-2">
-                        <h6>Liên lạc</h6>
+                    <div className="col col-2">
+                        <h6>Contact</h6>
                         <ul className="footer-links">
                             <li>
-                                <a href="http://scanfcode.com/about/">About Us</a>
+                                <a href="#">About Us</a>
                             </li>
                             <li>
-                                <a href="http://scanfcode.com/contact/">Contact Us</a>
+                                <a href="#">Contact Us</a>
                             </li>
                             <li>
-                                <a href="http://scanfcode.com/contribute-at-scanfcode/">Contribute</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/privacy-policy/">Privacy Policy</a>
-                            </li>
-                            <li>
-                                <a href="http://scanfcode.com/sitemap/">Sitemap</a>
+                                <a href="#">Contribute</a>
                             </li>
                         </ul>
                     </div>
@@ -88,14 +60,14 @@ export default function FooterHome() {
             </div>
             <div className="container">
                 <div className="row">
-                    <div className="col-md-8 col-sm-6 col-xs-12">
+                    <div className="col col-8">
                         <p className="copyright-text">
                             Copyright &copy; 2024 All Rights Reserved by {''}
                             <a href="#">Tortee</a>.
                         </p>
                     </div>
 
-                    <div className="col-md-4 col-sm-6 col-xs-12">
+                    <div className="col col-4">
                         <ul className="social-icons">
                             <li>
                                 <a className="facebook" href="#">

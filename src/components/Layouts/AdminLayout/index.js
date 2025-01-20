@@ -177,7 +177,7 @@ export function Sidebar() {
             </List>
             <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                    <Logout fontSize="small" />
+                    <Logout fontSize="small" style={{ marginRight: '36px' }} />
                 </ListItemIcon>
                 Logout
             </MenuItem>{' '}
@@ -190,8 +190,6 @@ export default function AdminLayout({ children }) {
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{ display: 'flex' }}>
-                {/* <CssBaseline /> */}
-                {/* <NavbarAdmin /> */}
                 <Sidebar />
                 <Box
                     component="main"

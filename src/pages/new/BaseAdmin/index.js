@@ -71,13 +71,6 @@ export default function AdminTestPage() {
                         </Breadcrumb>
                     </div>
                 </header>
-                <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                    <div className="flex-col items-center justify-center h-60 w-full">
-                        <div className="flex flex-row items-center justify-center mb-10 w-full mt-[50px]">
-                            <AnimatedTooltip items={people} />
-                        </div>
-                    </div>
-                </div>
             </SidebarInset>
         </SidebarProvider>
     );
