@@ -2,15 +2,15 @@ import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styl
 
 import { Box, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import Logout from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { useNavigate } from 'react-router-dom';
+import { AlignJustify } from 'lucide-react';
 
-import { MainListItems } from '~/components/listItems';
+import { MainListItems, SecondaryListItems } from '~/components/listItems';
 
 import { useState } from 'react';
 
@@ -149,8 +149,6 @@ export function Sidebar() {
         navigate('/admin/login');
     };
     const [open, setOpen] = useState(true);
-    const theme = useTheme();
-
     const toggleDrawer = () => {
         setOpen(!open);
     };
@@ -166,13 +164,17 @@ export function Sidebar() {
                 }}
             >
                 <Box sx={{ flexGrow: 1 }}></Box>
-                <IconButton onClick={toggleDrawer}>
-                    <ChevronLeftIcon />
+                <IconButton onClick={toggleDrawer} sx={{ mr: '14px' }}>
+                    <AlignJustify />
                 </IconButton>
             </Toolbar>
             <Divider />
             <List component="nav">
                 <MainListItems />
+                <Divider sx={{ my: 1 }} />
+            </List>
+            <List component="nav">
+                <SecondaryListItems />
                 <Divider sx={{ my: 1 }} />
             </List>
             <MenuItem onClick={handleLogout}>

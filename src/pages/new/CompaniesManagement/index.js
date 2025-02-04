@@ -28,7 +28,6 @@ export default function CompaniesManagement() {
                 const response = await CompanyAPI.getAll();
                 const data = response?.result || [];
 
-                console.log(data);
                 setRows(data);
             } catch (error) {
                 console.log('Failed to fetch blogs: ', error);

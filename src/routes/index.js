@@ -30,6 +30,8 @@ import PaymentAndSubscriptionManagement from '~/pages/new/PaymentAndSubscription
 import EmployeesManagement from '~/pages/new/EmployeesManagement';
 import CompaniesManagement from '~/pages/new/CompaniesManagement';
 import AccountsManagement from '~/pages/new/AccountsManagement ';
+import CoursesControl from '~/pages/new/CoursesControl';
+import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 
 const publicRoutes = [
     //new
@@ -55,6 +57,8 @@ const publicRoutes = [
     { path: '/test/admin-test', component: AdminTestPage, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
+    { path: '/company/course', component: CoursesControl, layout: AdminLayout },
+    { path: '/company/course/view/:id', component: CoursesControlEdit, layout: AdminLayout },
     { path: '/company/blog-management', component: BlogsManagement, layout: AdminLayout },
     { path: '/company/account-management', component: EmployeesManagement, layout: AdminLayout },
     { path: '/company/payment-management', component: PaymentsManagement, layout: AdminLayout },

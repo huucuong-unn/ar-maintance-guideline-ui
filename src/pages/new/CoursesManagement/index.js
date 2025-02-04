@@ -3,9 +3,8 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import BlogAPI from '~/API/BlogAPI';
 import CourseAPI from '~/API/CourseAPI';
 
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
@@ -23,28 +22,40 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function CoursesManagement() {
+    const [rows, setRows] = useState([]);
+    const [total, setTotal] = useState(0);
+
+    // DataGrid pagination model
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0, // zero-based for DataGrid
+        pageSize: 5, // items per page
+    });
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Convert zero-based to one-based if your API requires it
+                const pageParam = paginationModel.page + 1;
+                const sizeParam = paginationModel.pageSize;
+
                 const params = {
-                    page: 1,
-                    size: 10,
-                    searchTemp: null,
-                    status: 'INACTIVE',
-                    userId: 'f83cf1d9-143c-40ae-8918-0e1e050deeba',
-                    isEnrolled: true,
+                    page: pageParam,
+                    size: sizeParam,
+                    // ...additional parameters
                 };
 
                 const response = await CourseAPI.getAll(params);
                 const data = response?.result?.object || [];
                 setRows(data);
-                console.log(data);
+
+                // If your API returns total item count, set it for the DataGrid
+                setTotal(response?.result?.totalItems || 0);
             } catch (error) {
-                console.log('Failed to fetch blogs: ', error);
+                console.error('Failed to fetch courses:', error);
             }
         };
         fetchData();
-    }, []);
+    }, [paginationModel]);
     const columns = [
         { field: 'id', headerName: 'Id', width: 10 },
         { field: 'title', headerName: 'Title', width: 200 },
@@ -52,13 +63,11 @@ export default function CoursesManagement() {
         { field: 'imageUrl', headerName: 'PictureUrl', width: 200 },
         { field: 'description', headerName: 'Description', width: 200 },
         { field: 'duration', headerName: 'Duration', width: 100 },
-        { field: 'isMandatory', headerName: 'Mandatory ?', width: 100 },
+        { field: 'isMandatory', headerName: 'Is Mandatory', width: 100 },
         { field: 'numberOfLessons', headerName: 'Lesson', width: 100 },
         { field: 'numberOfParticipants', headerName: 'Participant', width: 100 },
         { field: 'status', headerName: 'Status', width: 100 },
     ];
-
-    const [rows, setRows] = useState([]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -109,7 +118,17 @@ export default function CoursesManagement() {
                                 <DataGrid
                                     rows={rows}
                                     columns={columns}
-                                    sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                                    pageSizeOptions={[5, 10, 25]}
+                                    paginationMode="server"
+                                    rowCount={total}
+                                    paginationModel={paginationModel}
+                                    onPaginationModelChange={setPaginationModel}
+                                    sx={{
+                                        '& .MuiDataGrid-scrollbar': {
+                                            left: 0,
+                                        },
+                                    }}
+                                    slots={{ toolbar: GridToolbar }}
                                 />
                             </Paper>
 

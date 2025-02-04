@@ -7,10 +7,18 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 
-export default function CardCourse({ title, description, image, viewers, lessons, duration }) {
+export default function CardCourse({ title, description, image, viewers, lessons, duration, status }) {
+    function equalsIgnoreCase(a, b) {
+        return a?.toLowerCase() === b?.toLowerCase();
+    }
+
     return (
         <Card
             sx={{
+                // Make the card fill 100% of the grid item
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 textAlign: 'left',
                 borderRadius: '16px',
                 transition: 'transform 0.3s, box-shadow 0.3s',
@@ -20,18 +28,25 @@ export default function CardCourse({ title, description, image, viewers, lessons
                     cursor: 'pointer',
                 },
                 opacity: 0.9,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '320px',
                 border: '1px solid #02F18D',
             }}
         >
             <CardMedia
-                sx={{ height: 140, margin: '8px', borderRadius: '8px' }}
-                image={image} // Use the passed image URL
+                component="img"
+                image={image}
                 title={title}
+                sx={{
+                    // No margin here
+                    width: '100%', // fill the card’s width
+                    height: 140, // fixed height
+                    objectFit: 'cover',
+                    borderRadius: '8px', // round corners
+                    padding: '8px',
+                }}
             />
-            <CardContent>
+
+            {/* Flex the content so it can fill remaining vertical space if needed */}
+            <CardContent sx={{ flex: '1 1 auto' }}>
                 <Typography
                     gutterBottom
                     variant="h5"
@@ -43,8 +58,9 @@ export default function CardCourse({ title, description, image, viewers, lessons
                         textOverflow: 'ellipsis',
                     }}
                 >
-                    {title} {/* Dynamic title */}
+                    {title}
                 </Typography>
+
                 <Typography
                     variant="body2"
                     sx={{
@@ -56,19 +72,39 @@ export default function CardCourse({ title, description, image, viewers, lessons
                         textOverflow: 'ellipsis',
                     }}
                 >
-                    {description} {/* Dynamic description */}
+                    {description}
                 </Typography>
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
                     <Typography sx={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>
-                        <PeopleIcon fontSize="small" sx={{ marginRight: '4px' }} /> <span>{viewers}</span>
+                        <PeopleIcon fontSize="small" sx={{ marginRight: '4px' }} /> {viewers}
                     </Typography>
                     <Typography sx={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>
-                        <PlayCircleIcon fontSize="small" sx={{ marginRight: '4px' }} /> <span>{lessons}</span>
+                        <PlayCircleIcon fontSize="small" sx={{ marginRight: '4px' }} /> {lessons}
                     </Typography>
                     <Typography sx={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>
-                        <AccessTimeIcon fontSize="small" sx={{ marginRight: '4px' }} /> <span>{duration}</span>
+                        <AccessTimeIcon fontSize="small" sx={{ marginRight: '4px' }} /> {duration}
                     </Typography>
                 </Box>
+
+                <Typography
+                    variant="body2"
+                    sx={
+                        equalsIgnoreCase(status, 'Active')
+                            ? {
+                                  mt: 1,
+                                  fontWeight: '700',
+                                  color: 'green',
+                              }
+                            : {
+                                  mt: 1,
+                                  fontWeight: '700',
+                                  color: 'orange',
+                              }
+                    }
+                >
+                    {status}
+                </Typography>
             </CardContent>
         </Card>
     );
