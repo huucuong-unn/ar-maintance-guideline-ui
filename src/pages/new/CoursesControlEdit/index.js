@@ -24,13 +24,22 @@ import {
     Tab,
     TextField,
     Typography,
+    List,
+    ListItem,
+    Avatar,
+    ListItemText,
+    Checkbox,
+    ListItemAvatar,
+    FormControlLabel,
 } from '@mui/material';
 import { File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import AccountAPI from '~/API/AccountAPI';
 
 import CourseAPI from '~/API/CourseAPI';
 import QuizAPI from '~/API/QuizAPI';
+import EnrollmentAPI from '~/API/EnrollmentAPI';
 
 export default function CoursesControlEdit() {
     // ==================== Tab State ====================
@@ -100,6 +109,7 @@ export default function CoursesControlEdit() {
     const ITEM_HEIGHT = 48;
     const [anchorEl, setAnchorEl] = useState(null);
     const openMenu = Boolean(anchorEl);
+
     const handleClickMenu = (event) => {
         setAnchorEl(event.currentTarget);
     };
@@ -670,6 +680,154 @@ export default function CoursesControlEdit() {
             setIsLoadingSections(false);
         }
     };
+
+    const EmployeeList = () => {
+        const [employeeList, setEmployeeList] = useState([]);
+        const [searchTerm, setSearchTerm] = useState('');
+        const [sortAssigned, setSortAssigned] = useState(false);
+        const [editMode, setEditMode] = useState(false);
+        const [employeeListToCreate, setEmployeeListToCreate] = useState([]);
+
+        const fetchUser = async () => {
+            try {
+                const res = await AccountAPI.getUserToAssign(
+                    'f608be70-fa3a-47cd-bb7a-751c16452f87/course/cf5777fa-8c1f-47fd-b27b-5ef8b5ee654d',
+                );
+                const loadedUser =
+                    res?.result?.map((user) => ({
+                        id: user.userResponse.id,
+                        email: user.userResponse.email,
+                        avatar: user.userResponse.avatar,
+                        username: user.userResponse.username,
+                        isAssigned: user.isAssigned,
+                    })) || [];
+                setEmployeeList(loadedUser);
+            } catch (error) {
+                console.error('Failed to fetch quiz:', error);
+            }
+        };
+
+        useEffect(() => {
+            fetchUser();
+        }, []);
+
+        console.log(employeeList);
+        console.log(employeeListToCreate);
+
+        const handleToggle = (id) => {
+            const courseId = 'cf5777fa-8c1f-47fd-b27b-5ef8b5ee654d';
+            const updatedEmployeeListToCreate = [...employeeListToCreate];
+            const employeeIndex = updatedEmployeeListToCreate.findIndex((emp) => emp.userId === id);
+
+            if (employeeIndex === -1) {
+                const newEmployee = { courseId, userId: id };
+                updatedEmployeeListToCreate.push(newEmployee);
+            } else {
+                updatedEmployeeListToCreate.splice(employeeIndex, 1);
+            }
+
+            setEmployeeListToCreate(updatedEmployeeListToCreate);
+        };
+
+        const handleSave = async () => {
+            try {
+                const res = await EnrollmentAPI.createEnrollment(employeeListToCreate);
+                console.log('Save response:', res.data);
+                fetchUser();
+            } catch (error) {
+                console.error('Failed to save assigned users:', error);
+            }
+        };
+
+        const handleSearch = (event) => {
+            setSearchTerm(event.target.value);
+        };
+
+        const handleSortToggle = () => {
+            setSortAssigned(!sortAssigned);
+        };
+
+        const handleEditModeToggle = () => {
+            setEditMode(!editMode);
+        };
+
+        const filteredEmployees = employeeList
+            .filter(
+                (employee) =>
+                    employee.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    employee.email.toLowerCase().includes(searchTerm.toLowerCase()),
+            )
+            .sort((a, b) => {
+                if (sortAssigned) {
+                    return a.isAssigned === b.isAssigned ? 0 : a.isAssigned ? -1 : 1;
+                } else {
+                    return 0;
+                }
+            });
+
+        return (
+            <div>
+                <TextField
+                    label="Search"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                />
+                <FormControlLabel
+                    control={<Checkbox checked={sortAssigned} onChange={handleSortToggle} />}
+                    label="Sort by Assigned"
+                />
+                <Button variant="contained" color="secondary" onClick={handleEditModeToggle}>
+                    {editMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                </Button>
+                <List>
+                    {employeeList.map((employee) => (
+                        <ListItem key={employee.id} button={editMode || !employee.isAssigned} onClick={() => editMode}>
+                            <ListItemAvatar>
+                                <Avatar src={employee.avatar} />
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={employee.username}
+                                secondary={
+                                    <Typography component="span" variant="body2" color="textPrimary">
+                                        {employee.email}
+                                    </Typography>
+                                }
+                            />
+                            {editMode ? (
+                                <Checkbox
+                                    edge="end"
+                                    checked={employee.isAssigned}
+                                    tabIndex={-1}
+                                    disableRipple
+                                    onChange={() => handleToggle(employee.id)}
+                                />
+                            ) : employee.isAssigned ? (
+                                // Nếu isAssigned là true thì hiển thị "Is Assigned"
+                                <Typography variant="body2" color="textSecondary">
+                                    Is Assigned
+                                </Typography>
+                            ) : (
+                                // Nếu isAssigned là false, hiển thị checkbox để người dùng có thể thay đổi
+                                <Checkbox
+                                    edge="end"
+                                    tabIndex={-1}
+                                    disableRipple
+                                    onChange={() => handleToggle(employee.id)}
+                                />
+                            )}
+                        </ListItem>
+                    ))}
+                </List>
+                <Button variant="contained" color="primary" onClick={handleSave}>
+                    Save
+                </Button>
+            </div>
+        );
+    };
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             <Box
@@ -754,6 +912,7 @@ export default function CoursesControlEdit() {
                     <TabList onChange={handleTabChange} textColor="#051D40">
                         <Tab label="Sections" value="1" />
                         <Tab label="Final Quiz" value="2" />
+                        <Tab label="Assign Employee" value="3" />
                     </TabList>
                 </Box>
 
@@ -1263,6 +1422,9 @@ export default function CoursesControlEdit() {
                             </Box>
                         </Box>
                     )}
+                </TabPanel>
+                <TabPanel value="3">
+                    <EmployeeList />
                 </TabPanel>
             </TabContext>
             {/* ==================== Edit Question Dialog ==================== */}

@@ -110,6 +110,10 @@ const AccountAPI = {
         const url = `/v1/user/${id}`;
         return axiosClient.get(url);
     },
+    getUserToAssign(id) {
+        const url = `/v1/user/company/${id}`;
+        return axiosClient.get(url);
+    },
 };
 
 export default AccountAPI;
