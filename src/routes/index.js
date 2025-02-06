@@ -29,7 +29,7 @@ import ModelRequestManagement from '~/pages/new/ModelRequestManagement';
 import PaymentAndSubscriptionManagement from '~/pages/new/PaymentAndSubscriptionManagement';
 import EmployeesManagement from '~/pages/new/EmployeesManagement';
 import CompaniesManagement from '~/pages/new/CompaniesManagement';
-import AccountsManagement from '~/pages/new/AccountsManagement ';
+// import AccountsManagement from '~/pages/new/AccountsManagement ';
 import CoursesControl from '~/pages/new/CoursesControl';
 import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 
@@ -78,11 +78,11 @@ const publicRoutes = [
         component: CompaniesManagement,
         layout: AdminLayout,
     },
-    {
-        path: '/admin/account-management',
-        component: AccountsManagement,
-        layout: AdminLayout,
-    },
+    // {
+    //     path: '/admin/account-management',
+    //     component: AccountsManagement,
+    //     layout: AdminLayout,
+    // },
 ];
 
 const adminRoutes = [];
