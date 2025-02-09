@@ -28,10 +28,18 @@ const CourseAPI = {
         return axiosClient.get('/v1/lesson/course/' + courseId);
     },
     create(data, includeAuthorization = false) {
-        return axiosClient.post('/v1/course', data);
+        return axiosClient.post('/v1/course', data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
     createLesson(data, includeAuthorization = false) {
-        return axiosClient.post('/v1/lesson-detail', data);
+        return axiosClient.post('/v1/lesson-detail', data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
     createSection(data, includeAuthorization = false) {
         return axiosClient.post('/v1/lesson', data);
@@ -41,6 +49,22 @@ const CourseAPI = {
     },
     getByCompanyId(companyId, includeAuthorization = false) {
         return axiosClient.get('/v1/course/company/' + companyId);
+    },
+    readVideo(videoUrl) {
+        return axiosClient
+            .get(`/v1/files/${videoUrl}`, {
+                responseType: 'blob', // Important for video files
+            })
+            .then((response) => {
+                if (!(response instanceof Blob)) {
+                    throw new Error(`API did not return a valid video Blob.`);
+                }
+                return response;
+            })
+            .catch((error) => {
+                console.error('Axios error fetching video:', error);
+                throw error;
+            });
     },
 };
 

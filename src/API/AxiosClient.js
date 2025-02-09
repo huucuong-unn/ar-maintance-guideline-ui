@@ -1,4 +1,6 @@
 import axios from 'axios';
+import storageService from '~/components/StorageService/storageService'; // Make sure you import storageService
+
 const handleAxiosError = (error) => {
     // Customize error handling based on your requirements.
     if (error.response) {
@@ -28,7 +30,14 @@ const axiosClient = axios.create({
 // Add a request interceptor
 axiosClient.interceptors.request.use(
     function (config) {
-        // Do something before request is sent
+        // Retrieve token from localStorage
+        const token = storageService.getItem('userInfo')?.token; // Adjust based on how you store your token
+
+        // If token exists, add it to the Authorization header
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+
         return config;
     },
     function (error) {
@@ -40,12 +49,12 @@ axiosClient.interceptors.request.use(
 // Add a response interceptor
 axiosClient.interceptors.response.use(
     function (response) {
-        // Any status code that lie within the range of 2xx cause this function to trigger
+        // Any status code that lies within the range of 2xx cause this function to trigger
         // Do something with response data
         return response.data;
     },
     function (error) {
-        // Any status codes that falls outside the range of 2xx cause this function to trigger
+        // Any status codes that fall outside the range of 2xx cause this function to trigger
         // Do something with response error
         handleAxiosError(error);
         return Promise.reject(error);

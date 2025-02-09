@@ -51,7 +51,7 @@ const AccountAPI = {
 
     //new
     login(data, includeAuthorization = false) {
-        return axiosClient.post('/v1/user/login', data);
+        return axiosClient.post('/v1/login', data);
     },
 
     //new

@@ -31,6 +31,7 @@ import {
     Checkbox,
     ListItemAvatar,
     FormControlLabel,
+    Pagination,
 } from '@mui/material';
 import { File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -40,8 +41,14 @@ import AccountAPI from '~/API/AccountAPI';
 import CourseAPI from '~/API/CourseAPI';
 import QuizAPI from '~/API/QuizAPI';
 import EnrollmentAPI from '~/API/EnrollmentAPI';
+import axios from 'axios';
+import { set } from 'date-fns';
+import { Attachment } from '@mui/icons-material';
+import storageService from '~/components/StorageService/storageService';
 
 export default function CoursesControlEdit() {
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
+
     // ==================== Tab State ====================
     const [tabValue, setTabValue] = useState('1');
     const handleTabChange = (e, newValue) => setTabValue(newValue);
@@ -249,6 +256,96 @@ export default function CoursesControlEdit() {
             console.error(err);
         } finally {
             setIsLoadingQuiz(false);
+        }
+    };
+
+    // ==================== Video Upload Handlers ====================
+    const handleVideoUpload = (event) => {
+        const file = event.target.files[0];
+
+        if (file) {
+            if (!file.type.startsWith('video/')) {
+                alert('Please select a valid video file.');
+                return;
+            }
+
+            handleLessonInputChange('videoFile', file); // Store file in state
+
+            // Read video duration using a hidden video element
+            const videoElement = document.getElementById('video-preview');
+            const objectURL = URL.createObjectURL(file);
+            videoElement.src = objectURL;
+
+            videoElement.onloadedmetadata = () => {
+                const durationInMinutes = Math.ceil(videoElement.duration / 60); // Convert seconds to minutes
+                handleLessonInputChange('duration', durationInMinutes);
+                URL.revokeObjectURL(objectURL); // Free memory
+            };
+        }
+    };
+
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+
+        if (file) {
+            // Ensure only allowed non-video file types are selected
+            if (file.type.startsWith('video/')) {
+                alert('Please select a document or non-video file.');
+                return;
+            }
+
+            handleLessonInputChange('attachFileUrl', file);
+        }
+    };
+
+    const [openVideoDialog, setOpenVideoDialog] = useState(false);
+    const [lessonDetails, setLessonDetails] = useState(null); // Store lesson details
+    const [videoSrc, setVideoSrc] = useState('');
+    const [videoType, setVideoType] = useState('');
+    const [loadingVideo, setLoadingVideo] = useState(false); // Loading state
+    const handleOpenVideoDialog = async (lesson) => {
+        try {
+            setLessonDetails(lesson); // Store lesson details (title, description, etc.)
+
+            setOpenVideoDialog(true);
+            setLoadingVideo(true);
+            const response = await CourseAPI.readVideo(lesson?.videoUrl); // Ensure this method exists
+            // Convert Blob to Object URL
+            const videoObjectUrl = URL.createObjectURL(response);
+            setVideoSrc(videoObjectUrl);
+            setVideoType(videoType); // Store detected video type
+            setLoadingVideo(false);
+        } catch (error) {
+            console.error('Error fetching video:', error);
+            alert(`Failed to load video. Error: ${error.message}`);
+        }
+    };
+
+    const handleCloseVideoDialog = () => {
+        setOpenVideoDialog(false);
+        setVideoSrc('');
+    };
+
+    const handleDownloadFile = async (fileUrl, fileName = 'attachment') => {
+        try {
+            const response = await CourseAPI.readVideo(fileUrl); // API call (same as video)
+
+            // Create a Blob URL
+            const fileObjectUrl = URL.createObjectURL(response);
+
+            // Create a temporary <a> element to trigger the download
+            const link = document.createElement('a');
+            link.href = fileObjectUrl;
+            link.download = fileName || 'downloaded-file'; // Set the file name
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up after download
+            document.body.removeChild(link);
+            URL.revokeObjectURL(fileObjectUrl);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            alert(`Failed to download file. Error: ${error.message}`);
         }
     };
 
@@ -596,11 +693,6 @@ export default function CoursesControlEdit() {
             return;
         }
 
-        if (selectedLessonType === 'VIDEO' && !newLessonData.videoUrl) {
-            alert('Please enter the Video URL.');
-            return;
-        }
-
         if (!newLessonData.title) {
             alert('Please enter the lesson title.');
             return;
@@ -616,29 +708,32 @@ export default function CoursesControlEdit() {
             return;
         }
 
-        // Add more validations based on lesson types as needed
+        if (selectedLessonType === 'VIDEO' && !newLessonData.videoFile) {
+            alert('Please select a video file.');
+            return;
+        }
 
         setIsCreatingLesson(true);
         try {
-            const lessonPayload = {
-                courseId: courseId,
-                lessonId: currentSectionId, // Associate with section
-                type: selectedLessonType.toUpperCase(), // Assuming API expects uppercase types
-                title: newLessonData.title || `${selectedLessonType} Lesson`,
-                description: newLessonData.description || '',
-                duration: newLessonData.duration || 0,
-                ...(selectedLessonType === 'VIDEO' && { videoUrl: newLessonData.videoUrl }),
-                ...(selectedLessonType === 'READING' && { content: newLessonData.content }),
-                ...(selectedLessonType === 'DOCUMENT' && {
-                    documentUrl: newLessonData.document ? URL.createObjectURL(newLessonData.document) : '',
-                }),
-            };
+            const formData = new FormData();
+            formData.append('lessonId', currentSectionId); // Associate with section
+            formData.append('type', selectedLessonType.toUpperCase());
+            formData.append('title', newLessonData.title);
+            formData.append('description', newLessonData.description || '');
+            formData.append('duration', newLessonData.duration || 0);
 
-            const response = await CourseAPI.createLesson(lessonPayload); // Ensure this method exists
+            if (selectedLessonType === 'VIDEO' && newLessonData.videoFile) {
+                formData.append('videoUrl', newLessonData.videoFile); // Video file
+            }
+
+            if (newLessonData.attachFileUrl) {
+                formData.append('attachFileUrl', newLessonData.attachFileUrl); // Additional file
+            }
+
+            const response = await CourseAPI.createLesson(formData);
 
             if (response?.result) {
                 alert('Lesson created successfully!');
-                // Refresh sections to include the new lesson
                 fetchSections();
                 handleCloseAddLessonDialog();
             }
@@ -681,149 +776,175 @@ export default function CoursesControlEdit() {
         }
     };
 
+    // ==================== Assign Employee ====================
     const EmployeeList = () => {
         const [employeeList, setEmployeeList] = useState([]);
+        const [searchQuery, setSearchQuery] = useState('');
         const [searchTerm, setSearchTerm] = useState('');
         const [sortAssigned, setSortAssigned] = useState(false);
         const [editMode, setEditMode] = useState(false);
         const [employeeListToCreate, setEmployeeListToCreate] = useState([]);
+        const [page, setPage] = useState(1);
+        const [totalPages, setTotalPages] = useState(1);
+        const [selectedUsers, setSelectedUsers] = useState(new Set());
+        const { id: courseId } = useParams();
+        const [isLoadingCreate, setIsLoadingCreate] = useState(false);
+        const [isLoadingEmployee, setIsLoadingEmployee] = useState(true);
+        const [openConfirmDialog, setOpenConfirmDialog] = useState(false); // 🔹 Dialog State
 
-        const fetchUser = async () => {
+        const handleToggle = (id) => {
+            setSelectedUsers((prevSelected) => {
+                const newSelected = new Set(prevSelected);
+                if (newSelected.has(id)) {
+                    newSelected.delete(id);
+                } else {
+                    newSelected.add(id);
+                }
+                return newSelected;
+            });
+
+            setEmployeeListToCreate((prevList) => {
+                const updatedList = [...prevList];
+                const index = updatedList.findIndex((emp) => emp.userId === id);
+
+                if (index === -1) {
+                    updatedList.push({ courseId: courseId, userId: id });
+                } else {
+                    updatedList.splice(index, 1);
+                }
+                return updatedList;
+            });
+        };
+
+        const fetchUser = async (page = 1, keyword = '') => {
             try {
                 const res = await AccountAPI.getUserToAssign(
-                    'f608be70-fa3a-47cd-bb7a-751c16452f87/course/cf5777fa-8c1f-47fd-b27b-5ef8b5ee654d',
+                    `${userInfo?.company?.id}/course/${courseId}?page=${page}&size=10&keyword=${keyword}`,
                 );
                 const loadedUser =
-                    res?.result?.map((user) => ({
+                    res?.result?.objectList?.map((user) => ({
                         id: user.userResponse.id,
                         email: user.userResponse.email,
                         avatar: user.userResponse.avatar,
                         username: user.userResponse.username,
                         isAssigned: user.isAssigned,
                     })) || [];
+
                 setEmployeeList(loadedUser);
+                setTotalPages(res?.result?.totalPages || 1);
+                setIsLoadingEmployee(false);
             } catch (error) {
-                console.error('Failed to fetch quiz:', error);
+                console.error('Failed to fetch user:', error);
             }
         };
 
         useEffect(() => {
-            fetchUser();
-        }, []);
+            fetchUser(page, searchTerm);
+        }, [page, searchTerm]);
 
-        console.log(employeeList);
-        console.log(employeeListToCreate);
-
-        const handleToggle = (id) => {
-            const courseId = 'cf5777fa-8c1f-47fd-b27b-5ef8b5ee654d';
-            const updatedEmployeeListToCreate = [...employeeListToCreate];
-            const employeeIndex = updatedEmployeeListToCreate.findIndex((emp) => emp.userId === id);
-
-            if (employeeIndex === -1) {
-                const newEmployee = { courseId, userId: id };
-                updatedEmployeeListToCreate.push(newEmployee);
-            } else {
-                updatedEmployeeListToCreate.splice(employeeIndex, 1);
-            }
-
-            setEmployeeListToCreate(updatedEmployeeListToCreate);
+        const handleSearchInputChange = (event) => {
+            setSearchQuery(event.target.value);
         };
 
-        const handleSave = async () => {
+        const handleSearchButtonClick = () => {
+            setSearchTerm(searchQuery);
+            setPage(1);
+        };
+
+        const handlePageChange = (event, value) => {
+            setPage(value);
+        };
+
+        const handleConfirmSave = async () => {
+            setIsLoadingCreate(true);
             try {
                 const res = await EnrollmentAPI.createEnrollment(employeeListToCreate);
+                setEmployeeListToCreate([]);
                 console.log('Save response:', res.data);
-                fetchUser();
+                fetchUser(page, searchTerm);
             } catch (error) {
                 console.error('Failed to save assigned users:', error);
+            } finally {
+                setIsLoadingCreate(false);
+                setOpenConfirmDialog(false); // 🔹 Close dialog after saving
             }
         };
-
-        const handleSearch = (event) => {
-            setSearchTerm(event.target.value);
-        };
-
-        const handleSortToggle = () => {
-            setSortAssigned(!sortAssigned);
-        };
-
-        const handleEditModeToggle = () => {
-            setEditMode(!editMode);
-        };
-
-        const filteredEmployees = employeeList
-            .filter(
-                (employee) =>
-                    employee.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    employee.email.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-            .sort((a, b) => {
-                if (sortAssigned) {
-                    return a.isAssigned === b.isAssigned ? 0 : a.isAssigned ? -1 : 1;
-                } else {
-                    return 0;
-                }
-            });
 
         return (
             <div>
-                <TextField
-                    label="Search"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={searchTerm}
-                    onChange={handleSearch}
-                />
-                <FormControlLabel
-                    control={<Checkbox checked={sortAssigned} onChange={handleSortToggle} />}
-                    label="Sort by Assigned"
-                />
-                <Button variant="contained" color="secondary" onClick={handleEditModeToggle}>
-                    {editMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
-                </Button>
-                <List>
-                    {employeeList.map((employee) => (
-                        <ListItem key={employee.id} button={editMode || !employee.isAssigned} onClick={() => editMode}>
-                            <ListItemAvatar>
-                                <Avatar src={employee.avatar} />
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={employee.username}
-                                secondary={
-                                    <Typography component="span" variant="body2" color="textPrimary">
-                                        {employee.email}
-                                    </Typography>
-                                }
+                {isLoadingEmployee ? (
+                    <CircularProgress />
+                ) : (
+                    <>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <TextField
+                                label="Search"
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                value={searchQuery}
+                                onChange={handleSearchInputChange}
                             />
-                            {editMode ? (
-                                <Checkbox
-                                    edge="end"
-                                    checked={employee.isAssigned}
-                                    tabIndex={-1}
-                                    disableRipple
-                                    onChange={() => handleToggle(employee.id)}
-                                />
-                            ) : employee.isAssigned ? (
-                                // Nếu isAssigned là true thì hiển thị "Is Assigned"
-                                <Typography variant="body2" color="textSecondary">
-                                    Is Assigned
-                                </Typography>
-                            ) : (
-                                // Nếu isAssigned là false, hiển thị checkbox để người dùng có thể thay đổi
-                                <Checkbox
-                                    edge="end"
-                                    tabIndex={-1}
-                                    disableRipple
-                                    onChange={() => handleToggle(employee.id)}
-                                />
-                            )}
-                        </ListItem>
-                    ))}
-                </List>
-                <Button variant="contained" color="primary" onClick={handleSave}>
-                    Save
-                </Button>
+                            <Button variant="contained" color="primary" onClick={handleSearchButtonClick}>
+                                Search
+                            </Button>
+                        </div>
+
+                        <List>
+                            {employeeList.map((employee) => (
+                                <ListItem key={employee.id} button={editMode || !employee.isAssigned}>
+                                    <ListItemAvatar>
+                                        <Avatar src={employee.avatar} />
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={employee.username}
+                                        secondary={
+                                            <Typography component="span" variant="body2" color="textPrimary">
+                                                {employee.email}
+                                            </Typography>
+                                        }
+                                    />
+                                    <Checkbox
+                                        edge="end"
+                                        checked={selectedUsers.has(employee.id) || employee.isAssigned}
+                                        disabled={employee.isAssigned}
+                                        onChange={() => handleToggle(employee.id)}
+                                    />
+                                </ListItem>
+                            ))}
+                            <Box fullWidth sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+                                <Pagination count={totalPages} page={page} onChange={handlePageChange} />
+                            </Box>
+                        </List>
+
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => setOpenConfirmDialog(true)} // 🔹 Open confirmation dialog
+                            disabled={employeeListToCreate.length === 0} // 🔹 Disable if no new selections
+                        >
+                            Save
+                        </Button>
+                    </>
+                )}
+
+                {/* 🔹 Confirmation Dialog */}
+                <Dialog open={openConfirmDialog} onClose={() => setOpenConfirmDialog(false)}>
+                    <DialogTitle>Confirm Save</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to assign these users to the course?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenConfirmDialog(false)} color="secondary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleConfirmSave} color="primary" disabled={isLoadingCreate}>
+                            {isLoadingCreate ? <CircularProgress size={24} /> : 'Confirm'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </div>
         );
     };
@@ -868,21 +989,16 @@ export default function CoursesControlEdit() {
                     sx={{
                         mb: 2,
                         padding: '12px 20px',
-                        backgroundColor: course?.status === 'INACTIVE' ? 'green' : 'red', // Set the background color conditionally
+                        backgroundColor: 'green', // Set the background color conditionally
                         ':hover': {
                             opacity: '0.9',
                             backgroundColor: course?.status === 'INACTIVE' ? 'darkgreen' : 'darkred', // Darker hover color
                         },
+                        display: course?.status === 'ACTIVE' ? 'none' : 'inline-block', // Hide if course is active
                     }}
                     onClick={handleClickToggleCourseStatus}
                 >
-                    {isLoadingStartCourse ? (
-                        <CircularProgress size={24} />
-                    ) : course?.status === 'INACTIVE' ? (
-                        'Start this course'
-                    ) : (
-                        'Stop this course'
-                    )}
+                    {isLoadingStartCourse ? <CircularProgress size={24} /> : 'Start this course'}
                 </Button>
                 <Typography
                     variant="body2"
@@ -1034,6 +1150,9 @@ export default function CoursesControlEdit() {
                                                                                     color: 'blue',
                                                                                 },
                                                                             }}
+                                                                            onClick={() =>
+                                                                                handleOpenVideoDialog(lesson)
+                                                                            }
                                                                         >
                                                                             {lesson.title}
                                                                         </Typography>
@@ -1044,34 +1163,9 @@ export default function CoursesControlEdit() {
                                                                                 ml: 'auto', // This will push the duration to the right
                                                                                 fontStyle: 'italic',
                                                                                 color: 'text.secondary',
-                                                                            }}
+                                                                            }} // Handle Click
                                                                         >
                                                                             {lesson.duration} min(s)
-                                                                        </Typography>
-                                                                    </Box>
-                                                                )}
-                                                                {lesson.type === 'DOCUMENT' && (
-                                                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                                                        <FileText />
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            fontWeight={700}
-                                                                        >
-                                                                            Document:
-                                                                        </Typography>
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            sx={{
-                                                                                ':hover': {
-                                                                                    cursor: 'pointer',
-                                                                                    color: 'blue',
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            {' '}
-                                                                            {lesson.title}
                                                                         </Typography>
                                                                     </Box>
                                                                 )}
@@ -1584,7 +1678,6 @@ export default function CoursesControlEdit() {
                         <Select label="Lesson Type" value={selectedLessonType} onChange={handleLessonTypeChange}>
                             <MenuItem value="READING">Reading</MenuItem>
                             <MenuItem value="VIDEO">Video</MenuItem>
-                            <MenuItem value="DOCUMENT">Document</MenuItem>
                             {/* Add more lesson types as needed */}
                         </Select>
                     </FormControl>
@@ -1607,23 +1700,93 @@ export default function CoursesControlEdit() {
                                 value={newLessonData.description || ''}
                                 onChange={(e) => handleLessonInputChange('description', e.target.value)}
                             />
+
+                            {/* Video File Input */}
+                            <input
+                                type="file"
+                                accept="video/*"
+                                style={{ display: 'none' }}
+                                id="video-upload"
+                                onChange={handleVideoUpload}
+                            />
+                            <label htmlFor="video-upload">
+                                <Button
+                                    component="span"
+                                    fullWidth
+                                    variant="contained"
+                                    sx={{
+                                        border: '2px dashed darkgrey',
+                                        padding: 2,
+                                        backgroundColor: '#f5f5f5',
+                                        boxShadow: 'none',
+                                        color: '#0f6cbf',
+                                        ':hover': {
+                                            backgroundColor: '#f5f5f5',
+                                            border: '2px solid #0f6cbf',
+                                            boxShadow: 'none',
+                                        },
+                                    }}
+                                >
+                                    {newLessonData.videoFile ? 'Change Video' : 'Upload Video'}
+                                </Button>
+                            </label>
+
+                            {/* Show Selected Video File Name */}
+                            {newLessonData.videoFile && (
+                                <Typography variant="body2" sx={{ marginTop: 1 }}>
+                                    Video: {newLessonData.videoFile.name}
+                                </Typography>
+                            )}
+
+                            {/* Auto-detected Video Duration */}
                             <TextField
                                 fullWidth
                                 margin="normal"
                                 required
-                                label="Video Duration(minutes)"
+                                label="Video Duration (minutes)"
                                 value={newLessonData.duration || ''}
-                                onChange={(e) => handleLessonInputChange('duration', e.target.value)}
+                                disabled
                             />
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Video URL"
-                                value={newLessonData.videoUrl || ''}
-                                onChange={(e) => handleLessonInputChange('videoUrl', e.target.value)}
+
+                            {/* Attach File Input (For non-video files) */}
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" // Restrict to non-video files
+                                style={{ display: 'none' }}
+                                id="file-attach"
+                                onChange={handleFileUpload}
                             />
-                            {/* If you want to allow video uploads, consider integrating a file upload component */}
+                            <label htmlFor="file-attach">
+                                <Button
+                                    component="span"
+                                    fullWidth
+                                    variant="contained"
+                                    sx={{
+                                        border: '2px dashed darkgrey',
+                                        padding: 2,
+                                        backgroundColor: '#f5f5f5',
+                                        boxShadow: 'none',
+                                        color: '#0f6cbf',
+                                        ':hover': {
+                                            backgroundColor: '#f5f5f5',
+                                            border: '2px solid #0f6cbf',
+                                            boxShadow: 'none',
+                                        },
+                                    }}
+                                >
+                                    {newLessonData.attachFileUrl ? 'Change Attachment' : 'Attach File'}
+                                </Button>
+                            </label>
+
+                            {/* Show Selected Attached File Name */}
+                            {newLessonData.attachFileUrl && (
+                                <Typography variant="body2" sx={{ marginTop: 1 }}>
+                                    Attached File: {newLessonData.attachFileUrl.name}
+                                </Typography>
+                            )}
+
+                            {/* Hidden Video Element for Duration Detection */}
+                            <video id="video-preview" style={{ display: 'none' }} />
                         </>
                     )}
 
@@ -1647,36 +1810,6 @@ export default function CoursesControlEdit() {
                                 value={newLessonData.content || ''}
                                 onChange={(e) => handleLessonInputChange('content', e.target.value)}
                             />
-                        </>
-                    )}
-
-                    {selectedLessonType === 'DOCUMENT' && (
-                        <>
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Document Title"
-                                value={newLessonData.title || ''}
-                                onChange={(e) => handleLessonInputChange('title', e.target.value)}
-                            />
-                            {/* Implement file upload if needed */}
-                            <Button variant="contained" component="label" sx={{ mt: 2 }}>
-                                Upload Document
-                                <input
-                                    type="file"
-                                    hidden
-                                    onChange={(e) => {
-                                        const file = e.target.files[0];
-                                        setNewLessonData((prev) => ({ ...prev, document: file }));
-                                    }}
-                                />
-                            </Button>
-                            {newLessonData.document && (
-                                <Typography variant="body2" sx={{ mt: 1 }}>
-                                    Selected File: {newLessonData.document.name}
-                                </Typography>
-                            )}
                         </>
                     )}
                 </DialogContent>
@@ -1707,6 +1840,52 @@ export default function CoursesControlEdit() {
                     <Button onClick={handleCloseDeleteSectionDialog}>Cancel</Button>
                     <Button sx={{ backgroundColor: 'red', color: 'white' }} onClick={handleDeleteSection} autoFocus>
                         Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diaglog Show Video */}
+            <Dialog open={openVideoDialog} onClose={handleCloseVideoDialog} maxWidth="md" fullWidth>
+                <DialogTitle>{lessonDetails?.title || 'Lesson Video'}</DialogTitle>
+                <DialogContent>
+                    {/* Display lesson details */}
+                    <Typography variant="body1" sx={{ mb: 1 }}>
+                        {lessonDetails?.description || ''}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Duration: {lessonDetails?.duration || 0} min(s)
+                    </Typography>
+
+                    {/* Video Player */}
+                    {loadingVideo ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+                            <CircularProgress size={50} />
+                        </Box>
+                    ) : videoSrc ? (
+                        <video controls style={{ width: '100%' }}>
+                            <source src={videoSrc} type={videoType || 'video/mp4'} />
+                            Your browser does not support this video format.
+                        </video>
+                    ) : (
+                        <Typography>Error loading video.</Typography>
+                    )}
+
+                    {/* Attached File */}
+                    {lessonDetails?.attachFileUrl && (
+                        <Box sx={{ mt: 2 }}>
+                            <Button
+                                variant="contained"
+                                startIcon={<FileText />}
+                                onClick={() => handleDownloadFile(lessonDetails.attachFileUrl, lessonDetails.title)}
+                            >
+                                Download Attached File
+                            </Button>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseVideoDialog} color="primary">
+                        Close
                     </Button>
                 </DialogActions>
             </Dialog>

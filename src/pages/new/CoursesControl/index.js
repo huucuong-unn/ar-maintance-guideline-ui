@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CourseAPI from '~/API/CourseAPI';
 import CardCourse from '~/components/CardCourse';
+import storageService from '~/components/StorageService/storageService';
 
 const defaultTheme = createTheme();
 
@@ -49,7 +50,10 @@ export default function CoursesControl() {
     const [duration, setDuration] = useState(0);
     const [isMandatory, setIsMandatory] = useState(false);
     const [type, setType] = useState('Training');
-    const companyId = 'f608be70-fa3a-47cd-bb7a-751c16452f87';
+    // Image Upload
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
 
     // Fetch data on mount
     useEffect(() => {
@@ -59,7 +63,7 @@ export default function CoursesControl() {
     const fetchCourses = async () => {
         try {
             setIsLoading(true);
-            const response = await CourseAPI.getByCompanyId(companyId);
+            const response = await CourseAPI.getByCompanyId(userInfo?.company?.id);
             const data = response?.result || [];
             setCourses(data);
         } catch (error) {
@@ -91,10 +95,11 @@ export default function CoursesControl() {
     // Create Course Dialog Logic
     // ===========================
     const handleOpenCreateDialog = () => {
-        // Reset form fields whenever we open
         setNewTitle('');
         setNewDescription('');
         setNewStatus('ACTIVE');
+        setSelectedImage(null);
+        setImagePreview('');
         setOpenCreateDialog(true);
     };
 
@@ -102,42 +107,45 @@ export default function CoursesControl() {
         setOpenCreateDialog(false);
     };
 
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                return;
+            }
+            console.log('first file', file);
+            setSelectedImage(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
     const handleCreateCourse = async () => {
-        // Validate minimal fields
         if (!newTitle.trim()) {
             alert('Please enter a title');
             return;
         }
 
-        if (!imageUrl.trim()) {
-            alert('Please enter an image URL');
+        if (!selectedImage) {
+            alert('Please select an image');
             return;
         }
 
-        const newCourseData = {
-            title: newTitle,
-            description: newDescription,
-            status: newStatus,
-            type: type,
-            isMandatory: isMandatory,
-            imageUrl: imageUrl,
-            duration: duration,
-            companyId: companyId,
-            // Possibly other fields (duration, imageUrl, etc.) if required by your backend
-        };
+        const formData = new FormData();
+        formData.append('title', newTitle);
+        formData.append('description', newDescription);
+        formData.append('status', newStatus);
+        formData.append('type', type);
+        formData.append('isMandatory', isMandatory);
+        formData.append('companyId', userInfo?.company?.id);
+        formData.append('imageUrl', selectedImage); // Attach the selected image
 
         try {
             setIsCreating(true);
-            const response = await CourseAPI.create(newCourseData);
+            const response = await CourseAPI.create(formData);
 
-            // If creation is successful:
             if (response?.result) {
-                // Option A: re-fetch to see the updated list
                 await fetchCourses();
-
-                // Option B (alternative): push to local courses
-                // setCourses((prev) => [...prev, response.result]);
-
                 handleCloseCreateDialog();
             }
         } catch (error) {
@@ -147,7 +155,6 @@ export default function CoursesControl() {
             setIsCreating(false);
         }
     };
-
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box
@@ -283,16 +290,23 @@ export default function CoursesControl() {
                             onChange={(e) => setNewTitle(e.target.value)}
                             required
                         />
-
-                        {/* ImgUrl field */}
-                        <TextField
-                            margin="normal"
-                            label="Image URL"
-                            fullWidth
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            required
+                        {/* Image Upload Field */}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            id="image-upload"
+                            onChange={handleImageUpload}
+                            multiple={false}
                         />
+                        <label htmlFor="image-upload">
+                            <Button variant="contained" component="span">
+                                {selectedImage ? 'Change Image' : 'Upload Image'}
+                            </Button>
+                        </label>
+                        {imagePreview && (
+                            <img src={imagePreview} alt="Preview" style={{ width: '100%', marginTop: 10 }} />
+                        )}
 
                         {/* Description Field */}
                         <TextField

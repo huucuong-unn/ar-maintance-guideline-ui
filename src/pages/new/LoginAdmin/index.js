@@ -26,8 +26,9 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function LoginAdmin() {
+    const adminRole = 'ADMIN';
+    const companyRole = 'COMPANY';
     const [showAlertError, setShowAlertError] = useState(false);
-    const [role, setRole] = useState('admin'); //default role is student
     const [loginLoading, setLoginLoading] = useState(false);
 
     const navigate = useNavigate();
@@ -36,8 +37,6 @@ export default function LoginAdmin() {
         setLoginLoading(true); // Start the loading spinner
         try {
             const data = new FormData(event.currentTarget);
-            data.append('role', role);
-
             // Make the API call
             const userInfo = await AccountAPI.login(data);
 
@@ -47,9 +46,15 @@ export default function LoginAdmin() {
             if (userInfo) {
                 setLoginLoading(false);
 
-                storageService.setItem('userInfo', userInfo); // Store user info
+                storageService.setItem('userInfo', userInfo?.result); // Store user info
 
-                navigate('/admin/payment-management'); // Navigate to home page
+                if (userInfo?.result?.user?.role?.roleName === adminRole) {
+                    navigate('/admin/dashboard'); // Navigate
+                }
+
+                if (userInfo?.result?.user?.role?.roleName === companyRole) {
+                    navigate('/company/course'); // Navigate
+                }
             } else {
                 // If login fails (non-200 status)
                 setLoginLoading(false);
@@ -150,7 +155,7 @@ export default function LoginAdmin() {
                                         required
                                         fullWidth
                                         name="password"
-                                        label="Mật khẩu"
+                                        label="Password"
                                         type="password"
                                         id="password"
                                         autoComplete="current-password"
@@ -173,7 +178,7 @@ export default function LoginAdmin() {
                                             },
                                         }}
                                     >
-                                        Đăng nhập
+                                        Login
                                     </Button>
 
                                     <Copyright sx={{ mt: 5 }} />
