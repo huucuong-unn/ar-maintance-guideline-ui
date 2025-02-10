@@ -9,7 +9,7 @@ import './style.scss';
 const LICENSE_KEY =
     'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDAyNjg3OTksImp0aSI6IjA3MmI4NDU1LTgxNDUtNDE1OS1iOGFlLTBjMzc0Mjg2MmYzNSIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6Ijk1OGMyYThkIn0.Q1B5yVpzZDp3yuRsi_eDef0kHxjS4jIBwFKUukwhHveZuvw7n5MotwxDSTcBd9TzCBTPgs-ppNU8st148yu5XA';
 
-export default function MyEditor() {
+export default function MyEditor({ value, onChange }) {
     const editorContainerRef = useRef(null);
     const editorRef = useRef(null);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
@@ -32,7 +32,7 @@ export default function MyEditor() {
                     shouldNotGroupWhenFull: false,
                 },
                 plugins: [AutoLink, Autosave, Bold, Essentials, Italic, Link, Paragraph],
-                initialData: '',
+                initialData: value,
                 licenseKey: LICENSE_KEY,
                 link: {
                     addTargetToExternalLinks: true,
@@ -50,14 +50,21 @@ export default function MyEditor() {
                 placeholder: 'Type or paste your content here!',
             },
         };
-    }, [isLayoutReady]);
+    }, [isLayoutReady, value]);
 
     return (
         <div className="main-container">
             <div className="editor-container editor-container_classic-editor" ref={editorContainerRef}>
                 <div className="editor-container__editor">
                     <div ref={editorRef}>
-                        {editorConfig && <CKEditor editor={ClassicEditor} config={editorConfig} />}
+                        {editorConfig && (
+                            <CKEditor
+                                editor={ClassicEditor}
+                                config={editorConfig}
+                                data={value} // Bind value to CKEditor
+                                onChange={(event, editor) => onChange(editor.getData())}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

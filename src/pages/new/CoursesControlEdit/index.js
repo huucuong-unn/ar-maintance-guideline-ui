@@ -45,6 +45,8 @@ import axios from 'axios';
 import { set } from 'date-fns';
 import { Attachment } from '@mui/icons-material';
 import storageService from '~/components/StorageService/storageService';
+import MyEditor from '~/components/MyEditor';
+import DOMPurify from 'dompurify';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
@@ -703,7 +705,7 @@ export default function CoursesControlEdit() {
             return;
         }
 
-        if (selectedLessonType === 'READING' && !newLessonData.content) {
+        if (selectedLessonType === 'READING' && (!newLessonData.content || newLessonData.content.length <= 0)) {
             alert('Please enter the content for the reading lesson.');
             return;
         }
@@ -718,12 +720,17 @@ export default function CoursesControlEdit() {
             const formData = new FormData();
             formData.append('lessonId', currentSectionId); // Associate with section
             formData.append('type', selectedLessonType.toUpperCase());
-            formData.append('title', newLessonData.title);
-            formData.append('description', newLessonData.description || '');
             formData.append('duration', newLessonData.duration || 0);
+            formData.append('title', newLessonData.title);
 
             if (selectedLessonType === 'VIDEO' && newLessonData.videoFile) {
+                formData.append('description', newLessonData.description || '');
                 formData.append('videoUrl', newLessonData.videoFile); // Video file
+            }
+
+            if (selectedLessonType === 'READING') {
+                formData.append('content', newLessonData.content);
+                console.log(newLessonData.content);
             }
 
             if (newLessonData.attachFileUrl) {
@@ -774,6 +781,17 @@ export default function CoursesControlEdit() {
         } finally {
             setIsLoadingSections(false);
         }
+    };
+
+    const [openLessonDialog, setOpenLessonDialog] = useState(false);
+    const handleOpenLessonDialog = (lesson) => {
+        setLessonDetails(lesson);
+        setOpenLessonDialog(true);
+    };
+
+    const handleCloseLessonDialog = () => {
+        setOpenLessonDialog(false);
+        setLessonDetails(null);
     };
 
     // ==================== Assign Employee ====================
@@ -1125,8 +1143,10 @@ export default function CoursesControlEdit() {
                                                                                     color: 'blue',
                                                                                 },
                                                                             }}
+                                                                            onClick={() =>
+                                                                                handleOpenLessonDialog(lesson)
+                                                                            }
                                                                         >
-                                                                            {' '}
                                                                             {lesson.title}
                                                                         </Typography>
                                                                     </Box>
@@ -1799,17 +1819,67 @@ export default function CoursesControlEdit() {
                                 label="Reading Title"
                                 value={newLessonData.title || ''}
                                 onChange={(e) => handleLessonInputChange('title', e.target.value)}
+                                sx={{ mb: 3 }}
                             />
+
+                            <Box>
+                                <MyEditor
+                                    value={newLessonData.content || ''}
+                                    onChange={(data) => {
+                                        handleLessonInputChange('content', data);
+                                        console.log(data);
+                                    }}
+                                />
+                            </Box>
+
                             <TextField
                                 fullWidth
                                 margin="normal"
                                 required
-                                label="Content"
-                                multiline
-                                minRows={4}
-                                value={newLessonData.content || ''}
-                                onChange={(e) => handleLessonInputChange('content', e.target.value)}
+                                label="Estimation Time (minutes)"
+                                type="number" // Enforces numerical input
+                                inputProps={{ min: 1 }} // Optional: Set minimum value to 1 to prevent negative numbers
+                                value={newLessonData.duration || ''}
+                                onChange={(e) => handleLessonInputChange('duration', e.target.value)}
+                                sx={{ mt: 3 }}
                             />
+
+                            {/* Attach File Input (For non-video files) */}
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" // Restrict to non-video files
+                                style={{ display: 'none' }}
+                                id="file-attach"
+                                onChange={handleFileUpload}
+                            />
+                            <label htmlFor="file-attach">
+                                <Button
+                                    component="span"
+                                    fullWidth
+                                    variant="contained"
+                                    sx={{
+                                        border: '2px dashed darkgrey',
+                                        padding: 2,
+                                        backgroundColor: '#f5f5f5',
+                                        boxShadow: 'none',
+                                        color: '#0f6cbf',
+                                        ':hover': {
+                                            backgroundColor: '#f5f5f5',
+                                            border: '2px solid #0f6cbf',
+                                            boxShadow: 'none',
+                                        },
+                                    }}
+                                >
+                                    {newLessonData.attachFileUrl ? 'Change Attachment' : 'Attach File'}
+                                </Button>
+                            </label>
+
+                            {/* Show Selected Attached File Name */}
+                            {newLessonData.attachFileUrl && (
+                                <Typography variant="body2" sx={{ marginTop: 1 }}>
+                                    Attached File: {newLessonData.attachFileUrl.name}
+                                </Typography>
+                            )}
                         </>
                     )}
                 </DialogContent>
@@ -1855,10 +1925,19 @@ export default function CoursesControlEdit() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Duration: {lessonDetails?.duration || 0} min(s)
                     </Typography>
+                    <Divider />
 
                     {/* Video Player */}
                     {loadingVideo ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                height: '300px',
+                                my: 2,
+                            }}
+                        >
                             <CircularProgress size={50} />
                         </Box>
                     ) : videoSrc ? (
@@ -1870,7 +1949,50 @@ export default function CoursesControlEdit() {
                         <Typography>Error loading video.</Typography>
                     )}
 
+                    <Divider />
                     {/* Attached File */}
+                    {lessonDetails?.attachFileUrl && (
+                        <Box sx={{ mt: 2 }}>
+                            <Button
+                                variant="contained"
+                                startIcon={<FileText />}
+                                onClick={() => handleDownloadFile(lessonDetails.attachFileUrl, lessonDetails.title)}
+                                fontSize="12px"
+                            >
+                                Download Attached File
+                            </Button>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseVideoDialog} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Dialog Show Readinng */}
+            <Dialog open={openLessonDialog} onClose={handleCloseLessonDialog} maxWidth="md" fullWidth>
+                <DialogTitle>{lessonDetails?.title || 'Lesson Details'}</DialogTitle>
+
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Estimation time: {lessonDetails?.duration || 0} min(s)
+                    </Typography>
+                    <Divider />
+
+                    {/* Show Lesson Content for READING type */}
+                    <Typography
+                        variant="body2"
+                        color="text.primary"
+                        sx={{ my: 2 }}
+                        dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(lessonDetails?.content || 'No content available.'),
+                        }}
+                    />
+                    <Divider />
+
+                    {/* Attached File Download */}
                     {lessonDetails?.attachFileUrl && (
                         <Box sx={{ mt: 2 }}>
                             <Button
@@ -1884,7 +2006,7 @@ export default function CoursesControlEdit() {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseVideoDialog} color="primary">
+                    <Button onClick={handleCloseLessonDialog} color="primary">
                         Close
                     </Button>
                 </DialogActions>
