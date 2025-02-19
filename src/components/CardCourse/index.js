@@ -6,6 +6,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
+import { getImage } from '~/Constant';
 
 export default function CardCourse({ title, description, image, viewers, lessons, duration, status }) {
     function equalsIgnoreCase(a, b) {
@@ -33,7 +34,7 @@ export default function CardCourse({ title, description, image, viewers, lessons
         >
             <CardMedia
                 component="img"
-                image={image}
+                image={getImage(image)} // Construct API URL
                 title={title}
                 sx={{
                     // No margin here

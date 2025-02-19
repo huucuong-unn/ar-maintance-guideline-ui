@@ -47,6 +47,7 @@ import { Attachment } from '@mui/icons-material';
 import storageService from '~/components/StorageService/storageService';
 import MyEditor from '~/components/MyEditor';
 import DOMPurify from 'dompurify';
+import { getImage } from '~/Constant';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
@@ -700,11 +701,6 @@ export default function CoursesControlEdit() {
             return;
         }
 
-        if (!newLessonData.duration || isNaN(newLessonData.duration) || newLessonData.duration <= 0) {
-            alert('Please enter a valid duration.');
-            return;
-        }
-
         if (selectedLessonType === 'READING' && (!newLessonData.content || newLessonData.content.length <= 0)) {
             alert('Please enter the content for the reading lesson.');
             return;
@@ -794,6 +790,35 @@ export default function CoursesControlEdit() {
         setLessonDetails(null);
     };
 
+    // Update lesson
+    const [isEditingLesson, setIsEditingLesson] = useState(false);
+    const [editingLessonId, setEditingLessonId] = useState(null);
+
+    const handleEditLesson = (lesson, sectionId) => {
+        // Set edit mode
+        setIsEditingLesson(true);
+        setEditingLessonId(lesson.id);
+
+        // (Optionally) ensure you know the section id
+        setCurrentSectionId(sectionId);
+
+        // Set the lesson type and pre-fill the data
+        setSelectedLessonType(lesson.type);
+        setNewLessonData({
+            title: lesson.title,
+            duration: lesson.duration,
+            // For READING lessons, assume lesson.content contains HTML string
+            content: lesson.content,
+            // For VIDEO lessons, these fields may be available
+            description: lesson.description,
+            videoFile: lesson.videoUrl, // user may upload a new video if needed
+            attachFileUrl: lesson.attachFileUrl || null,
+        });
+
+        // Open the same dialog used for adding a lesson
+        setOpenAddLessonDialog(true);
+    };
+
     // ==================== Assign Employee ====================
     const EmployeeList = () => {
         const [employeeList, setEmployeeList] = useState([]);
@@ -846,6 +871,7 @@ export default function CoursesControlEdit() {
                         avatar: user.userResponse.avatar,
                         username: user.userResponse.username,
                         isAssigned: user.isAssigned,
+                        isEnrolled: user.isEnrolled,
                     })) || [];
 
                 setEmployeeList(loadedUser);
@@ -903,33 +929,65 @@ export default function CoursesControlEdit() {
                                 value={searchQuery}
                                 onChange={handleSearchInputChange}
                             />
-                            <Button variant="contained" color="primary" onClick={handleSearchButtonClick}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleSearchButtonClick}
+                                sx={{ padding: '12px' }}
+                            >
                                 Search
                             </Button>
                         </div>
 
                         <List>
+                            {/* Header Row */}
+                            <ListItem sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                                {/* <ListItemText primary="Employee Gmail" sx={{ fontWeight: 'bold', flex: 3 }} /> */}
+                                <Typography sx={{ flex: 3, fontWeight: 'bold' }}>Employee Gmail</Typography>
+                                <Typography sx={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>
+                                    Is Enrolled
+                                </Typography>
+                                <Typography sx={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>
+                                    Is Assigned
+                                </Typography>
+                            </ListItem>
+
+                            {/* Employee List */}
                             {employeeList.map((employee) => (
-                                <ListItem key={employee.id} button={editMode || !employee.isAssigned}>
-                                    <ListItemAvatar>
-                                        <Avatar src={employee.avatar} />
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={employee.username}
-                                        secondary={
-                                            <Typography component="span" variant="body2" color="textPrimary">
-                                                {employee.email}
-                                            </Typography>
-                                        }
-                                    />
-                                    <Checkbox
-                                        edge="end"
-                                        checked={selectedUsers.has(employee.id) || employee.isAssigned}
-                                        disabled={employee.isAssigned}
-                                        onChange={() => handleToggle(employee.id)}
-                                    />
+                                <ListItem key={employee.id} sx={{ display: 'flex', alignItems: 'center' }}>
+                                    {/* Employee Gmail */}
+                                    <Box sx={{ flex: 3, display: 'flex', alignItems: 'center' }}>
+                                        <ListItemAvatar>
+                                            <Avatar src={employee.avatar} />
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={employee.username}
+                                            secondary={
+                                                <Typography component="span" variant="body2" color="textPrimary">
+                                                    {employee.email}
+                                                </Typography>
+                                            }
+                                        />
+                                    </Box>
+
+                                    {/* Is Enrolled */}
+                                    <Box sx={{ flex: 1, textAlign: 'center' }}>
+                                        <Checkbox edge="end" checked={employee?.isEnrolled} disabled />
+                                    </Box>
+
+                                    {/* Is Assigned */}
+                                    <Box sx={{ flex: 1, textAlign: 'center' }}>
+                                        <Checkbox
+                                            edge="end"
+                                            checked={selectedUsers.has(employee.id) || employee.isAssigned}
+                                            disabled={employee.isAssigned || employee?.isEnrolled}
+                                            onChange={() => handleToggle(employee.id)}
+                                        />
+                                    </Box>
                                 </ListItem>
                             ))}
+
+                            {/* Pagination */}
                             <Box fullWidth sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
                                 <Pagination count={totalPages} page={page} onChange={handlePageChange} />
                             </Box>
@@ -974,20 +1032,21 @@ export default function CoursesControlEdit() {
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    backgroundImage: `url(${course?.imageUrl})`,
+                    backgroundImage: `url(${getImage(course?.imageUrl)})`,
                     borderRadius: 4,
                     padding: 4,
                 }}
             >
                 {/* ====== Course Title ====== */}
-                <Typography
-                    variant="h4"
-                    sx={{
-                        fontWeight: 900,
-                        fontSize: 46,
-                        color: '#051D40',
-                        mb: 4,
-                        textShadow: `
+                <Box sx={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, padding: 4 }}>
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            fontWeight: 900,
+                            fontSize: 46,
+                            color: '#051D40',
+                            mb: 4,
+                            textShadow: `
                             -2px -2px 0 #FFFFFF, 
                             2px -2px 0 #FFFFFF, 
                             -2px 2px 0 #FFFFFF, 
@@ -997,53 +1056,46 @@ export default function CoursesControlEdit() {
                             -2px 0px 0 #FFFFFF, 
                             2px 0px 0 #FFFFFF
                         `,
-                    }}
-                >
-                    {course?.title || 'Course Title'}
-                </Typography>
-                {/* ====== Start/Stop Course Button ====== */}
-                <Button
-                    variant="contained"
-                    sx={{
-                        mb: 2,
-                        padding: '12px 20px',
-                        backgroundColor: 'green', // Set the background color conditionally
-                        ':hover': {
-                            opacity: '0.9',
-                            backgroundColor: course?.status === 'INACTIVE' ? 'darkgreen' : 'darkred', // Darker hover color
-                        },
-                        display: course?.status === 'ACTIVE' ? 'none' : 'inline-block', // Hide if course is active
-                    }}
-                    onClick={handleClickToggleCourseStatus}
-                >
-                    {isLoadingStartCourse ? <CircularProgress size={24} /> : 'Start this course'}
-                </Button>
-                <Typography
-                    variant="body2"
-                    sx={{
-                        color: 'text.secondary',
-                        mb: 4,
-                        fontStyle: 'italic',
-                        textShadow: `
-                            -1px -1px 0 #FFFFFF, 
-                            1px -1px 0 #FFFFFF, 
-                            -1px 1px 0 #FFFFFF, 
-                            1px 1px 0 #FFFFFF, 
-                            0px -1px 0 #FFFFFF, 
-                            0px 1px 0 #FFFFFF, 
-                            -1px 0px 0 #FFFFFF, 
-                            1px 0px 0 #FFFFFF
-                        `,
-                    }}
-                >
-                    You must create a FINAL QUIZ, AT LEAST 1 QUESTION, and AT LEAST 1 SECTION before starting the
-                    course!
-                </Typography>
+                        }}
+                    >
+                        {course?.title || 'Course Title'}
+                    </Typography>
+                    {/* ====== Start/Stop Course Button ====== */}
+                    <Button
+                        variant="contained"
+                        sx={{
+                            mb: 2,
+                            padding: '12px 20px',
+                            backgroundColor: 'green', // Set the background color conditionally
+                            ':hover': {
+                                opacity: '0.9',
+                                backgroundColor: course?.status === 'INACTIVE' ? 'darkgreen' : 'darkred', // Darker hover color
+                            },
+                            display: course?.status === 'ACTIVE' ? 'none' : 'inline-block', // Hide if course is active
+                        }}
+                        onClick={handleClickToggleCourseStatus}
+                    >
+                        {isLoadingStartCourse ? <CircularProgress size={24} /> : 'Start this guideline'}
+                    </Button>
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: 'white',
+                            mb: 4,
+                            fontStyle: 'italic',
+                            fontSize: '16px',
+                        }}
+                    >
+                        You must create a FINAL QUIZ, AT LEAST 1 QUESTION, and AT LEAST 1 SECTION before starting the
+                        course!
+                    </Typography>
+                </Box>
             </Box>
             {/* ====== Tab Context ====== */}
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
+                        <Tab label="Model" value="0" />
                         <Tab label="Sections" value="1" />
                         <Tab label="Final Quiz" value="2" />
                         <Tab label="Assign Employee" value="3" />
@@ -1077,40 +1129,6 @@ export default function CoursesControlEdit() {
                                         }}
                                     >
                                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                            <div>
-                                                <IconButton
-                                                    aria-label="more"
-                                                    id="long-button"
-                                                    aria-controls={openMenu ? 'long-menu' : undefined}
-                                                    aria-expanded={openMenu ? 'true' : undefined}
-                                                    aria-haspopup="true"
-                                                    onClick={handleClickMenu}
-                                                >
-                                                    <MoreVerticalIcon />
-                                                </IconButton>
-                                                <Menu
-                                                    id="long-menu"
-                                                    MenuListProps={{
-                                                        'aria-labelledby': 'long-button',
-                                                    }}
-                                                    anchorEl={anchorEl}
-                                                    open={openMenu}
-                                                    onClose={handleCloseMenu}
-                                                    slotProps={{
-                                                        paper: {
-                                                            style: {
-                                                                maxHeight: ITEM_HEIGHT * 4.5,
-                                                                width: '20ch',
-                                                            },
-                                                        },
-                                                    }}
-                                                >
-                                                    <MenuItem onClick={() => {}}>Update</MenuItem>
-                                                    <MenuItem onClick={() => handleClickDeleteSection(section.id)}>
-                                                        Delete
-                                                    </MenuItem>
-                                                </Menu>
-                                            </div>
                                             <Typography fontSize={24} fontWeight={700}>
                                                 {section.title}
                                             </Typography>
@@ -1125,7 +1143,67 @@ export default function CoursesControlEdit() {
                                                         <AccordionDetails sx={{ py: 3 }}>
                                                             <Box key={lesson.id} sx={{ mb: 1, pl: 2 }}>
                                                                 {lesson.type === 'READING' && (
-                                                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            display: 'flex',
+                                                                            gap: 1,
+                                                                            alignItems: 'center',
+                                                                        }}
+                                                                    >
+                                                                        <div>
+                                                                            <IconButton
+                                                                                aria-label="more"
+                                                                                id="long-button"
+                                                                                aria-controls={
+                                                                                    openMenu ? 'long-menu' : undefined
+                                                                                }
+                                                                                aria-expanded={
+                                                                                    openMenu ? 'true' : undefined
+                                                                                }
+                                                                                aria-haspopup="true"
+                                                                                onClick={handleClickMenu}
+                                                                            >
+                                                                                <MoreVerticalIcon />
+                                                                            </IconButton>
+                                                                            <Menu
+                                                                                id="long-menu"
+                                                                                MenuListProps={{
+                                                                                    'aria-labelledby': 'long-button',
+                                                                                }}
+                                                                                anchorEl={anchorEl}
+                                                                                open={openMenu}
+                                                                                onClose={handleCloseMenu}
+                                                                                slotProps={{
+                                                                                    paper: {
+                                                                                        style: {
+                                                                                            maxHeight:
+                                                                                                ITEM_HEIGHT * 4.5,
+                                                                                            width: '20ch',
+                                                                                        },
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <MenuItem
+                                                                                    onClick={() =>
+                                                                                        handleEditLesson(
+                                                                                            lesson,
+                                                                                            section.id,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Update
+                                                                                </MenuItem>
+                                                                                <MenuItem
+                                                                                    onClick={() =>
+                                                                                        handleClickDeleteSection(
+                                                                                            section.id,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Delete
+                                                                                </MenuItem>
+                                                                            </Menu>
+                                                                        </div>
                                                                         <File />
                                                                         <Typography
                                                                             variant="body2"
@@ -1152,7 +1230,67 @@ export default function CoursesControlEdit() {
                                                                     </Box>
                                                                 )}
                                                                 {lesson.type === 'VIDEO' && (
-                                                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            display: 'flex',
+                                                                            gap: 1,
+                                                                            alignItems: 'center',
+                                                                        }}
+                                                                    >
+                                                                        <div>
+                                                                            <IconButton
+                                                                                aria-label="more"
+                                                                                id="long-button"
+                                                                                aria-controls={
+                                                                                    openMenu ? 'long-menu' : undefined
+                                                                                }
+                                                                                aria-expanded={
+                                                                                    openMenu ? 'true' : undefined
+                                                                                }
+                                                                                aria-haspopup="true"
+                                                                                onClick={handleClickMenu}
+                                                                            >
+                                                                                <MoreVerticalIcon />
+                                                                            </IconButton>
+                                                                            <Menu
+                                                                                id="long-menu"
+                                                                                MenuListProps={{
+                                                                                    'aria-labelledby': 'long-button',
+                                                                                }}
+                                                                                anchorEl={anchorEl}
+                                                                                open={openMenu}
+                                                                                onClose={handleCloseMenu}
+                                                                                slotProps={{
+                                                                                    paper: {
+                                                                                        style: {
+                                                                                            maxHeight:
+                                                                                                ITEM_HEIGHT * 4.5,
+                                                                                            width: '20ch',
+                                                                                        },
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <MenuItem
+                                                                                    onClick={() =>
+                                                                                        handleEditLesson(
+                                                                                            lesson,
+                                                                                            section.id,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Update
+                                                                                </MenuItem>
+                                                                                <MenuItem
+                                                                                    onClick={() =>
+                                                                                        handleClickDeleteSection(
+                                                                                            section.id,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Delete
+                                                                                </MenuItem>
+                                                                            </Menu>
+                                                                        </div>
                                                                         <Video />
                                                                         <Typography
                                                                             variant="body2"
@@ -1712,13 +1850,7 @@ export default function CoursesControlEdit() {
                                 label="Video Title"
                                 value={newLessonData.title || ''}
                                 onChange={(e) => handleLessonInputChange('title', e.target.value)}
-                            />
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                label="Video Description"
-                                value={newLessonData.description || ''}
-                                onChange={(e) => handleLessonInputChange('description', e.target.value)}
+                                sx={{ mb: 3 }}
                             />
 
                             {/* Video File Input */}
@@ -1754,7 +1886,7 @@ export default function CoursesControlEdit() {
                             {/* Show Selected Video File Name */}
                             {newLessonData.videoFile && (
                                 <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Video: {newLessonData.videoFile.name}
+                                    Video: {newLessonData.videoFile.name || newLessonData.videoFile}
                                 </Typography>
                             )}
 
@@ -1766,6 +1898,15 @@ export default function CoursesControlEdit() {
                                 label="Video Duration (minutes)"
                                 value={newLessonData.duration || ''}
                                 disabled
+                            />
+
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Video Description"
+                                value={newLessonData.description || ''}
+                                onChange={(e) => handleLessonInputChange('description', e.target.value)}
+                                sx={{ mb: 3 }}
                             />
 
                             {/* Attach File Input (For non-video files) */}
@@ -1801,7 +1942,7 @@ export default function CoursesControlEdit() {
                             {/* Show Selected Attached File Name */}
                             {newLessonData.attachFileUrl && (
                                 <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Attached File: {newLessonData.attachFileUrl.name}
+                                    Attached File: {newLessonData.attachFileUrl.name || newLessonData.attachFileUrl}
                                 </Typography>
                             )}
 
@@ -1877,7 +2018,7 @@ export default function CoursesControlEdit() {
                             {/* Show Selected Attached File Name */}
                             {newLessonData.attachFileUrl && (
                                 <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Attached File: {newLessonData.attachFileUrl.name}
+                                    Attached File: {newLessonData.attachFileUrl.name || newLessonData.attachFileUrl}
                                 </Typography>
                             )}
                         </>

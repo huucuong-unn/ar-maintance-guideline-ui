@@ -1,5 +1,6 @@
 import axios from 'axios';
 import storageService from '~/components/StorageService/storageService'; // Make sure you import storageService
+import { host } from '~/Constant';
 
 const handleAxiosError = (error) => {
     // Customize error handling based on your requirements.
@@ -16,9 +17,6 @@ const handleAxiosError = (error) => {
         }
     }
 };
-
-// const host = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
-const host = process.env.REACT_APP_BACKEND_APP_HOST_LOCAL;
 
 const axiosClient = axios.create({
     baseURL: `${host}/api/`,

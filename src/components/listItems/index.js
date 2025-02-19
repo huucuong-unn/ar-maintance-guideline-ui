@@ -20,7 +20,7 @@ export const MainListItems = () => {
         {
             route: '/company/course',
             icon: <AppWindowMac />,
-            title: 'Courses',
+            title: 'My Guidelines',
         },
     ];
 
@@ -72,17 +72,12 @@ export const SecondaryListItems = () => {
         {
             route: '/company/course-management',
             icon: <Book />,
-            title: 'Courses',
+            title: 'Guidelines',
         },
         {
             route: '/company/model-management',
             icon: <Bot />,
             title: '3D Models',
-        },
-        {
-            route: '/company/model-request-management',
-            icon: <Mail />,
-            title: 'AR Model Requests',
         },
         {
             route: '/company/account-management',
