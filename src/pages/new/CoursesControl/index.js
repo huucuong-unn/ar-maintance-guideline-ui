@@ -50,10 +50,12 @@ export default function CoursesControl() {
     const [duration, setDuration] = useState(0);
     const [isMandatory, setIsMandatory] = useState(false);
     const [type, setType] = useState('Training');
+    const [model, setModel] = useState('');
     // Image Upload
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
+    const defaultModel = '3206416a-6cee-4fb9-8742-b3a97b8e0027';
 
     // Fetch data on mount
     useEffect(() => {
@@ -126,8 +128,8 @@ export default function CoursesControl() {
             return;
         }
 
-        if (!selectedImage) {
-            alert('Please select an image');
+        if (!model) {
+            alert('Please select a model');
             return;
         }
 
@@ -139,18 +141,20 @@ export default function CoursesControl() {
         formData.append('isMandatory', isMandatory);
         formData.append('companyId', userInfo?.company?.id);
         formData.append('imageUrl', selectedImage); // Attach the selected image
+        formData.append('modelId', model);
 
         try {
             setIsCreating(true);
             const response = await CourseAPI.create(formData);
 
             if (response?.result) {
+                alert('Guideline created successfully!');
                 await fetchCourses();
                 handleCloseCreateDialog();
             }
         } catch (error) {
-            console.error('Failed to create course:', error);
-            alert('Failed to create course. Please try again.');
+            console.error('Failed to guideline course:', error);
+            alert('Failed to create guideline. Please try again.');
         } finally {
             setIsCreating(false);
         }
@@ -183,7 +187,7 @@ export default function CoursesControl() {
                         marginBottom: '3%',
                     }}
                 >
-                    My Courses
+                    My Guidelines
                 </Typography>
 
                 {/* ===================== CREATE + SEARCH & FILTER ROW ===================== */}
@@ -209,7 +213,7 @@ export default function CoursesControl() {
 
                     {/* Create Course button */}
                     <Button variant="contained" sx={{ ml: 'auto' }} onClick={handleOpenCreateDialog}>
-                        Create Course
+                        Create Guideline
                     </Button>
                 </Box>
                 {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
@@ -275,7 +279,7 @@ export default function CoursesControl() {
 
                 {/* ===================== CREATE COURSE DIALOG ===================== */}
                 <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="sm">
-                    <DialogTitle>Create New Course</DialogTitle>
+                    <DialogTitle>Create New Guideline</DialogTitle>
                     <DialogContent>
                         <DialogContentText sx={{ mb: 2 }}>
                             Please fill out the form to create a new course.
@@ -284,12 +288,21 @@ export default function CoursesControl() {
                         {/* Title Field */}
                         <TextField
                             margin="normal"
-                            label="Course Title"
+                            label="Guideline Title"
                             fullWidth
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             required
                         />
+
+                        {/* Model Field */}
+                        <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
+                            <InputLabel>Model*</InputLabel>
+                            <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
+                                <MenuItem value={defaultModel}>Default model</MenuItem>
+                            </Select>
+                        </FormControl>
+
                         {/* Image Upload Field */}
                         <input
                             type="file"
@@ -300,7 +313,23 @@ export default function CoursesControl() {
                             multiple={false}
                         />
                         <label htmlFor="image-upload">
-                            <Button variant="contained" component="span">
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                component="span"
+                                sx={{
+                                    border: '2px dashed darkgrey',
+                                    padding: 2,
+                                    backgroundColor: '#f5f5f5',
+                                    boxShadow: 'none',
+                                    color: '#0f6cbf',
+                                    ':hover': {
+                                        backgroundColor: '#f5f5f5',
+                                        border: '2px solid #0f6cbf',
+                                        boxShadow: 'none',
+                                    },
+                                }}
+                            >
                                 {selectedImage ? 'Change Image' : 'Upload Image'}
                             </Button>
                         </label>
@@ -317,16 +346,8 @@ export default function CoursesControl() {
                             minRows={3}
                             value={newDescription}
                             onChange={(e) => setNewDescription(e.target.value)}
+                            sx={{ mt: 3 }}
                         />
-
-                        {/* Status Field */}
-                        {/* <FormControl fullWidth margin="normal">
-                            <InputLabel>Status</InputLabel>
-                            <Select value={newStatus} label="Status" onChange={(e) => setNewStatus(e.target.value)}>
-                                <MenuItem value="ACTIVE">Active</MenuItem>
-                                <MenuItem value="INACTIVE">Inactive</MenuItem>
-                            </Select>
-                        </FormControl> */}
 
                         <Typography sx={{ mt: 1 }}>Type: {type}</Typography>
                     </DialogContent>

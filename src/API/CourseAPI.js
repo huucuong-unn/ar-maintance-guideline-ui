@@ -1,3 +1,4 @@
+import { host } from '~/Constant';
 import axiosClient from './AxiosClient';
 
 const CourseAPI = {
@@ -65,6 +66,9 @@ const CourseAPI = {
                 console.error('Axios error fetching video:', error);
                 throw error;
             });
+    },
+    getImageUrl(image) {
+        return `${host}/api/v1/files/${image}`;
     },
 };
 

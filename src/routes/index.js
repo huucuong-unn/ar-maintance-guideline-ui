@@ -32,6 +32,7 @@ import CompaniesManagement from '~/pages/new/CompaniesManagement';
 // import AccountsManagement from '~/pages/new/AccountsManagement ';
 import CoursesControl from '~/pages/new/CoursesControl';
 import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
+import ModelDetail from '~/pages/new/ModelDetail';
 
 const publicRoutes = [
     //new
@@ -65,6 +66,7 @@ const publicRoutes = [
     { path: '/company/dashboard', component: DashboardManagement, layout: AdminLayout },
     { path: '/company/course-management', component: CoursesManagement, layout: AdminLayout },
     { path: '/company/model-management', component: ModelsManagement, layout: AdminLayout },
+    { path: '/company/model-management/view', component: ModelDetail, layout: AdminLayout },
     { path: '/company/model-request-management', component: ModelRequestManagement, layout: AdminLayout },
     {
         path: '/company/payment-subscription-management',
