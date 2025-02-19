@@ -11,14 +11,6 @@ const AccountAPI = {
         return config;
     },
 
-    createAccount(data, includeAuthorization = false) {
-        return axiosClient.post('/v1/account/create', data, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-    },
-
     createAccountForCompany(data, includeAuthorization = false) {
         return axiosClient.post('/v1/account/create-company', data, {
             headers: {
@@ -80,12 +72,6 @@ const AccountAPI = {
         return axiosClient.get(url, authorizedConfig);
     },
 
-    changeStatus(id, includeAuthorization = false) {
-        const url = `/v1/account/change-status/${id}`;
-        const authorizedConfig = this.addAuthorizationHeader(includeAuthorization);
-        return axiosClient.put(url, authorizedConfig);
-    },
-
     approveAccount(id, includeAuthorization = false) {
         const url = `/v1/account/approve/${id}`;
         const authorizedConfig = this.addAuthorizationHeader(includeAuthorization);
@@ -102,9 +88,9 @@ const AccountAPI = {
         const authorizedConfig = this.addAuthorizationHeader(includeAuthorization);
         return axiosClient.get(url, authorizedConfig);
     },
-    getAllAccount() {
-        const url = `/v1/user`;
-        return axiosClient.get(url);
+    getAllAccount(params) {
+        const url = '/v1/user';
+        return axiosClient.get(url, { params });
     },
     getUserById(id) {
         const url = `/v1/user/${id}`;
@@ -113,6 +99,17 @@ const AccountAPI = {
     getUserToAssign(id) {
         const url = `/v1/user/company/${id}`;
         return axiosClient.get(url);
+    },
+    getUserToAssign(id) {
+        const url = `/v1/user/company/${id}`;
+        return axiosClient.get(url);
+    },
+    changeStatus(id, params) {
+        const url = `/v1/user/${id}?status=${params.status}&isPending=${params.isPending}`;
+        return axiosClient.put(url);
+    },
+    createAccount(data) {
+        return axiosClient.post('/v1/register/company', data);
     },
 };
 
