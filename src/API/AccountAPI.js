@@ -104,6 +104,10 @@ const AccountAPI = {
         const url = `/v1/user/company/${id}`;
         return axiosClient.get(url);
     },
+    getStaffByCompanyId(id, params) {
+        const url = `/v1/user/company/${id}`;
+        return axiosClient.get(url, { params });
+    },
     changeStatus(id, params) {
         const url = `/v1/user/${id}?status=${params.status}&isPending=${params.isPending}`;
         return axiosClient.put(url);

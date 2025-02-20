@@ -1,13 +1,29 @@
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { DataGrid } from '@mui/x-data-grid';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import {
+    Box,
+    Typography,
+    Skeleton,
+    TextField,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button,
+    CircularProgress,
+    Grid,
+    Paper,
+    Modal,
+} from '@mui/material';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
 import PaymentAPI from '~/API/PaymentAPI';
-
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import { format } from 'date-fns';
 
 function Copyright(props) {
     return (
@@ -22,35 +38,44 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function PaymentAndSubscriptionManagement() {
-    const paginationModel = { page: 0, pageSize: 5 };
+    const [rows, setRows] = useState([]);
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 5,
+    });
+    const [total, setTotal] = useState(0);
 
     const columns = [
-        { field: 'id', headerName: 'No.', width: 70 },
-        { field: 'email', headerName: 'Email', width: 200 },
-        { field: 'total', headerName: 'Total (vnđ)', width: 200 },
-        { field: 'tierName', headerName: 'Plan Type', width: 200 },
-        { field: 'createdDate', headerName: 'Created At', width: 200 },
+        { field: 'itemCode', headerName: 'Item Code', width: 200 },
+        { field: 'orderCode', headerName: 'Order Code', width: 200 },
+        { field: 'createdDate', headerName: 'Create At', width: 250 },
+        { field: 'updatedDate', headerName: 'Update At', width: 250 },
         { field: 'status', headerName: 'Status', width: 200 },
     ];
 
-    const [rows, setRows] = useState([]);
-
     useEffect(() => {
-        const fetchPayments = async () => {
+        const fetchData = async () => {
             try {
-                const response = await PaymentAPI.getPayments();
-                var i = 0;
-                for (i = 0; i < response.length; i++) {
-                    response[i].id = i + 1;
-                }
-                setRows(response);
-                console.log(response);
+                const pageParam = paginationModel.page + 1;
+                const sizeParam = paginationModel.pageSize;
+
+                const response = await PaymentAPI.getPaymentsByCompanyId('f608be70-fa3a-47cd-bb7a-751c16452f87');
+                const data = response?.result?.objectList || [];
+
+                const formattedData = data.map((item) => ({
+                    ...item,
+                    createdDate: item.createdDate ? format(new Date(item.createdDate), 'MM/dd/yyyy HH:mm:ss') : '',
+                    updatedDate: item.updatedDate ? format(new Date(item.updatedDate), 'MM/dd/yyyy HH:mm:ss') : '',
+                }));
+
+                setRows(formattedData);
+                setTotal(response?.result?.totalItems || 0);
             } catch (error) {
-                console.log('Failed to fetch accounts: ', error);
+                console.error('Failed to fetch payments:', error);
             }
         };
-        fetchPayments();
-    }, []);
+        fetchData();
+    }, [paginationModel]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -59,7 +84,6 @@ export default function PaymentAndSubscriptionManagement() {
                 component="main"
                 item
                 sx={{
-                    // backgroundImage: 'url(https://source.unsplash.com/random?wallpapers)',
                     backgroundRepeat: 'no-repeat',
                     backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
                     backgroundSize: 'cover',
@@ -85,7 +109,7 @@ export default function PaymentAndSubscriptionManagement() {
                         left: '20%',
                     }}
                 >
-                    Payment & Subscription
+                    Payment History
                 </Typography>
                 <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
                     <Box
@@ -102,9 +126,18 @@ export default function PaymentAndSubscriptionManagement() {
                                 <DataGrid
                                     rows={rows}
                                     columns={columns}
+                                    rowCount={total}
+                                    paginationMode="server"
+                                    paginationModel={paginationModel}
+                                    onPaginationModelChange={(newModel) => {
+                                        setPaginationModel((prev) => ({
+                                            ...prev,
+                                            page: newModel.page,
+                                        }));
+                                    }}
                                     sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                    initialState={{ pagination: { paginationModel } }}
-                                    pageSizeOptions={[5, 10]}
+                                    getRowId={(row) => row.id}
+                                    slots={{ toolbar: GridToolbar }}
                                 />
                             </Paper>
 
