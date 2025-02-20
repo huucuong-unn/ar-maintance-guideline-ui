@@ -1,13 +1,28 @@
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { DataGrid } from '@mui/x-data-grid';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import {
+    Box,
+    Typography,
+    Skeleton,
+    TextField,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button,
+    CircularProgress,
+    Grid,
+    Paper,
+    Modal,
+} from '@mui/material';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
 import AccountAPI from '~/API/AccountAPI';
-
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
 
 function Copyright(props) {
     return (
@@ -22,36 +37,59 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function EmployeesManagement() {
-    const paginationModel = { page: 0, pageSize: 5 };
+    const [rows, setRows] = useState([]);
+    const [searchParams, setSearchParams] = useState({
+        username: '',
+        email: '',
+        status: '',
+    });
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [status, setStatus] = useState('');
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 5,
+    });
+    const [total, setTotal] = useState(0);
 
     const columns = [
-        { field: 'id', headerName: 'No.', width: 70 },
-        { field: 'name', headerName: 'Name', width: 200 },
+        { field: 'username', headerName: 'Username', width: 200 },
         { field: 'email', headerName: 'Email', width: 200 },
-        { field: 'dob', headerName: 'Date of Birth', width: 200 },
-        { field: 'remainReviewCVTimes', headerName: 'Remaining Review CV Times', width: 200 },
-        { field: 'role', headerName: 'Role', width: 200 },
+        { field: 'phone', headerName: 'Phone', width: 200 },
+        { field: 'status', headerName: 'Status Account', width: 200 },
     ];
 
-    const [rows, setRows] = useState([]);
-
     useEffect(() => {
-        const fetchBlogs = async () => {
+        const fetchData = async () => {
             try {
-                const response = await AccountAPI.getAllAccount();
-                var i = 0;
-                for (i = 0; i < response.length; i++) {
-                    response[i].id = i + 1;
-                    response[i].dob = response[i].dob ? formatDate(response[i].dob) : '';
-                }
-                setRows(response);
+                const pageParam = paginationModel.page + 1;
+                const sizeParam = paginationModel.pageSize;
+
+                const params = {
+                    page: pageParam,
+                    size: sizeParam,
+                    username: searchParams.username || undefined,
+                    email: searchParams.email || undefined,
+                    status: searchParams.status || undefined,
+                };
+
+                console.log(params);
+
+                const response = await AccountAPI.getStaffByCompanyId('f608be70-fa3a-47cd-bb7a-751c16452f87', params);
                 console.log(response);
+
+                const data = response?.result?.objectList || [];
+                console.log(data);
+
+                setRows(data);
+
+                setTotal(response?.result?.totalItems || 0);
             } catch (error) {
-                console.log('Failed to fetch accounts: ', error);
+                console.error('Failed to fetch accounts:', error);
             }
         };
-        fetchBlogs();
-    }, []);
+        fetchData();
+    }, [paginationModel, searchParams]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -70,7 +108,6 @@ export default function EmployeesManagement() {
                 component="main"
                 item
                 sx={{
-                    // backgroundImage: 'url(https://source.unsplash.com/random?wallpapers)',
                     backgroundRepeat: 'no-repeat',
                     backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
                     backgroundSize: 'cover',
@@ -81,6 +118,7 @@ export default function EmployeesManagement() {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    flexDirection: 'column',
                 }}
             >
                 <Typography
@@ -98,6 +136,44 @@ export default function EmployeesManagement() {
                 >
                     Employees
                 </Typography>
+                {/* ===================== CREATE + SEARCH & FILTER ROW ===================== */}
+                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 3 }}>
+                    {/* Search by email */}
+                    <TextField
+                        variant="outlined"
+                        label="Search by Username"
+                        sx={{ width: '300px' }}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <TextField
+                        variant="outlined"
+                        label="Search by Email"
+                        sx={{ width: '300px' }}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+
+                    {/* Filter by status */}
+                    <FormControl sx={{ width: '200px' }}>
+                        <InputLabel>Status</InputLabel>
+                        <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                            <MenuItem value="">All</MenuItem>
+                            <MenuItem value="ACTIVE">Active</MenuItem>
+                            <MenuItem value="INACTIVE">Inactive</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                    {/* Create Course button */}
+                    <Button
+                        variant="contained"
+                        sx={{ ml: 'auto' }}
+                        onClick={() => setSearchParams({ username, email, status })}
+                    >
+                        Search
+                    </Button>
+                </Box>
+                {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
                 <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
                     <Box
                         sx={{
@@ -113,9 +189,18 @@ export default function EmployeesManagement() {
                                 <DataGrid
                                     rows={rows}
                                     columns={columns}
+                                    rowCount={total}
+                                    paginationMode="server"
+                                    paginationModel={paginationModel}
+                                    onPaginationModelChange={(newModel) => {
+                                        setPaginationModel((prev) => ({
+                                            ...prev,
+                                            page: newModel.page,
+                                        }));
+                                    }}
                                     sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                    initialState={{ pagination: { paginationModel } }}
-                                    pageSizeOptions={[5, 10]}
+                                    getRowId={(row) => row.id}
+                                    slots={{ toolbar: GridToolbar }}
                                 />
                             </Paper>
 
