@@ -49,7 +49,7 @@ const publicRoutes = [
     { path: '/forgot-password', component: ForgotPassword, layout: null },
     { path: '/reset-password', component: ResetPassword, layout: null },
     { path: '/home', component: Homepage, layout: FullLayout },
-    { path: '/', component: Homepage, layout: FullLayout },
+    { path: '/', component: Homepage, layout: CompanyLogin },
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
     { path: '/profile/:userId', component: UserProfile, layout: FullLayout },
