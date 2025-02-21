@@ -21,20 +21,23 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { getImage } from '~/Constant';
+import MyEditor from '~/components/MyEditor';
+import InstructionAPI from '~/API/InstructionAPI';
+import ModelAPI from '~/API/ModelAPI';
 
 // ======================
 // Mock Data
 // ======================
-const mockModel = {
-    id: '3206416a-6cee-4fb9-8742-b3a97b8e0027',
-    title: 'Mock Mechanical Model',
-    description: 'A sample mechanical model for testing the UI.',
-    imageUrl: 'mechanic-gear.jpg', // Use your getImage() function to display
-};
+// const mockModel = {
+//     id: '3206416a-6cee-4fb9-8742-b3a97b8e0027',
+//     title: 'Mock Mechanical Model',
+//     description: 'A sample mechanical model for testing the UI.',
+//     imageUrl: 'mechanic-gear.jpg', // Use your getImage() function to display
+// };
 
 const mockInstructions = [
     {
-        id: 'instr-1',
+        id: 'e8e12a28-c3ca-4dbd-b733-e2931b164c05',
         code: 'IC2000',
         name: 'How to open model?',
         description: 'Description for opening the model.',
@@ -72,98 +75,116 @@ export default function ModelDetail() {
     const [openAddInstruction, setOpenAddInstruction] = useState(false);
     const [isCreatingInstruction, setIsCreatingInstruction] = useState(false);
 
-    // Fields for Add Instruction
-    const [code, setCode] = useState('');
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [rotation, setRotation] = useState(''); // guidedViewPosition.rotation
-    const [translation, setTranslation] = useState(''); // guidedViewPosition.translation
-    const [multipartFile, setMultipartFile] = useState(null); // actual file
-
     // ==================== 2) Add Instruction Detail Dialog State ====================
     const [openAddDetail, setOpenAddDetail] = useState(false);
     const [isCreatingDetail, setIsCreatingDetail] = useState(false);
 
     // Fields for Add Instruction Detail
     const [selectedInstructionId, setSelectedInstructionId] = useState(null);
-    const [detailDescription, setDetailDescription] = useState('');
-    const [detailFile, setDetailFile] = useState(null);
 
     // ==================== Fetch Model & Instructions (Mock) ====================
     useEffect(() => {
-        // Simulate fetch
-        setIsLoadingModel(true);
-        setTimeout(() => {
-            // Instead of real API call:
-            // const response = await ModelAPI.getById(modelId);
-            setModel(mockModel);
-            setIsLoadingModel(false);
-        }, 1000);
-
-        setIsLoadingInstructions(true);
-        setTimeout(() => {
-            // Instead of real API call:
-            // const response = await InstructionAPI.getByModelId(modelId);
-            setInstructions(mockInstructions);
-            setIsLoadingInstructions(false);
-        }, 1000);
+        fetchModel();
     }, [modelId]);
 
-    // ==================== Add Instruction Handlers (Mock) ====================
-    const handleOpenAddInstruction = () => {
-        setCode('');
-        setName('');
-        setDescription('');
-        setRotation('');
-        setTranslation('');
-        setMultipartFile(null);
-        setOpenAddInstruction(true);
+    const fetchModel = async () => {
+        setIsLoadingModel(true);
+        setIsLoadingInstructions(true);
+
+        try {
+            // Real API call
+            const response = await ModelAPI.getById(modelId);
+            console.log('Model:', response);
+            if (response?.result) {
+                setModel(response.result);
+                setInstructions(response?.result?.instructionResponses); // Replace with actual API call
+            } else {
+                alert('Failed to fetch model. Please try again.');
+            }
+        } catch (error) {
+            console.error('Failed to fetch model:', error);
+            alert('Failed to fetch model. Please try again.');
+        } finally {
+            setIsLoadingModel(false);
+            setIsLoadingInstructions(false);
+        }
     };
+    // ==================== Add Instruction Handlers (Mock) ====================
 
     const handleCloseAddInstruction = () => {
         setOpenAddInstruction(false);
     };
 
-    const handleFileSelect = (e) => {
-        if (e.target.files[0]) {
-            setMultipartFile(e.target.files[0]);
-        }
+    // For Instruction (instead of separate states for code, name, etc.)
+    const [newInstructionData, setNewInstructionData] = useState({
+        code: '',
+        name: '',
+        description: '',
+        imageUrl: null,
+        guideViewPosition: {
+            rotation: '',
+            translation: '',
+        },
+        instructionDetailRequest: {
+            description: '',
+            multipartFile: null,
+        },
+    });
+
+    const handleInstructionInputChange = (field, value) => {
+        setNewInstructionData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    // For Instruction Detail
+    const [newDetailData, setNewDetailData] = useState({
+        description: '',
+        multipartFile: null,
+    });
+
+    const handleDetailInputChange = (field, value) => {
+        setNewDetailData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
     };
 
     const handleCreateInstruction = async () => {
-        if (!name.trim()) {
+        if (!newInstructionData.name.trim()) {
             return alert('Please enter a name.');
         }
-        if (!code.trim()) {
+        if (!newInstructionData.code.trim()) {
             return alert('Please enter a code.');
         }
 
         setIsCreatingInstruction(true);
         try {
-            // Instead of real API call:
-            // await InstructionAPI.create(formData);
-
-            // Mock create
-            const newInstruction = {
-                id: `instr-mock-${Date.now()}`, // random ID
-                code,
-                name,
-                description,
-                guidedViewPosition: {
-                    rotation,
-                    translation,
-                },
-            };
-
-            // If you have a file
-            if (multipartFile) {
-                console.log('Selected file:', multipartFile.name);
+            const formData = new FormData();
+            formData.append('modelId', modelId); // Assuming your backend needs modelId
+            formData.append('code', newInstructionData.code);
+            formData.append('name', newInstructionData.name);
+            formData.append('description', newInstructionData.description);
+            formData.append('guidedViewPosition.rotation', newInstructionData.guidedViewPosition.rotation);
+            formData.append('guidedViewPosition.translation', newInstructionData.guidedViewPosition.translation);
+            formData.append('imageUrl', newInstructionData.imageUrl);
+            formData.append(
+                'instructionDetailRequest.description',
+                newInstructionData.instructionDetailRequest.multipartFile,
+            );
+            formData.append(
+                'instructionDetailRequest.multipartFile',
+                newInstructionData.instructionDetailRequest.multipartFile,
+            );
+            // Real API call – ensure InstructionAPI.create is implemented correctly
+            const response = await InstructionAPI.create(formData);
+            if (response?.result) {
+                setInstructions((prev) => [...prev, response.result]);
+                alert('Instruction created successfully!');
+            } else {
+                alert('Failed to create instruction. Please try again.');
             }
-
-            // Update local state
-            setInstructions((prev) => [...prev, newInstruction]);
-
-            alert('Instruction created (mock) successfully!');
             handleCloseAddInstruction();
         } catch (error) {
             console.error('Failed to create instruction:', error);
@@ -174,10 +195,30 @@ export default function ModelDetail() {
     };
 
     // ==================== Add Instruction Detail Handlers (Mock) ====================
+    const handleOpenAddInstruction = () => {
+        setNewInstructionData({
+            code: '',
+            name: '',
+            description: '',
+            imageUrl: null,
+            guideViewPosition: {
+                rotation: '',
+                translation: '',
+            },
+            instructionDetailRequest: {
+                description: '',
+                multipartFile: null,
+            },
+        });
+        setOpenAddInstruction(true);
+    };
+
     const handleOpenAddDetail = (instructionId) => {
         setSelectedInstructionId(instructionId);
-        setDetailDescription('');
-        setDetailFile(null);
+        setNewDetailData({
+            description: '',
+            multipartFile: null,
+        });
         setOpenAddDetail(true);
     };
 
@@ -185,34 +226,31 @@ export default function ModelDetail() {
         setOpenAddDetail(false);
     };
 
-    const handleDetailFileSelect = (e) => {
-        if (e.target.files[0]) {
-            setDetailFile(e.target.files[0]);
-        }
-    };
-
     const handleCreateDetail = async () => {
         if (!selectedInstructionId) {
             return alert('No instruction selected.');
         }
-        if (!detailDescription.trim()) {
+        if (!newDetailData.description.trim()) {
             return alert('Please enter a description.');
         }
 
         setIsCreatingDetail(true);
         try {
-            // Instead of real API call:
-            // await InstructionDetailAPI.create(formData);
-
-            // Mock create
-            console.log('Creating instruction detail (mock)...');
-            console.log('Instruction ID:', selectedInstructionId);
-            console.log('Description:', detailDescription);
-            if (detailFile) {
-                console.log('Selected file for detail:', detailFile.name);
+            const formData = new FormData();
+            formData.append('instructionId', selectedInstructionId);
+            formData.append('description', newDetailData.description);
+            if (newDetailData.multipartFile) {
+                formData.append('multipartFile', newDetailData.multipartFile);
             }
 
-            alert('Instruction Detail created (mock) successfully!');
+            // Real API call – ensure InstructionAPI.createDetail is implemented correctly
+            const response = await InstructionAPI.createDetail(formData);
+            if (response?.result) {
+                alert('Instruction Detail created successfully!');
+                // Optionally update local state if needed
+            } else {
+                alert('Failed to create instruction detail. Please try again.');
+            }
             handleCloseAddDetail();
         } catch (error) {
             console.error('Failed to create instruction detail:', error);
@@ -238,7 +276,7 @@ export default function ModelDetail() {
                 }}
             >
                 <Typography variant="h4" sx={{ fontWeight: 900, fontSize: 46, color: '#051D40', mb: 2 }}>
-                    {model?.title || 'Model Title'}
+                    {model?.name || 'Model Title'}
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#051D40' }}>
                     {model?.description || 'No description available.'}
@@ -254,11 +292,6 @@ export default function ModelDetail() {
                 </Box>
 
                 <TabPanel value="1">
-                    {/* Add Instruction Button */}
-                    <Button variant="contained" onClick={handleOpenAddInstruction} sx={{ mb: 2 }}>
-                        + Add Instruction
-                    </Button>
-
                     {isLoadingInstructions ? (
                         <CircularProgress />
                     ) : instructions.length === 0 ? (
@@ -271,30 +304,67 @@ export default function ModelDetail() {
                                         {instruction.name} ({instruction.code})
                                     </Typography>
                                 </AccordionSummary>
-                                <AccordionDetails>
-                                    <Typography sx={{ fontStyle: 'italic', mb: 1 }}>
-                                        {instruction.description}
+                                {instruction.instructionDetailResponse &&
+                                instruction.instructionDetailResponse.length > 0 ? (
+                                    instruction.instructionDetailResponse
+                                        .sort((a, b) => a.orderNumber - b.orderNumber)
+                                        .map((instructionDetail) => (
+                                            <Box key={instructionDetail.id}>
+                                                <AccordionDetails>
+                                                    <Typography sx={{ fontStyle: 'italic', mb: 1 }}>
+                                                        {instructionDetail.description}
+                                                    </Typography>
+                                                </AccordionDetails>
+                                                <Divider />
+                                            </Box>
+                                        ))
+                                ) : (
+                                    <Typography variant="body2" sx={{ my: 2 }}>
+                                        No instruction details available.
                                     </Typography>
-
-                                    <Typography variant="body2" sx={{ mb: 2 }}>
-                                        Rotation: {instruction.guidedViewPosition?.rotation}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ mb: 2 }}>
-                                        Translation: {instruction.guidedViewPosition?.translation}
-                                    </Typography>
-
-                                    {/* Button to Add Instruction Detail */}
-                                    <Button
-                                        variant="outlined"
-                                        size="small"
-                                        onClick={() => handleOpenAddDetail(instruction.id)}
-                                    >
-                                        Add Detail
-                                    </Button>
-                                </AccordionDetails>
+                                )}
+                                {/* Button to Add Instruction Detail */}
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => handleOpenAddDetail(instruction.id)}
+                                    sx={{
+                                        my: 2,
+                                        borderRadius: '24px',
+                                        padding: '12px 20px',
+                                        backgroundColor: '#48A6A7',
+                                        ':hover': {
+                                            backgroundColor: '#48A6A7',
+                                            opacity: '0.8',
+                                        },
+                                    }}
+                                >
+                                    Add Detail
+                                </Button>
                             </Accordion>
                         ))
                     )}
+                    {/* Add Instruction Button */}
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={handleOpenAddInstruction}
+                        sx={{
+                            mt: 4,
+                            border: '2px dashed darkgrey',
+                            padding: 2,
+                            backgroundColor: '#f5f5f5',
+                            boxShadow: 'none',
+                            color: '#0f6cbf',
+                            ':hover': {
+                                backgroundColor: '#f5f5f5',
+                                border: '2px solid #0f6cbf',
+                                boxShadow: 'none',
+                            },
+                        }}
+                    >
+                        + Add Instruction
+                    </Button>
                 </TabPanel>
             </TabContext>
 
@@ -310,18 +380,18 @@ export default function ModelDetail() {
                         fullWidth
                         margin="normal"
                         required
-                        label="Code"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
+                        label="Title"
+                        value={newInstructionData.name}
+                        onChange={(e) => handleInstructionInputChange('name', e.target.value)}
                     />
 
                     <TextField
                         fullWidth
                         margin="normal"
                         required
-                        label="Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        label="Code"
+                        value={newInstructionData.code}
+                        onChange={(e) => handleInstructionInputChange('code', e.target.value)}
                     />
 
                     <TextField
@@ -330,33 +400,110 @@ export default function ModelDetail() {
                         label="Description"
                         multiline
                         minRows={2}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        value={newInstructionData.description}
+                        onChange={(e) => handleInstructionInputChange('description', e.target.value)}
                     />
 
                     <TextField
                         fullWidth
                         margin="normal"
                         label="guidedViewPosition.rotation"
-                        value={rotation}
-                        onChange={(e) => setRotation(e.target.value)}
+                        value={newInstructionData.rotation}
+                        onChange={(e) => handleInstructionInputChange('guidedViewPosition.rotation', e.target.value)}
                     />
 
                     <TextField
                         fullWidth
                         margin="normal"
                         label="guidedViewPosition.translation"
-                        value={translation}
-                        onChange={(e) => setTranslation(e.target.value)}
+                        value={newInstructionData.translation}
+                        onChange={(e) => handleInstructionInputChange('guidedViewPosition.translation', e.target.value)}
                     />
 
-                    <Typography sx={{ mt: 2 }}>Upload File (Optional)</Typography>
-                    <input type="file" accept="image/*" onChange={handleFileSelect} />
-                    {multipartFile && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            {multipartFile.name}
-                        </Typography>
-                    )}
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="instructionDetailRequest.description"
+                        value={newInstructionData.rotation}
+                        onChange={(e) =>
+                            handleInstructionInputChange('instructionDetailRequest.description', e.target.value)
+                        }
+                    />
+
+                    {/* For iamge input */}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        id="instruction-image-upload"
+                        onChange={(e) => {
+                            if (e.target.files[0]) {
+                                handleInstructionInputChange('instructionDetailRequest.imageUrl', e.target.files[0]);
+                            }
+                        }}
+                    />
+                    <label htmlFor="instruction-image-upload">
+                        <Button
+                            component="span"
+                            fullWidth
+                            variant="contained"
+                            sx={{
+                                border: '2px dashed darkgrey',
+                                padding: 2,
+                                backgroundColor: '#f5f5f5',
+                                boxShadow: 'none',
+                                color: '#0f6cbf',
+                                ':hover': {
+                                    backgroundColor: '#f5f5f5',
+                                    border: '2px solid #0f6cbf',
+                                    boxShadow: 'none',
+                                },
+                                mt: 2,
+                            }}
+                        >
+                            {newInstructionData['instructionDetailRequest.imageUrl'] ? 'Change Image' : 'Attach Image'}
+                        </Button>
+                    </label>
+
+                    {/* For file .glb input */}
+                    <input
+                        type="file"
+                        accept=".glb"
+                        style={{ display: 'none' }}
+                        id="glb-upload"
+                        onChange={(e) => {
+                            if (e.target.files[0]) {
+                                handleInstructionInputChange(
+                                    'instructionDetailRequest.multipartFile',
+                                    e.target.files[0],
+                                );
+                            }
+                        }}
+                    />
+                    <label htmlFor="glb-upload">
+                        <Button
+                            component="span"
+                            fullWidth
+                            variant="contained"
+                            sx={{
+                                border: '2px dashed darkgrey',
+                                padding: 2,
+                                backgroundColor: '#f5f5f5',
+                                boxShadow: 'none',
+                                color: '#0f6cbf',
+                                ':hover': {
+                                    backgroundColor: '#f5f5f5',
+                                    border: '2px solid #0f6cbf',
+                                    boxShadow: 'none',
+                                },
+                                mt: 3,
+                            }}
+                        >
+                            {newInstructionData['instructionDetailRequest.multipartFile']
+                                ? 'Change .glb File'
+                                : 'Attach .glb File'}
+                        </Button>
+                    </label>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddInstruction} disabled={isCreatingInstruction}>
@@ -382,17 +529,18 @@ export default function ModelDetail() {
                         label="Description"
                         multiline
                         minRows={2}
-                        value={detailDescription}
-                        onChange={(e) => setDetailDescription(e.target.value)}
+                        value={newDetailData.description}
+                        onChange={(e) => handleDetailInputChange('description', e.target.value)}
                     />
 
-                    <Typography sx={{ mt: 2 }}>Upload File (Optional)</Typography>
-                    <input type="file" onChange={handleDetailFileSelect} />
-                    {detailFile && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            {detailFile.name}
-                        </Typography>
-                    )}
+                    <input
+                        type="file"
+                        onChange={(e) => {
+                            if (e.target.files[0]) {
+                                handleDetailInputChange('multipartFile', e.target.files[0]);
+                            }
+                        }}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddDetail} disabled={isCreatingDetail}>

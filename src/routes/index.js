@@ -72,7 +72,7 @@ const publicRoutes = [
     { path: '/company/dashboard', component: DashboardManagement, layout: AdminLayout },
     { path: '/company/course-management', component: CoursesManagement, layout: AdminLayout },
     { path: '/company/model-management', component: ModelsManagement, layout: AdminLayout },
-    { path: '/company/model-management/view', component: ModelDetail, layout: AdminLayout },
+    { path: '/company/model-management/view/:id', component: ModelDetail, layout: AdminLayout },
     { path: '/company/model-request-management', component: ModelRequestManagement, layout: AdminLayout },
     { path: '/company/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },

@@ -20,6 +20,14 @@ const ModelAPI = {
             },
         });
     },
+
+    getByCompany(companyId, includeAuthorization = false) {
+        return axiosClient.get(`/v1/model/company/${companyId}?page=1&size=1&type=&name=`);
+    },
+
+    getById(id, includeAuthorization = false) {
+        return axiosClient.get(`/v1/model/${id}`);
+    },
 };
 
 export default ModelAPI;

@@ -15,6 +15,7 @@ import {
     Typography,
     Grid,
     Paper,
+    Skeleton,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid } from '@mui/x-data-grid';
@@ -24,56 +25,57 @@ import { getImage } from '~/Constant';
 import CardModel from '~/components/CardModel';
 import ModelAPI from '~/API/ModelAPI';
 import { useNavigate } from 'react-router-dom';
+import storageService from '~/components/StorageService/storageService';
 
 const defaultTheme = createTheme();
 
 export default function ModelsManagement() {
     const navigate = useNavigate();
 
-    const mockModels = [
-        {
-            id: 1,
-            name: 'Mechanical Gear Model',
-            description:
-                'A high-detail 3D model of an industrial gear, ideal for automotive and machinery simulations.',
-            image: 'mechanic-gear.jpg',
-            version: 'v1.0',
-            scale: '1:10',
-            modelTypeId: 'gear-model',
-            status: 'ACTIVE',
-        },
-        {
-            id: 2,
-            name: 'Engine Assembly Model',
-            description: 'A complete 3D engine assembly model that includes all the main components and parts.',
-            image: 'engine-assembly.jpg',
-            version: 'v2.1',
-            scale: '1:5',
-            modelTypeId: 'engine-model',
-            status: 'ACTIVE',
-        },
-        {
-            id: 3,
-            name: 'Suspension System Model',
-            description:
-                "Detailed 3D representation of a vehicle's suspension system with realistic parts and mechanics.",
-            image: 'suspension-system.jpg',
-            version: 'v1.3',
-            scale: '1:8',
-            modelTypeId: 'suspension-model',
-            status: 'INACTIVE',
-        },
-        {
-            id: 4,
-            name: 'Transmission System Model',
-            description: 'A comprehensive 3D model of a transmission system designed for heavy vehicles.',
-            image: 'transmission-system.jpg',
-            version: 'v1.0',
-            scale: '1:7',
-            modelTypeId: 'transmission-model',
-            status: 'ACTIVE',
-        },
-    ];
+    // const mockModels = [
+    //     {
+    //         id: 1,
+    //         name: 'Mechanical Gear Model',
+    //         description:
+    //             'A high-detail 3D model of an industrial gear, ideal for automotive and machinery simulations.',
+    //         image: 'mechanic-gear.jpg',
+    //         version: 'v1.0',
+    //         scale: '1:10',
+    //         modelTypeId: 'gear-model',
+    //         status: 'ACTIVE',
+    //     },
+    //     {
+    //         id: 2,
+    //         name: 'Engine Assembly Model',
+    //         description: 'A complete 3D engine assembly model that includes all the main components and parts.',
+    //         image: 'engine-assembly.jpg',
+    //         version: 'v2.1',
+    //         scale: '1:5',
+    //         modelTypeId: 'engine-model',
+    //         status: 'ACTIVE',
+    //     },
+    //     {
+    //         id: 3,
+    //         name: 'Suspension System Model',
+    //         description:
+    //             "Detailed 3D representation of a vehicle's suspension system with realistic parts and mechanics.",
+    //         image: 'suspension-system.jpg',
+    //         version: 'v1.3',
+    //         scale: '1:8',
+    //         modelTypeId: 'suspension-model',
+    //         status: 'INACTIVE',
+    //     },
+    //     {
+    //         id: 4,
+    //         name: 'Transmission System Model',
+    //         description: 'A comprehensive 3D model of a transmission system designed for heavy vehicles.',
+    //         image: 'transmission-system.jpg',
+    //         version: 'v1.0',
+    //         scale: '1:7',
+    //         modelTypeId: 'transmission-model',
+    //         status: 'ACTIVE',
+    //     },
+    // ];
     // Data states
     const [models, setModels] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -92,16 +94,17 @@ export default function ModelsManagement() {
     const [file3D, setFile3D] = useState(null);
     const [modelTypeId, setModelTypeId] = useState('');
     const [status, setStatus] = useState('ACTIVE');
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
 
     // Fetch models on mount
     useEffect(() => {
         const fetchModels = async () => {
             try {
-                // const response = await ModelAPI.getModels();
-                // // Assuming response is an array and we need to add an 'id' field for mapping:
-                // response.forEach((item, index) => (item.id = index + 1));
-                // setModels(response);
-                setModels(mockModels);
+                const response = await ModelAPI.getByCompany(userInfo?.company?.id);
+                const data = response?.result?.objectList || [];
+                setModels(data);
+                console.log('Models:', data);
+                // setModels(mockModels);
             } catch (error) {
                 console.error('Failed to fetch models:', error);
             } finally {
@@ -112,7 +115,7 @@ export default function ModelsManagement() {
     }, []);
 
     // Local search filtering
-    const filteredModels = models.filter((model) => model.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    // const filteredModels = models.filter((model) => model.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Dialog handlers
     const handleOpenCreateDialog = () => {
@@ -182,7 +185,7 @@ export default function ModelsManagement() {
     };
 
     const handleRedirectToModelView = (modelId) => {
-        navigate(`/company/model-management/view`);
+        navigate(`/company/model-management/view/${modelId}`);
     };
 
     return (
@@ -220,10 +223,26 @@ export default function ModelsManagement() {
                 {/* Models Cards Grid */}
                 <Box sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', py: 4, px: 2 }}>
                     {isLoading ? (
-                        <Typography>Loading...</Typography>
+                        <Grid container spacing={3}>
+                            {Array.from(new Array(8)).map((_, idx) => (
+                                <Grid item xs={12} sm={6} md={3} key={idx}>
+                                    <Skeleton
+                                        variant="rectangular"
+                                        sx={{
+                                            width: '100%',
+                                            aspectRatio: '16/9',
+                                            borderRadius: 2,
+                                            mb: 1,
+                                        }}
+                                    />
+                                    <Skeleton variant="text" height={30} width="80%" sx={{ mb: 1 }} />
+                                    <Skeleton variant="text" height={20} width="60%" />
+                                </Grid>
+                            ))}
+                        </Grid>
                     ) : (
                         <Grid container spacing={3}>
-                            {filteredModels.map((model) => (
+                            {models.map((model) => (
                                 <Grid
                                     item
                                     xs={12}
