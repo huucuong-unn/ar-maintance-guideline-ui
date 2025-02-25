@@ -33,7 +33,7 @@ import {
     FormControlLabel,
     Pagination,
 } from '@mui/material';
-import { File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
+import { Divide, File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AccountAPI from '~/API/AccountAPI';
@@ -48,6 +48,7 @@ import storageService from '~/components/StorageService/storageService';
 import MyEditor from '~/components/MyEditor';
 import DOMPurify from 'dompurify';
 import { getImage } from '~/Constant';
+import ModelAPI from '~/API/ModelAPI';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
@@ -191,6 +192,19 @@ export default function CoursesControlEdit() {
             setIsLoadingCourse(false);
         }
     };
+    const [model, setModel] = useState();
+    const [isLoadingModel, setIsLoadingModel] = useState(true);
+    const fetchModel = async () => {
+        try {
+            setIsLoadingModel(true);
+            const response = await ModelAPI.getById(course?.modelId);
+            setModel(response?.result);
+        } catch (error) {
+            console.error('Failed to fetch model:', error);
+        } finally {
+            setIsLoadingModel(false);
+        }
+    };
 
     // ==================== useEffect for Initial Data Fetching ====================
     useEffect(() => {
@@ -198,6 +212,10 @@ export default function CoursesControlEdit() {
         fetchQuiz();
         fetchSections();
     }, [courseId]);
+
+    useEffect(() => {
+        fetchModel();
+    }, [course]);
 
     // ==================== Edit Quiz Dialog Handlers ====================
     const handleClickOpenEditQuiz = () => {
@@ -1025,6 +1043,32 @@ export default function CoursesControlEdit() {
         );
     };
 
+    async function handleDownloadQrCode(qrCodeUrl, fileName) {
+        if (!qrCodeUrl) return;
+
+        try {
+            // Fetch image as Blob
+            const response = await axios.get(getImage(qrCodeUrl), { responseType: 'blob' });
+            // Create a Blob URL
+            const blob = new Blob([response.data], { type: response.headers['content-type'] });
+            const downloadUrl = URL.createObjectURL(blob);
+
+            // Create a temporary link
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error downloading QR code:', error);
+            alert('Failed to download QR code. Please try again.');
+        }
+    }
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             <Box
@@ -1095,15 +1139,121 @@ export default function CoursesControlEdit() {
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
-                        <Tab label="Model" value="0" />
-                        <Tab label="Sections" value="1" />
-                        <Tab label="Final Quiz" value="2" />
-                        <Tab label="Assign Employee" value="3" />
+                        <Tab label="Model" value="1" />
+                        <Tab label="Sections" value="2" />
+                        <Tab label="Final Quiz" value="3" />
+                        <Tab label="Assign Employee" value="4" />
                     </TabList>
                 </Box>
+                {/* ================= TabPanel 0: Model ================= */}
+                <TabPanel value="1">
+                    {isLoadingModel ? (
+                        <CircularProgress />
+                    ) : (
+                        <Box sx={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
+                            {/* LEFT COLUMN: QR Code & Download Button */}
+                            <Box
+                                sx={{
+                                    width: '30%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}
+                            >
+                                {/* QR Code Image */}
+                                <img
+                                    src={getImage(course?.qrCode)}
+                                    alt="QR Code"
+                                    style={{
+                                        maxWidth: '100%',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+                                    }}
+                                />
+
+                                {/* Download Button */}
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleDownloadQrCode(course?.qrCode, model?.name + '_QRCode.png')}
+                                    sx={{ alignSelf: 'center' }}
+                                >
+                                    Download QR Code
+                                </Button>
+                            </Box>
+
+                            {/* RIGHT COLUMN: Model Info */}
+                            <Box
+                                sx={{
+                                    width: '60%',
+                                    backgroundColor: 'rgba(255,255,255,0.8)',
+                                    p: 3,
+                                    borderRadius: 2,
+                                    boxShadow: 3,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 2,
+                                    textAlign: 'left',
+                                }}
+                            >
+                                {/* Model Image */}
+                                <img
+                                    src={getImage(model?.imageUrl)}
+                                    alt="Model Preview"
+                                    style={{
+                                        width: '100%',
+                                        borderRadius: '8px',
+                                        marginBottom: '16px',
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                    }}
+                                />
+
+                                {/* Model Details */}
+                                <Box sx={{ display: 'flex', mb: 1, textAlign: 'left' }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Model Name
+                                    </Typography>
+                                    <Typography variant="body1">{model?.name || 'N/A'}</Typography>
+                                </Box>
+                                <Divider />
+                                {/* Aligned details */}
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Type
+                                    </Typography>
+                                    <Typography variant="body1">{model?.modelTypeName || 'N/A'}</Typography>
+                                </Box>
+                                <Divider />
+
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Description
+                                    </Typography>
+                                    <Typography variant="body1">{model?.description || 'No description'}</Typography>
+                                </Box>
+                                <Divider />
+
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Version
+                                    </Typography>
+                                    <Typography variant="body1">{model?.version || 'N/A'}</Typography>
+                                </Box>
+                                <Divider />
+
+                                <Box sx={{ display: 'flex' }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Scale
+                                    </Typography>
+                                    <Typography variant="body1">{model?.scale || 'N/A'}</Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+                    )}
+                </TabPanel>
 
                 {/* ================= TabPanel 1: Sections ================= */}
-                <TabPanel value="1">
+                <TabPanel value="2">
                     <Box>
                         {/* ====== Render Sections ====== */}
                         {isLoadingSections ? (
@@ -1383,7 +1533,7 @@ export default function CoursesControlEdit() {
                 </TabPanel>
 
                 {/* ================= TabPanel 2: Final Quiz ================= */}
-                <TabPanel value="2">
+                <TabPanel value="3">
                     {isLoadingQuiz ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                             <CircularProgress />
@@ -1675,7 +1825,7 @@ export default function CoursesControlEdit() {
                         </Box>
                     )}
                 </TabPanel>
-                <TabPanel value="3">
+                <TabPanel value="4">
                     <EmployeeList />
                 </TabPanel>
             </TabContext>

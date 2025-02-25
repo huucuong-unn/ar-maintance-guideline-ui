@@ -267,7 +267,7 @@ export default function CoursesControl() {
                                         description={data.description}
                                         image={data.imageUrl}
                                         viewers={data.numberOfParticipants}
-                                        lessons={data.lessons.length}
+                                        lessons={data?.lessons?.length}
                                         duration={data.duration}
                                         status={data.status}
                                     />
