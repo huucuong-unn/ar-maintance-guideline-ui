@@ -2,6 +2,7 @@
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
+import { useParams } from 'react-router-dom';
 import {
     Accordion,
     AccordionDetails,
@@ -35,7 +36,6 @@ import {
 } from '@mui/material';
 import { Divide, File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import AccountAPI from '~/API/AccountAPI';
 
 import CourseAPI from '~/API/CourseAPI';
@@ -48,11 +48,12 @@ import storageService from '~/components/StorageService/storageService';
 import MyEditor from '~/components/MyEditor';
 import DOMPurify from 'dompurify';
 import { getImage } from '~/Constant';
+import InstructionAPI from '~/API/InstructionAPI';
+import InstructionDetailAPI from '~/API/InstructionDetailAPI';
 import ModelAPI from '~/API/ModelAPI';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
-
     // ==================== Tab State ====================
     const [tabValue, setTabValue] = useState('1');
     const handleTabChange = (e, newValue) => setTabValue(newValue);
@@ -320,7 +321,7 @@ export default function CoursesControlEdit() {
     };
 
     const [openVideoDialog, setOpenVideoDialog] = useState(false);
-    const [lessonDetails, setLessonDetails] = useState(null); // Store lesson details
+    const [lessonDetails, setLessonDetails] = useState(null);
     const [videoSrc, setVideoSrc] = useState('');
     const [videoType, setVideoType] = useState('');
     const [loadingVideo, setLoadingVideo] = useState(false); // Loading state
@@ -649,10 +650,6 @@ export default function CoursesControlEdit() {
         setOpenAddSectionDialog(true);
     };
 
-    const handleCloseAddSectionDialog = () => {
-        setOpenAddSectionDialog(false);
-    };
-
     const handleCreateSection = async () => {
         // Basic Validation
         if (!newSectionTitle.trim()) {
@@ -683,16 +680,10 @@ export default function CoursesControlEdit() {
     };
 
     // ==================== Add Lesson Handlers ====================
-    const handleOpenAddLessonDialog = (sectionId) => {
-        setCurrentSectionId(sectionId);
-        setSelectedLessonType('');
+    const handleOpenAddLessonDialog = (instructionId) => {
+        setCurrentSectionId(instructionId);
         setNewLessonData({});
         setOpenAddLessonDialog(true);
-    };
-
-    const handleCloseAddLessonDialog = () => {
-        setOpenAddLessonDialog(false);
-        setCurrentSectionId(null);
     };
 
     const handleLessonTypeChange = (e) => {
@@ -780,18 +771,92 @@ export default function CoursesControlEdit() {
         setSectionToDelete(null);
     };
 
+    //Open handleSwapOrderInstructionDetail
+    const [instructionIdCurrent, setInstructionIdCurrent] = useState('');
+    const [instructionDetailIdCurrent, setInstructionDetailIdCurrent] = useState('');
+    const [instructionDetailIdToSwap, setInstructionDetailIdToSwap] = useState('');
+    const [openSwapOrderDialog, setOpenSwapOrderDialog] = useState(false);
+    const [instructionDetailList, setInstructionDetailList] = useState([]);
+    const [instructionDetailCurrent, setInstructionDetailCurrent] = useState({});
+    const handleClickSwapOrderIntructionDetail = (instructionDetailId, instructionId) => {
+        setInstructionDetailIdCurrent(instructionDetailId);
+        console.log(instructionId);
+        fetchInstructionDetailById(instructionDetailId);
+        setInstructionIdCurrent(instructionId);
+        setOpenSwapOrderDialog(true);
+    };
+
+    useEffect(() => {
+        console.log(instructionDetailIdToSwap);
+    }, [instructionDetailIdToSwap]);
+
+    const handleClickSaveSwapOrder = async () => {
+        try {
+            const response = await InstructionDetailAPI.swapOrder(
+                instructionDetailIdCurrent,
+                instructionDetailIdToSwap,
+            );
+
+            if (response?.result) {
+                alert('Instruction Detail swap successfully!');
+                fetchInstructionByCourseId();
+                handleCloseSwapOrderIntructionDetail();
+            }
+        } catch (error) {
+            console.error('Failed to swap Instruction Detail:', error);
+        }
+    };
+
+    const handleCloseSwapOrderIntructionDetail = () => {
+        setInstructionDetailIdCurrent('');
+        setInstructionDetailIdToSwap('');
+        setInstructionDetailIdCurrent('');
+        setInstructionIdCurrent('');
+        setInstructionDetailList([]);
+        setOpenSwapOrderDialog(false);
+    };
+
+    const fetchInstructionDetailByInstructionId = async () => {
+        try {
+            const response = await InstructionDetailAPI.getByInstructionId(instructionIdCurrent);
+            const data = response?.result || [];
+            console.log(data);
+            setInstructionDetailList(data);
+        } catch (error) {
+            console.error('Failed to fetch models:', error);
+        }
+    };
+
+    const fetchInstructionDetailById = async (id) => {
+        try {
+            const response = await InstructionDetailAPI.getById(id);
+            const data = response?.result || [];
+            console.log(data);
+            setInstructionDetailCurrent(data);
+        } catch (error) {
+            console.error('Failed to fetch models:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchInstructionDetailByInstructionId();
+    }, [instructionIdCurrent]);
+
+    //Close handleSwapOrderInstructionDetail
+
     // Delete section logic
     const handleDeleteSection = async () => {
         try {
             setIsLoadingSections(true);
             // Call API to delete the section
-            await CourseAPI.deleteSection(sectionToDelete);
+            await InstructionDetailAPI.deleteByIddeleteById(sectionToDelete);
             // Remove the deleted section from the list
             setSections((prevSections) => prevSections.filter((section) => section.id !== sectionToDelete));
+            fetchInstructionByCourseId();
             setOpenDeleteSectionDialog(false);
         } catch (error) {
-            console.error('Failed to delete section:', error);
-            alert('Failed to delete section. Please try again.');
+            console.error('Failed to delete instruction detail:', error);
+            alert('Failed to delete instruction detail. Please try again.');
         } finally {
             setIsLoadingSections(false);
         }
@@ -806,35 +871,6 @@ export default function CoursesControlEdit() {
     const handleCloseLessonDialog = () => {
         setOpenLessonDialog(false);
         setLessonDetails(null);
-    };
-
-    // Update lesson
-    const [isEditingLesson, setIsEditingLesson] = useState(false);
-    const [editingLessonId, setEditingLessonId] = useState(null);
-
-    const handleEditLesson = (lesson, sectionId) => {
-        // Set edit mode
-        setIsEditingLesson(true);
-        setEditingLessonId(lesson.id);
-
-        // (Optionally) ensure you know the section id
-        setCurrentSectionId(sectionId);
-
-        // Set the lesson type and pre-fill the data
-        setSelectedLessonType(lesson.type);
-        setNewLessonData({
-            title: lesson.title,
-            duration: lesson.duration,
-            // For READING lessons, assume lesson.content contains HTML string
-            content: lesson.content,
-            // For VIDEO lessons, these fields may be available
-            description: lesson.description,
-            videoFile: lesson.videoUrl, // user may upload a new video if needed
-            attachFileUrl: lesson.attachFileUrl || null,
-        });
-
-        // Open the same dialog used for adding a lesson
-        setOpenAddLessonDialog(true);
     };
 
     // ==================== Assign Employee ====================
@@ -1043,6 +1079,289 @@ export default function CoursesControlEdit() {
         );
     };
 
+    const [translation, setTranslation] = useState({ x: '', y: '', z: '' });
+    const [rotation, setRotation] = useState({ pitch: '', yaw: '', roll: '' });
+    const [instructionName, setInstructionName] = useState('');
+    const [instructionDescription, setInstructionDescription] = useState('');
+    const [image, setImage] = useState(null);
+    const [file3D, setFile3D] = useState(null);
+    const [guideViewPosition, setGuideViewPosition] = useState({
+        translation: [0, 0, 0],
+        rotation: [0, 0, 0],
+    });
+    const [instructionDetailRequest, setInstructionDetailRequest] = useState({
+        description: '',
+        file: null,
+        imageFile: null,
+        name: '',
+    });
+    const [isCreating, setIsCreating] = useState(false);
+
+    const handleCloseAddSectionDialog = () => {
+        setOpenAddSectionDialog(false);
+        setInstructionName('');
+        setInstructionDescription('');
+        setTranslation({ x: '', y: '', z: '' });
+        setRotation({ pitch: '', yaw: '', roll: '' });
+        setGuideViewPosition({ translation: [0, 0, 0], rotation: [0, 0, 0] });
+        setInstructionDetailRequest({
+            description: '',
+            file: null,
+            imageFile: null,
+            name: '',
+        });
+    };
+
+    const handleTranslationChange = (axis, value) => {
+        const newTranslation = { ...translation, [axis]: value };
+        setTranslation(newTranslation);
+        setGuideViewPosition((prev) => ({
+            ...prev,
+            translation: [
+                parseFloat(newTranslation.x) || 0,
+                parseFloat(newTranslation.y) || 0,
+                parseFloat(newTranslation.z) || 0,
+            ],
+        }));
+    };
+
+    const handleRotationChange = (axis, value) => {
+        const newRotation = { ...rotation, [axis]: value };
+        setRotation(newRotation);
+        setGuideViewPosition((prev) => ({
+            ...prev,
+            rotation: [
+                parseFloat(newRotation.pitch) || 0,
+                parseFloat(newRotation.yaw) || 0,
+                parseFloat(newRotation.roll) || 0,
+            ],
+        }));
+    };
+
+    const handleInstructionDetailNameChange = (e) => {
+        setInstructionDetailRequest((prev) => ({
+            ...prev,
+            name: e.target.value,
+        }));
+    };
+
+    // Hàm xử lý nhập mô tả instruction detail
+    const handleInstructionDetailDescriptionChange = (e) => {
+        setInstructionDetailRequest((prev) => ({
+            ...prev,
+            description: e.target.value,
+        }));
+    };
+    const handleImageSelect = (e) => {
+        if (e.target.files[0]) {
+            setImage(e.target.files[0]);
+        }
+    };
+
+    const handle3DFileSelect = (e) => {
+        if (e.target.files[0]) {
+            setFile3D(e.target.files[0]);
+        }
+    };
+
+    const handleCreateInstruction = async () => {
+        // Validate required fields
+        if (!instructionName.trim()) return alert('Please enter an instruction name.');
+        if (!instructionDescription.trim()) return alert('Please enter an instruction description.');
+        if (!file3D) return alert('Please select a 3D file.');
+        if (!image) return alert('Please select an image.');
+
+        setIsCreating(true);
+        console.log(image);
+
+        try {
+            const formDataForInstruction = new FormData();
+            formDataForInstruction.append('courseId', '45252911-662c-4f30-a6fb-3f3be967b257');
+            formDataForInstruction.append('name', instructionName);
+            formDataForInstruction.append('description', instructionDescription);
+
+            // Thêm guideViewPosition.translation và guideViewPosition.rotation
+            formDataForInstruction.append('guideViewPosition.translation', guideViewPosition.translation.join(','));
+            formDataForInstruction.append('guideViewPosition.rotation', guideViewPosition.rotation.join(','));
+
+            // Thêm dữ liệu instructionDetailRequest từng key riêng biệt
+            formDataForInstruction.append('instructionDetailRequest.name', instructionDetailRequest.name);
+            formDataForInstruction.append('instructionDetailRequest.description', instructionDetailRequest.description);
+            formDataForInstruction.append('instructionDetailRequest.file', file3D);
+            formDataForInstruction.append('instructionDetailRequest.imageFile', image);
+
+            console.log([...formDataForInstruction]); // Kiểm tra dữ liệu trước khi gửi
+
+            const response = await InstructionAPI.create(formDataForInstruction);
+            if (response?.result) {
+                alert('Instruction created successfully!');
+                setOpenAddSectionDialog(false);
+                handleCloseAddSectionDialog(); // Reset form
+            }
+        } catch (error) {
+            console.error('Failed to create instruction:', error);
+            alert('Failed to create instruction. Please try again.');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    //Get Instruction By Course Id
+    const [instructions, setInstructions] = useState([]);
+    const [imageForInstructionDetail, setImageForInstructionDetail] = useState(null);
+    const [file3DForInstructionDetail, setFile3DForInstructionDetail] = useState(null);
+    const [nameForInstructionDetail, setNameForInstructionDetail] = useState('');
+    const [descriptionForInstructionDetail, setDescriptionForInstructionDetail] = useState('');
+    const [isCreatingForInstructionDetail, setIsCreatingForInstructionDetail] = useState(false);
+    const [isUpdatingForInstructionDetail, setIsUpdatingForInstructionDetail] = useState(false);
+    const [openUpdateLessonDialog, setOpenUpdateLessonDialog] = useState(false);
+    const [currentInstructionDetailId, setcurrentInstructionDetailId] = useState('');
+    // Update lesson
+    const [isEditingLesson, setIsEditingLesson] = useState(false);
+    const [editingLessonId, setEditingLessonId] = useState(null);
+    const [anchorElMap, setAnchorElMap] = useState({});
+
+    const handleClickMenuss = (event, id) => {
+        setAnchorElMap((prev) => ({ ...prev, [id]: event.currentTarget }));
+    };
+
+    const handleCloseMenuss = (id) => {
+        setAnchorElMap((prev) => ({ ...prev, [id]: null }));
+    };
+
+    const handleCloseAddLessonDialog = () => {
+        setOpenAddLessonDialog(false);
+        setOpenUpdateLessonDialog(false);
+        setCurrentSectionId(null);
+        setImageForInstructionDetail(null);
+        setFile3DForInstructionDetail(null);
+        setNameForInstructionDetail('');
+        setDescriptionForInstructionDetail('');
+    };
+
+    const handleEditLesson = async (instructionDetailId) => {
+        console.log(instructionDetailId);
+        const response = await InstructionDetailAPI.getById(instructionDetailId);
+        const data = response?.result || {};
+        console.log(data);
+
+        setIsEditingLesson(true);
+        setcurrentInstructionDetailId(data.id);
+        setNameForInstructionDetail(data.name);
+        setDescriptionForInstructionDetail(data.description);
+
+        setOpenUpdateLessonDialog(true);
+    };
+
+    useEffect(() => {
+        console.log(currentInstructionDetailId);
+    }, [currentInstructionDetailId]);
+
+    const handleImageSelectForInstructionDetail = (e) => {
+        if (e.target.files[0]) {
+            setImageForInstructionDetail(e.target.files[0]);
+        }
+    };
+
+    const handle3DFileSelectForInstructionDetail = (e) => {
+        if (e.target.files[0]) {
+            setFile3DForInstructionDetail(e.target.files[0]);
+        }
+    };
+
+    useEffect(() => {
+        fetchInstructionByCourseId();
+    }, []);
+
+    const fetchInstructionByCourseId = async () => {
+        try {
+            const response = await InstructionAPI.getByCourse(courseId);
+            const data = response?.result?.objectList || [];
+            console.log(data);
+
+            setInstructions(data);
+            setIsLoadingSections(false);
+        } catch (error) {
+            console.error('Failed to fetch models:', error);
+        }
+    };
+
+    const handleCreateInstructionDetail = async () => {
+        // Validate required fields
+        if (!nameForInstructionDetail.trim()) return alert('Please enter an instruction detail name.');
+        if (!descriptionForInstructionDetail.trim()) return alert('Please enter an instruction detail description.');
+        if (!file3DForInstructionDetail) return alert('Please select a 3D file.');
+        if (!imageForInstructionDetail) return alert('Please select an image.');
+
+        setIsCreatingForInstructionDetail(true);
+
+        try {
+            const formDataForInstructionDetail = new FormData();
+            formDataForInstructionDetail.append('instructionId', '635750f7-a39e-4d5d-9b1a-706484f346bc');
+            formDataForInstructionDetail.append('name', nameForInstructionDetail);
+            formDataForInstructionDetail.append('description', descriptionForInstructionDetail);
+            formDataForInstructionDetail.append('file', file3DForInstructionDetail);
+            formDataForInstructionDetail.append('imageFile', imageForInstructionDetail);
+
+            const response = await InstructionDetailAPI.create(formDataForInstructionDetail);
+            if (response?.result) {
+                alert('Instruction created successfully!');
+                setOpenAddSectionDialog(false);
+                handleCloseAddLessonDialog();
+                fetchInstructionByCourseId();
+            }
+        } catch (error) {
+            console.error('Failed to create instruction:', error);
+            alert('Failed to create instruction. Please try again.');
+        } finally {
+            setIsCreatingForInstructionDetail(false);
+        }
+    };
+
+    const handleUpdateInstructionDetail = async () => {
+        // Validate required fields
+        if (!nameForInstructionDetail.trim()) return alert('Please enter an instruction detail name.');
+        if (!descriptionForInstructionDetail.trim()) return alert('Please enter an instruction detail description.');
+
+        setIsUpdatingForInstructionDetail(true);
+
+        try {
+            const formDataForUpdateInstructionDetail = new FormData();
+
+            formDataForUpdateInstructionDetail.append('name', nameForInstructionDetail);
+            formDataForUpdateInstructionDetail.append('description', descriptionForInstructionDetail);
+            if (file3DForInstructionDetail != null && imageForInstructionDetail != null) {
+                formDataForUpdateInstructionDetail.append('file', file3DForInstructionDetail);
+                formDataForUpdateInstructionDetail.append('imageFile', imageForInstructionDetail);
+            }
+
+            if (file3DForInstructionDetail == null && imageForInstructionDetail != null) {
+                formDataForUpdateInstructionDetail.append('imageFile', imageForInstructionDetail);
+            }
+
+            if (file3DForInstructionDetail != null && imageForInstructionDetail == null) {
+                formDataForUpdateInstructionDetail.append('file', file3DForInstructionDetail);
+            }
+
+            console.log([...formDataForUpdateInstructionDetail]);
+            const response = await InstructionDetailAPI.update(
+                currentInstructionDetailId,
+                formDataForUpdateInstructionDetail,
+            );
+            if (response?.result) {
+                alert('Instruction updated successfully!');
+                setOpenUpdateLessonDialog(false);
+                handleCloseAddLessonDialog();
+                fetchInstructionByCourseId();
+            }
+        } catch (error) {
+            console.error('Failed to update instruction detail:', error);
+            alert('Failed to update instruction detail. Please try again.');
+        } finally {
+            setIsUpdatingForInstructionDetail(false);
+        }
+    };
+
     async function handleDownloadQrCode(qrCodeUrl, fileName) {
         if (!qrCodeUrl) return;
 
@@ -1140,8 +1459,7 @@ export default function CoursesControlEdit() {
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
                         <Tab label="Model" value="1" />
-                        <Tab label="Sections" value="2" />
-                        <Tab label="Final Quiz" value="3" />
+                        <Tab label="INSTRUCTION" value="2" />
                         <Tab label="Assign Employee" value="4" />
                     </TabList>
                 </Box>
@@ -1260,253 +1578,149 @@ export default function CoursesControlEdit() {
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                                 <CircularProgress />
                             </Box>
-                        ) : sections.length === 0 ? (
-                            <Typography variant="body1">No sections available. Please add a section.</Typography>
+                        ) : instructions.length === 0 ? (
+                            <Typography variant="body1">No Instruction available. Please add a Instruction.</Typography>
                         ) : (
-                            sections
-                                .sort((a, b) => a.orderInCourse - b.orderInCourse) // Ensure ordered by orderInCourse
-                                .map((section, sectionIndex) => (
-                                    <Accordion
-                                        key={section.id}
-                                        expanded={expandedFAQ === `section${section.id}`}
-                                        onChange={handleChangeFAQ(`section${section.id}`)}
+                            instructions.map((instruction, instructionIndex) => (
+                                <Accordion
+                                    key={instruction.id}
+                                    expanded={expandedFAQ === `section${instruction.id}`}
+                                    onChange={handleChangeFAQ(`section${instruction.id}`)}
+                                    sx={{
+                                        border: '1px solid #dee2e6',
+                                        boxShadow: 'none',
+                                        mb: 2,
+                                        padding: 1,
+                                        color: '#051D40',
+                                    }}
+                                >
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                        <Typography fontSize={24} fontWeight={700}>
+                                            {instruction.name}
+                                        </Typography>
+                                    </AccordionSummary>
+                                    <Divider />
+                                    {/* ====== Render Lessons within Section ====== */}
+                                    {instruction.instructionDetailResponse &&
+                                    instruction.instructionDetailResponse.length > 0 ? (
+                                        instruction.instructionDetailResponse.map((instructionDetail) => (
+                                            <>
+                                                <AccordionDetails sx={{ py: 3 }}>
+                                                    <Box key={instructionDetail.id} sx={{ mb: 1, pl: 2 }}>
+                                                        <Box
+                                                            sx={{
+                                                                display: 'flex',
+                                                                gap: 1,
+                                                                alignItems: 'center',
+                                                            }}
+                                                        >
+                                                            <div>
+                                                                <IconButton
+                                                                    aria-label="more"
+                                                                    id="long-button"
+                                                                    aria-controls={openMenu ? 'long-menu' : undefined}
+                                                                    aria-expanded={openMenu ? 'true' : undefined}
+                                                                    aria-haspopup="true"
+                                                                    onClick={(event) =>
+                                                                        handleClickMenuss(event, instructionDetail.id)
+                                                                    }
+                                                                >
+                                                                    <MoreVerticalIcon />
+                                                                </IconButton>
+                                                                <Menu
+                                                                    id="long-menu"
+                                                                    MenuListProps={{
+                                                                        'aria-labelledby': 'long-button',
+                                                                    }}
+                                                                    anchorEl={anchorElMap[instructionDetail.id]}
+                                                                    open={Boolean(anchorElMap[instructionDetail.id])}
+                                                                    onClose={() =>
+                                                                        handleCloseMenuss(instructionDetail.id)
+                                                                    }
+                                                                    slotProps={{
+                                                                        paper: {
+                                                                            style: {
+                                                                                maxHeight: ITEM_HEIGHT * 4.5,
+                                                                                width: '20ch',
+                                                                            },
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <MenuItem
+                                                                        onClick={() =>
+                                                                            handleEditLesson(instructionDetail.id)
+                                                                        }
+                                                                    >
+                                                                        Update
+                                                                    </MenuItem>
+                                                                    <MenuItem
+                                                                        onClick={() =>
+                                                                            handleClickDeleteSection(
+                                                                                instructionDetail.id,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Delete
+                                                                    </MenuItem>
+                                                                    <MenuItem
+                                                                        onClick={() =>
+                                                                            handleClickSwapOrderIntructionDetail(
+                                                                                instructionDetail.id,
+                                                                                instruction.id,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Swap Order
+                                                                    </MenuItem>
+                                                                </Menu>
+                                                            </div>
+                                                            <File />
+                                                            <Typography
+                                                                variant="body2"
+                                                                fontSize={16}
+                                                                sx={{
+                                                                    ':hover': {
+                                                                        cursor: 'pointer',
+                                                                        color: 'blue',
+                                                                    },
+                                                                }}
+                                                                onClick={() =>
+                                                                    handleOpenLessonDialog(instructionDetail)
+                                                                }
+                                                            >
+                                                                {instructionDetail.name}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </AccordionDetails>
+                                                <Divider />
+                                            </>
+                                        ))
+                                    ) : (
+                                        <Typography variant="body2" sx={{ my: 2 }}>
+                                            No instruction detail in this section.
+                                        </Typography>
+                                    )}
+
+                                    {/* ====== Add Lesson Button ====== */}
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => handleOpenAddLessonDialog(instruction.id)}
                                         sx={{
-                                            border: '1px solid #dee2e6',
-                                            boxShadow: 'none',
-                                            mb: 2,
-                                            padding: 1,
-                                            color: '#051D40',
+                                            my: 2,
+                                            borderRadius: '24px',
+                                            padding: '12px 20px',
+                                            backgroundColor: '#48A6A7',
+                                            ':hover': {
+                                                backgroundColor: '#48A6A7',
+                                                opacity: '0.8',
+                                            },
                                         }}
                                     >
-                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                            <Typography fontSize={24} fontWeight={700}>
-                                                {section.title}
-                                            </Typography>
-                                        </AccordionSummary>
-                                        <Divider />
-                                        {/* ====== Render Lessons within Section ====== */}
-                                        {section.lessonDetails && section.lessonDetails.length > 0 ? (
-                                            section.lessonDetails
-                                                .sort((a, b) => a.orderInLesson - b.orderInLesson)
-                                                .map((lesson, lessonIndex) => (
-                                                    <>
-                                                        <AccordionDetails sx={{ py: 3 }}>
-                                                            <Box key={lesson.id} sx={{ mb: 1, pl: 2 }}>
-                                                                {lesson.type === 'READING' && (
-                                                                    <Box
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            gap: 1,
-                                                                            alignItems: 'center',
-                                                                        }}
-                                                                    >
-                                                                        <div>
-                                                                            <IconButton
-                                                                                aria-label="more"
-                                                                                id="long-button"
-                                                                                aria-controls={
-                                                                                    openMenu ? 'long-menu' : undefined
-                                                                                }
-                                                                                aria-expanded={
-                                                                                    openMenu ? 'true' : undefined
-                                                                                }
-                                                                                aria-haspopup="true"
-                                                                                onClick={handleClickMenu}
-                                                                            >
-                                                                                <MoreVerticalIcon />
-                                                                            </IconButton>
-                                                                            <Menu
-                                                                                id="long-menu"
-                                                                                MenuListProps={{
-                                                                                    'aria-labelledby': 'long-button',
-                                                                                }}
-                                                                                anchorEl={anchorEl}
-                                                                                open={openMenu}
-                                                                                onClose={handleCloseMenu}
-                                                                                slotProps={{
-                                                                                    paper: {
-                                                                                        style: {
-                                                                                            maxHeight:
-                                                                                                ITEM_HEIGHT * 4.5,
-                                                                                            width: '20ch',
-                                                                                        },
-                                                                                    },
-                                                                                }}
-                                                                            >
-                                                                                <MenuItem
-                                                                                    onClick={() =>
-                                                                                        handleEditLesson(
-                                                                                            lesson,
-                                                                                            section.id,
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    Update
-                                                                                </MenuItem>
-                                                                                <MenuItem
-                                                                                    onClick={() =>
-                                                                                        handleClickDeleteSection(
-                                                                                            section.id,
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    Delete
-                                                                                </MenuItem>
-                                                                            </Menu>
-                                                                        </div>
-                                                                        <File />
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            fontWeight={700}
-                                                                        >
-                                                                            Reading:
-                                                                        </Typography>
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            sx={{
-                                                                                ':hover': {
-                                                                                    cursor: 'pointer',
-                                                                                    color: 'blue',
-                                                                                },
-                                                                            }}
-                                                                            onClick={() =>
-                                                                                handleOpenLessonDialog(lesson)
-                                                                            }
-                                                                        >
-                                                                            {lesson.title}
-                                                                        </Typography>
-                                                                    </Box>
-                                                                )}
-                                                                {lesson.type === 'VIDEO' && (
-                                                                    <Box
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            gap: 1,
-                                                                            alignItems: 'center',
-                                                                        }}
-                                                                    >
-                                                                        <div>
-                                                                            <IconButton
-                                                                                aria-label="more"
-                                                                                id="long-button"
-                                                                                aria-controls={
-                                                                                    openMenu ? 'long-menu' : undefined
-                                                                                }
-                                                                                aria-expanded={
-                                                                                    openMenu ? 'true' : undefined
-                                                                                }
-                                                                                aria-haspopup="true"
-                                                                                onClick={handleClickMenu}
-                                                                            >
-                                                                                <MoreVerticalIcon />
-                                                                            </IconButton>
-                                                                            <Menu
-                                                                                id="long-menu"
-                                                                                MenuListProps={{
-                                                                                    'aria-labelledby': 'long-button',
-                                                                                }}
-                                                                                anchorEl={anchorEl}
-                                                                                open={openMenu}
-                                                                                onClose={handleCloseMenu}
-                                                                                slotProps={{
-                                                                                    paper: {
-                                                                                        style: {
-                                                                                            maxHeight:
-                                                                                                ITEM_HEIGHT * 4.5,
-                                                                                            width: '20ch',
-                                                                                        },
-                                                                                    },
-                                                                                }}
-                                                                            >
-                                                                                <MenuItem
-                                                                                    onClick={() =>
-                                                                                        handleEditLesson(
-                                                                                            lesson,
-                                                                                            section.id,
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    Update
-                                                                                </MenuItem>
-                                                                                <MenuItem
-                                                                                    onClick={() =>
-                                                                                        handleClickDeleteSection(
-                                                                                            section.id,
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    Delete
-                                                                                </MenuItem>
-                                                                            </Menu>
-                                                                        </div>
-                                                                        <Video />
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            fontWeight={700}
-                                                                        >
-                                                                            Video:
-                                                                        </Typography>
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            sx={{
-                                                                                ':hover': {
-                                                                                    cursor: 'pointer',
-                                                                                    color: 'blue',
-                                                                                },
-                                                                            }}
-                                                                            onClick={() =>
-                                                                                handleOpenVideoDialog(lesson)
-                                                                            }
-                                                                        >
-                                                                            {lesson.title}
-                                                                        </Typography>
-                                                                        <Typography
-                                                                            variant="body2"
-                                                                            fontSize={16}
-                                                                            sx={{
-                                                                                ml: 'auto', // This will push the duration to the right
-                                                                                fontStyle: 'italic',
-                                                                                color: 'text.secondary',
-                                                                            }} // Handle Click
-                                                                        >
-                                                                            {lesson.duration} min(s)
-                                                                        </Typography>
-                                                                    </Box>
-                                                                )}
-                                                            </Box>
-                                                        </AccordionDetails>
-                                                        <Divider />
-                                                    </>
-                                                ))
-                                        ) : (
-                                            <Typography variant="body2" sx={{ my: 2 }}>
-                                                No lesson in this section.
-                                            </Typography>
-                                        )}
-
-                                        {/* ====== Add Lesson Button ====== */}
-                                        <Button
-                                            variant="contained"
-                                            onClick={() => handleOpenAddLessonDialog(section.id)}
-                                            sx={{
-                                                my: 2,
-                                                borderRadius: '24px',
-                                                padding: '12px 20px',
-                                                backgroundColor: '#48A6A7',
-                                                ':hover': {
-                                                    backgroundColor: '#48A6A7',
-                                                    opacity: '0.8',
-                                                },
-                                            }}
-                                        >
-                                            + Add a Lesson
-                                        </Button>
-                                    </Accordion>
-                                ))
+                                        + Add a Instruction Detail
+                                    </Button>
+                                </Accordion>
+                            ))
                         )}
                         {/* ====== Add Section Button ====== */}
                         <Button
@@ -1527,7 +1741,7 @@ export default function CoursesControlEdit() {
                                 },
                             }}
                         >
-                            + Add Section
+                            + Add Instruction
                         </Button>
                     </Box>
                 </TabPanel>
@@ -1910,6 +2124,47 @@ export default function CoursesControlEdit() {
                     </Button>
                 </DialogActions>
             </Dialog>
+            {/* ==================== Swap Order Dialog ==================== */}
+            <Dialog
+                open={openSwapOrderDialog}
+                onClose={handleCloseSwapOrderIntructionDetail}
+                aria-labelledby="swap-dialog-title"
+            >
+                <DialogTitle id="swap-dialog-title">Swap Order Number</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="Current Order Number"
+                        value={instructionDetailCurrent.orderNumber}
+                        fullWidth
+                        variant="outlined"
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                        margin="dense"
+                    />
+                    <TextField
+                        select
+                        label="Order Number to Swap"
+                        fullWidth
+                        margin="dense"
+                        value={instructionDetailIdToSwap}
+                        onChange={(e) => setInstructionDetailIdToSwap(e.target.value)}
+                    >
+                        {instructionDetailList
+                            .filter((item) => item.id !== instructionDetailIdCurrent) // Loại bỏ ID hiện tại khỏi danh sách
+                            .map((instructionDetail) => (
+                                <MenuItem key={instructionDetail.id} value={instructionDetail.id}>
+                                    {instructionDetail.name} - {instructionDetail.orderNumber}
+                                </MenuItem>
+                            ))}
+                    </TextField>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseSwapOrderIntructionDetail}>Cancel</Button>
+                    <Button sx={{ backgroundColor: 'blue', color: 'white' }} onClick={handleClickSaveSwapOrder}>
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
             {/* ==================== Start/Stop Course Dialog ==================== */}
             <Dialog
                 open={openCourseStatusDialog}
@@ -1947,158 +2202,148 @@ export default function CoursesControlEdit() {
                         fullWidth
                         margin="normal"
                         required
-                        label="Section Title"
-                        value={newSectionTitle}
-                        onChange={(e) => setNewSectionTitle(e.target.value)}
+                        label="Instruction Title"
+                        value={instructionName}
+                        onChange={(e) => setInstructionName(e.target.value)}
                     />
 
                     {/* Section Description */}
                     <TextField
                         fullWidth
                         margin="normal"
-                        label="Description"
+                        label="Instruction Description"
                         multiline
                         minRows={3}
-                        value={newSectionDescription}
-                        onChange={(e) => setNewSectionDescription(e.target.value)}
+                        value={instructionDescription}
+                        onChange={(e) => setInstructionDescription(e.target.value)}
                     />
+
+                    <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                        Translation (X, Y, Z)
+                    </Typography>
+                    <Box display="flex" gap={2}>
+                        {['x', 'y', 'z'].map((axis) => (
+                            <TextField
+                                key={axis}
+                                label={axis.toUpperCase()}
+                                type="number"
+                                value={translation[axis]}
+                                onChange={(e) => handleTranslationChange(axis, e.target.value)}
+                                fullWidth
+                            />
+                        ))}
+                    </Box>
+
+                    <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
+                        Rotation (Pitch, Yaw, Roll)
+                    </Typography>
+                    <Box display="flex" gap={2}>
+                        {['pitch', 'yaw', 'roll'].map((axis) => (
+                            <TextField
+                                key={axis}
+                                label={axis.charAt(0).toUpperCase() + axis.slice(1)}
+                                type="number"
+                                value={rotation[axis]}
+                                onChange={(e) => handleRotationChange(axis, e.target.value)}
+                                fullWidth
+                            />
+                        ))}
+                    </Box>
+
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Instruction Detail Name"
+                        value={instructionDetailRequest.name}
+                        onChange={handleInstructionDetailNameChange}
+                    />
+
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Instruction Detail Description"
+                        multiline
+                        minRows={3}
+                        value={instructionDetailRequest.description}
+                        onChange={handleInstructionDetailDescriptionChange}
+                    />
+
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                        Select an image for instruction detail (required):
+                    </Typography>
+                    <input type="file" accept="image/*" onChange={handleImageSelect} style={{ marginBottom: '8px' }} />
+                    {image && <Typography variant="body2">File: {image.name}</Typography>}
+
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                        Select 3D file (required, e.g. .glb):
+                    </Typography>
+                    <input
+                        type="file"
+                        accept=".glb,.gltf"
+                        onChange={handle3DFileSelect}
+                        style={{ marginBottom: '8px' }}
+                    />
+                    {file3D && <Typography variant="body2">File: {file3D.name}</Typography>}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddSectionDialog} disabled={isCreatingSection}>
                         Cancel
                     </Button>
-                    <Button onClick={handleCreateSection} disabled={isCreatingSection}>
-                        {isCreatingSection ? <CircularProgress size={24} /> : 'Create'}
+                    <Button onClick={handleCreateInstruction} disabled={isCreating}>
+                        {isCreating ? <CircularProgress size={24} /> : 'Create'}
                     </Button>
                 </DialogActions>
             </Dialog>
             {/* ==================== Add Lesson Dialog ==================== */}
             <Dialog open={openAddLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="sm">
-                <DialogTitle>Add New Lesson</DialogTitle>
+                <DialogTitle>Add New Instruction Detail</DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ mb: 2 }}>
-                        Please select the lesson type and provide the necessary details.
+                        Please fill out the form below to create a new instruction detail.
                     </DialogContentText>
 
-                    {/* Lesson Type Selection */}
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Lesson Type</InputLabel>
-                        <Select label="Lesson Type" value={selectedLessonType} onChange={handleLessonTypeChange}>
-                            <MenuItem value="READING">Reading</MenuItem>
-                            <MenuItem value="VIDEO">Video</MenuItem>
-                            {/* Add more lesson types as needed */}
-                        </Select>
-                    </FormControl>
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        required
+                        label="Name"
+                        value={nameForInstructionDetail}
+                        onChange={(e) => setNameForInstructionDetail(e.target.value)}
+                    />
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Description"
+                        multiline
+                        minRows={2}
+                        value={descriptionForInstructionDetail}
+                        onChange={(e) => setDescriptionForInstructionDetail(e.target.value)}
+                    />
 
-                    {/* Conditional Rendering based on Lesson Type */}
-                    {selectedLessonType === 'VIDEO' && (
-                        <>
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Video Title"
-                                value={newLessonData.title || ''}
-                                onChange={(e) => handleLessonInputChange('title', e.target.value)}
-                                sx={{ mb: 3 }}
-                            />
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                        Select an image (required):
+                    </Typography>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelectForInstructionDetail}
+                        style={{ marginBottom: '8px' }}
+                    />
+                    {imageForInstructionDetail && (
+                        <Typography variant="body2">File: {imageForInstructionDetail.name}</Typography>
+                    )}
 
-                            {/* Video File Input */}
-                            <input
-                                type="file"
-                                accept="video/*"
-                                style={{ display: 'none' }}
-                                id="video-upload"
-                                onChange={handleVideoUpload}
-                            />
-                            <label htmlFor="video-upload">
-                                <Button
-                                    component="span"
-                                    fullWidth
-                                    variant="contained"
-                                    sx={{
-                                        border: '2px dashed darkgrey',
-                                        padding: 2,
-                                        backgroundColor: '#f5f5f5',
-                                        boxShadow: 'none',
-                                        color: '#0f6cbf',
-                                        ':hover': {
-                                            backgroundColor: '#f5f5f5',
-                                            border: '2px solid #0f6cbf',
-                                            boxShadow: 'none',
-                                        },
-                                    }}
-                                >
-                                    {newLessonData.videoFile ? 'Change Video' : 'Upload Video'}
-                                </Button>
-                            </label>
-
-                            {/* Show Selected Video File Name */}
-                            {newLessonData.videoFile && (
-                                <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Video: {newLessonData.videoFile.name || newLessonData.videoFile}
-                                </Typography>
-                            )}
-
-                            {/* Auto-detected Video Duration */}
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Video Duration (minutes)"
-                                value={newLessonData.duration || ''}
-                                disabled
-                            />
-
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                label="Video Description"
-                                value={newLessonData.description || ''}
-                                onChange={(e) => handleLessonInputChange('description', e.target.value)}
-                                sx={{ mb: 3 }}
-                            />
-
-                            {/* Attach File Input (For non-video files) */}
-                            <input
-                                type="file"
-                                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" // Restrict to non-video files
-                                style={{ display: 'none' }}
-                                id="file-attach"
-                                onChange={handleFileUpload}
-                            />
-                            <label htmlFor="file-attach">
-                                <Button
-                                    component="span"
-                                    fullWidth
-                                    variant="contained"
-                                    sx={{
-                                        border: '2px dashed darkgrey',
-                                        padding: 2,
-                                        backgroundColor: '#f5f5f5',
-                                        boxShadow: 'none',
-                                        color: '#0f6cbf',
-                                        ':hover': {
-                                            backgroundColor: '#f5f5f5',
-                                            border: '2px solid #0f6cbf',
-                                            boxShadow: 'none',
-                                        },
-                                    }}
-                                >
-                                    {newLessonData.attachFileUrl ? 'Change Attachment' : 'Attach File'}
-                                </Button>
-                            </label>
-
-                            {/* Show Selected Attached File Name */}
-                            {newLessonData.attachFileUrl && (
-                                <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Attached File: {newLessonData.attachFileUrl.name || newLessonData.attachFileUrl}
-                                </Typography>
-                            )}
-
-                            {/* Hidden Video Element for Duration Detection */}
-                            <video id="video-preview" style={{ display: 'none' }} />
-                        </>
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                        Select 3D file (required, e.g. .glb):
+                    </Typography>
+                    <input
+                        type="file"
+                        accept=".glb,.gltf"
+                        onChange={handle3DFileSelectForInstructionDetail}
+                        style={{ marginBottom: '8px' }}
+                    />
+                    {file3DForInstructionDetail && (
+                        <Typography variant="body2">File: {file3DForInstructionDetail.name}</Typography>
                     )}
 
                     {selectedLessonType === 'READING' && (
@@ -2178,8 +2423,142 @@ export default function CoursesControlEdit() {
                     <Button onClick={handleCloseAddLessonDialog} disabled={isCreatingLesson}>
                         Cancel
                     </Button>
-                    <Button onClick={handleCreateLesson} disabled={isCreatingLesson}>
-                        {isCreatingLesson ? <CircularProgress size={24} /> : 'Create'}
+                    <Button onClick={handleCreateInstructionDetail} disabled={isCreatingForInstructionDetail}>
+                        {isCreatingForInstructionDetail ? <CircularProgress size={24} /> : 'Create'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={openUpdateLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Update Instruction Detail</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 2 }}>
+                        Please fill out the form below to update a new instruction detail.
+                    </DialogContentText>
+
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        required
+                        label="Name"
+                        value={nameForInstructionDetail}
+                        onChange={(e) => setNameForInstructionDetail(e.target.value)}
+                    />
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Description"
+                        multiline
+                        minRows={2}
+                        value={descriptionForInstructionDetail}
+                        onChange={(e) => setDescriptionForInstructionDetail(e.target.value)}
+                    />
+
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                        Select an image :
+                    </Typography>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelectForInstructionDetail}
+                        style={{ marginBottom: '8px' }}
+                    />
+                    {imageForInstructionDetail && (
+                        <Typography variant="body2">File: {imageForInstructionDetail.name}</Typography>
+                    )}
+
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                        Select 3D file :
+                    </Typography>
+                    <input
+                        type="file"
+                        accept=".glb,.gltf"
+                        onChange={handle3DFileSelectForInstructionDetail}
+                        style={{ marginBottom: '8px' }}
+                    />
+                    {file3DForInstructionDetail && (
+                        <Typography variant="body2">File: {file3DForInstructionDetail.name}</Typography>
+                    )}
+
+                    {selectedLessonType === 'READING' && (
+                        <>
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                required
+                                label="Reading Title"
+                                value={newLessonData.title || ''}
+                                onChange={(e) => handleLessonInputChange('title', e.target.value)}
+                                sx={{ mb: 3 }}
+                            />
+
+                            <Box>
+                                <MyEditor
+                                    value={newLessonData.content || ''}
+                                    onChange={(data) => {
+                                        handleLessonInputChange('content', data);
+                                        console.log(data);
+                                    }}
+                                />
+                            </Box>
+
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                required
+                                label="Estimation Time (minutes)"
+                                type="number" // Enforces numerical input
+                                inputProps={{ min: 1 }} // Optional: Set minimum value to 1 to prevent negative numbers
+                                value={newLessonData.duration || ''}
+                                onChange={(e) => handleLessonInputChange('duration', e.target.value)}
+                                sx={{ mt: 3 }}
+                            />
+
+                            {/* Attach File Input (For non-video files) */}
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" // Restrict to non-video files
+                                style={{ display: 'none' }}
+                                id="file-attach"
+                                onChange={handleFileUpload}
+                            />
+                            <label htmlFor="file-attach">
+                                <Button
+                                    component="span"
+                                    fullWidth
+                                    variant="contained"
+                                    sx={{
+                                        border: '2px dashed darkgrey',
+                                        padding: 2,
+                                        backgroundColor: '#f5f5f5',
+                                        boxShadow: 'none',
+                                        color: '#0f6cbf',
+                                        ':hover': {
+                                            backgroundColor: '#f5f5f5',
+                                            border: '2px solid #0f6cbf',
+                                            boxShadow: 'none',
+                                        },
+                                    }}
+                                >
+                                    {newLessonData.attachFileUrl ? 'Change Attachment' : 'Attach File'}
+                                </Button>
+                            </label>
+
+                            {/* Show Selected Attached File Name */}
+                            {newLessonData.attachFileUrl && (
+                                <Typography variant="body2" sx={{ marginTop: 1 }}>
+                                    Attached File: {newLessonData.attachFileUrl.name || newLessonData.attachFileUrl}
+                                </Typography>
+                            )}
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseAddLessonDialog} disabled={isUpdatingForInstructionDetail}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleUpdateInstructionDetail} disabled={isUpdatingForInstructionDetail}>
+                        {isUpdatingForInstructionDetail ? <CircularProgress size={24} /> : 'Update'}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -2264,34 +2643,43 @@ export default function CoursesControlEdit() {
 
             {/* Dialog Show Readinng */}
             <Dialog open={openLessonDialog} onClose={handleCloseLessonDialog} maxWidth="md" fullWidth>
-                <DialogTitle>{lessonDetails?.title || 'Lesson Details'}</DialogTitle>
+                <DialogTitle>{lessonDetails?.name || 'Lesson Details'}</DialogTitle>
 
                 <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Estimation time: {lessonDetails?.duration || 0} min(s)
-                    </Typography>
                     <Divider />
-
+                    <Typography
+                        variant="body2"
+                        color="text.primary"
+                        sx={{ my: 2 }}
+                        dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(
+                                '<strong>Step ' + (lessonDetails?.orderNumber || 'No content available.') + '</strong>',
+                            ),
+                        }}
+                    />
+                    <img src={`http://localhost:8086/api/v1/files/${lessonDetails?.imgString}`} />
                     {/* Show Lesson Content for READING type */}
                     <Typography
                         variant="body2"
                         color="text.primary"
                         sx={{ my: 2 }}
                         dangerouslySetInnerHTML={{
-                            __html: DOMPurify.sanitize(lessonDetails?.content || 'No content available.'),
+                            __html: DOMPurify.sanitize(
+                                'Description: ' + lessonDetails?.description || 'No content available.',
+                            ),
                         }}
                     />
                     <Divider />
 
                     {/* Attached File Download */}
-                    {lessonDetails?.attachFileUrl && (
+                    {lessonDetails?.fileString && (
                         <Box sx={{ mt: 2 }}>
                             <Button
                                 variant="contained"
                                 startIcon={<FileText />}
-                                onClick={() => handleDownloadFile(lessonDetails.attachFileUrl, lessonDetails.title)}
+                                onClick={() => handleDownloadFile(lessonDetails.fileString, lessonDetails.name)}
                             >
-                                Download Attached File
+                                Download File Instruction Detail
                             </Button>
                         </Box>
                     )}

@@ -15,8 +15,15 @@ const InstructionAPI = {
         }
         return config;
     },
-    create(data, includeAuthorization = false) {
-        return axiosClient.post(instruction, data);
+    getByCourse(courseId) {
+        return axiosClient.get(`/v1/instruction/course/${courseId}`);
+    },
+    create(data) {
+        return axiosClient.post('/v1/instruction', data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
     createDetail(data, includeAuthorization = false) {
         return axiosClient.post(instructionDetail, data);
