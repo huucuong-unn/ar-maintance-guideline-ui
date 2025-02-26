@@ -34,7 +34,7 @@ import {
     FormControlLabel,
     Pagination,
 } from '@mui/material';
-import { File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
+import { Divide, File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AccountAPI from '~/API/AccountAPI';
 
@@ -50,6 +50,7 @@ import DOMPurify from 'dompurify';
 import { getImage } from '~/Constant';
 import InstructionAPI from '~/API/InstructionAPI';
 import InstructionDetailAPI from '~/API/InstructionDetailAPI';
+import ModelAPI from '~/API/ModelAPI';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
@@ -192,6 +193,19 @@ export default function CoursesControlEdit() {
             setIsLoadingCourse(false);
         }
     };
+    const [model, setModel] = useState();
+    const [isLoadingModel, setIsLoadingModel] = useState(true);
+    const fetchModel = async () => {
+        try {
+            setIsLoadingModel(true);
+            const response = await ModelAPI.getById(course?.modelId);
+            setModel(response?.result);
+        } catch (error) {
+            console.error('Failed to fetch model:', error);
+        } finally {
+            setIsLoadingModel(false);
+        }
+    };
 
     // ==================== useEffect for Initial Data Fetching ====================
     useEffect(() => {
@@ -199,6 +213,10 @@ export default function CoursesControlEdit() {
         fetchQuiz();
         fetchSections();
     }, [courseId]);
+
+    useEffect(() => {
+        fetchModel();
+    }, [course]);
 
     // ==================== Edit Quiz Dialog Handlers ====================
     const handleClickOpenEditQuiz = () => {
@@ -1344,6 +1362,32 @@ export default function CoursesControlEdit() {
         }
     };
 
+    async function handleDownloadQrCode(qrCodeUrl, fileName) {
+        if (!qrCodeUrl) return;
+
+        try {
+            // Fetch image as Blob
+            const response = await axios.get(getImage(qrCodeUrl), { responseType: 'blob' });
+            // Create a Blob URL
+            const blob = new Blob([response.data], { type: response.headers['content-type'] });
+            const downloadUrl = URL.createObjectURL(blob);
+
+            // Create a temporary link
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error downloading QR code:', error);
+            alert('Failed to download QR code. Please try again.');
+        }
+    }
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             <Box
@@ -1414,15 +1458,120 @@ export default function CoursesControlEdit() {
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
-                        <Tab label="Model" value="0" />
-                        <Tab label="INSTRUCTION" value="1" />
-                        {/* <Tab label="Final Quiz" value="2" /> */}
-                        <Tab label="Assign Employee" value="3" />
+                        <Tab label="Model" value="1" />
+                        <Tab label="INSTRUCTION" value="2" />
+                        <Tab label="Assign Employee" value="4" />
                     </TabList>
                 </Box>
+                {/* ================= TabPanel 0: Model ================= */}
+                <TabPanel value="1">
+                    {isLoadingModel ? (
+                        <CircularProgress />
+                    ) : (
+                        <Box sx={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
+                            {/* LEFT COLUMN: QR Code & Download Button */}
+                            <Box
+                                sx={{
+                                    width: '30%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}
+                            >
+                                {/* QR Code Image */}
+                                <img
+                                    src={getImage(course?.qrCode)}
+                                    alt="QR Code"
+                                    style={{
+                                        maxWidth: '100%',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+                                    }}
+                                />
+
+                                {/* Download Button */}
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleDownloadQrCode(course?.qrCode, model?.name + '_QRCode.png')}
+                                    sx={{ alignSelf: 'center' }}
+                                >
+                                    Download QR Code
+                                </Button>
+                            </Box>
+
+                            {/* RIGHT COLUMN: Model Info */}
+                            <Box
+                                sx={{
+                                    width: '60%',
+                                    backgroundColor: 'rgba(255,255,255,0.8)',
+                                    p: 3,
+                                    borderRadius: 2,
+                                    boxShadow: 3,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 2,
+                                    textAlign: 'left',
+                                }}
+                            >
+                                {/* Model Image */}
+                                <img
+                                    src={getImage(model?.imageUrl)}
+                                    alt="Model Preview"
+                                    style={{
+                                        width: '100%',
+                                        borderRadius: '8px',
+                                        marginBottom: '16px',
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                    }}
+                                />
+
+                                {/* Model Details */}
+                                <Box sx={{ display: 'flex', mb: 1, textAlign: 'left' }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Model Name
+                                    </Typography>
+                                    <Typography variant="body1">{model?.name || 'N/A'}</Typography>
+                                </Box>
+                                <Divider />
+                                {/* Aligned details */}
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Type
+                                    </Typography>
+                                    <Typography variant="body1">{model?.modelTypeName || 'N/A'}</Typography>
+                                </Box>
+                                <Divider />
+
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Description
+                                    </Typography>
+                                    <Typography variant="body1">{model?.description || 'No description'}</Typography>
+                                </Box>
+                                <Divider />
+
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Version
+                                    </Typography>
+                                    <Typography variant="body1">{model?.version || 'N/A'}</Typography>
+                                </Box>
+                                <Divider />
+
+                                <Box sx={{ display: 'flex' }}>
+                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                        Scale
+                                    </Typography>
+                                    <Typography variant="body1">{model?.scale || 'N/A'}</Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+                    )}
+                </TabPanel>
 
                 {/* ================= TabPanel 1: Sections ================= */}
-                <TabPanel value="1">
+                <TabPanel value="2">
                     <Box>
                         {/* ====== Render Sections ====== */}
                         {isLoadingSections ? (
@@ -1599,6 +1748,298 @@ export default function CoursesControlEdit() {
 
                 {/* ================= TabPanel 2: Final Quiz ================= */}
                 <TabPanel value="3">
+                    {isLoadingQuiz ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <Box
+                            sx={{
+                                width: {
+                                    xs: '100%', // 100% for extra small screens (xs)
+                                    lg: '80%', // 70% for medium screens (md) and up
+                                },
+                                px: '5%',
+                                m: 'auto',
+                            }}
+                        >
+                            <Box mb={3}>
+                                <Typography variant="h4" sx={{ fontWeight: 700, fontSize: 24, color: '#051D40' }}>
+                                    Final Quiz
+                                </Typography>
+                                {quiz ? (
+                                    <Box sx={{ backgroundColor: 'white', p: 3, borderRadius: '8px', mt: 2 }}>
+                                        {/* Quiz Details */}
+                                        <Box sx={{ textAlign: 'left', mb: 3 }}>
+                                            <Typography sx={{ fontSize: '20px', fontWeight: 700 }}>
+                                                Quiz Title*
+                                            </Typography>
+                                            <Typography>{quiz?.title}</Typography>
+                                        </Box>
+                                        <Box sx={{ textAlign: 'left' }}>
+                                            <Typography sx={{ fontSize: '20px', fontWeight: 700 }}>
+                                                Description
+                                            </Typography>
+                                            <Typography>{quiz?.description}</Typography>
+                                        </Box>
+                                        {/* Edit Quiz Button */}
+                                        <Button
+                                            variant="contained"
+                                            sx={{
+                                                mt: 2,
+                                                backgroundColor: '#051D40',
+                                                display: 'block',
+                                            }}
+                                            onClick={handleClickOpenEditQuiz}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            backgroundColor: 'white',
+                                            p: 4,
+                                            borderRadius: '8px',
+                                            mt: 2,
+                                        }}
+                                    >
+                                        {/* Create Quiz Form */}
+                                        <TextField
+                                            fullWidth
+                                            margin="normal"
+                                            required
+                                            label="Quiz Title"
+                                            value={quizTitle}
+                                            onChange={(e) => setQuizTitle(e.target.value)}
+                                        />
+                                        <TextField
+                                            fullWidth
+                                            margin="normal"
+                                            label="Description"
+                                            multiline
+                                            minRows={3}
+                                            value={quizDescription}
+                                            onChange={(e) => setQuizDescription(e.target.value)}
+                                            sx={{ borderRadius: '20px' }}
+                                        />
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            fullWidth
+                                            sx={{
+                                                mt: 3,
+                                                mb: 2,
+                                                bgcolor: '#051D40',
+                                                padding: '12px 0',
+                                                fontSize: '16px',
+                                                ':hover': {
+                                                    bgcolor: '#051D40',
+                                                    opacity: '0.8',
+                                                },
+                                            }}
+                                            onClick={handleCreateQuiz}
+                                        >
+                                            Create Quiz
+                                        </Button>
+                                    </Box>
+                                )}
+
+                                {/* ====== Edit Quiz Dialog ====== */}
+                                <Dialog open={openEditQuiz} onClose={handleCloseEditQuiz}>
+                                    <DialogTitle>Edit Quiz</DialogTitle>
+                                    <DialogContent sx={{ minWidth: '524px' }}>
+                                        {isLoadingEditQuiz ? (
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                                <CircularProgress />
+                                            </Box>
+                                        ) : (
+                                            <>
+                                                <DialogContentText>
+                                                    Update your quiz title and description.
+                                                </DialogContentText>
+                                                <TextField
+                                                    fullWidth
+                                                    margin="normal"
+                                                    required
+                                                    label="Quiz Title"
+                                                    value={quizTitle}
+                                                    onChange={(e) => setQuizTitle(e.target.value)}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    margin="normal"
+                                                    label="Description"
+                                                    multiline
+                                                    minRows={3}
+                                                    value={quizDescription}
+                                                    onChange={(e) => setQuizDescription(e.target.value)}
+                                                />
+                                            </>
+                                        )}
+                                    </DialogContent>
+                                    <DialogActions>
+                                        <Button onClick={handleCloseEditQuiz} disabled={isLoadingEditQuiz}>
+                                            Cancel
+                                        </Button>
+                                        <Button onClick={handleUpdateQuiz} disabled={isLoadingEditQuiz}>
+                                            Update
+                                        </Button>
+                                    </DialogActions>
+                                </Dialog>
+                            </Box>
+
+                            <Divider />
+
+                            {/* ====== Questions List ====== */}
+                            <Box sx={{ mt: 3 }}>
+                                {questions.map((q, qIndex) => (
+                                    <Accordion
+                                        key={qIndex}
+                                        expanded={expandedQuestion === `panel${qIndex}`}
+                                        onChange={() =>
+                                            setExpandedQuestion(
+                                                expandedQuestion === `panel${qIndex}` ? false : `panel${qIndex}`,
+                                            )
+                                        }
+                                        sx={{
+                                            border: '1px solid #dee2e6',
+                                            boxShadow: 'none',
+                                            mb: 2,
+                                            color: '#051D40',
+                                        }}
+                                    >
+                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                            <Typography fontSize="24px" fontWeight={700}>
+                                                {`Question ${qIndex + 1}`}
+                                            </Typography>
+                                        </AccordionSummary>
+                                        <AccordionDetails>
+                                            {q.isSaved ? (
+                                                <Box sx={{ textAlign: 'left', width: '100%' }}>
+                                                    <Typography>{q.question}</Typography>
+                                                    {q.answers.map((answer, aIndex) => (
+                                                        <Box key={aIndex}>
+                                                            <Typography
+                                                                sx={answer.isRight ? { fontWeight: 'bold' } : {}}
+                                                            >
+                                                                {String.fromCharCode(65 + aIndex)}. {answer.option}
+                                                            </Typography>
+                                                        </Box>
+                                                    ))}
+                                                    {/* Edit & Delete Buttons */}
+                                                    <Box sx={{ display: 'flex', gap: '10px', mt: 2 }}>
+                                                        <Button
+                                                            variant="contained"
+                                                            sx={{ backgroundColor: '#051D40' }}
+                                                            onClick={() => handleClickOpenEditQuestion(qIndex)}
+                                                        >
+                                                            Edit
+                                                        </Button>
+                                                        <Button
+                                                            variant="contained"
+                                                            sx={{ backgroundColor: '#051D40' }}
+                                                            onClick={() => handleClickOpenDeleteQuestion(qIndex)}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </Box>
+                                                </Box>
+                                            ) : (
+                                                <Box>
+                                                    <TextField
+                                                        fullWidth
+                                                        margin="normal"
+                                                        required
+                                                        label={`Question ${qIndex + 1}`}
+                                                        value={q.question}
+                                                        onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
+                                                        error={Boolean(questionErrors[qIndex]?.questionError)}
+                                                        helperText={questionErrors[qIndex]?.questionError}
+                                                    />
+
+                                                    {q.answers.map((ans, aIndex) => (
+                                                        <TextField
+                                                            key={aIndex}
+                                                            fullWidth
+                                                            margin="normal"
+                                                            label={`${String.fromCharCode(65 + aIndex)} - Answer ${
+                                                                aIndex + 1
+                                                            }`}
+                                                            value={ans.option}
+                                                            onChange={(e) =>
+                                                                handleAnswerChange(qIndex, aIndex, e.target.value)
+                                                            }
+                                                            error={Boolean(
+                                                                questionErrors[qIndex]?.answerErrors[aIndex],
+                                                            )}
+                                                            helperText={questionErrors[qIndex]?.answerErrors[aIndex]}
+                                                        />
+                                                    ))}
+
+                                                    {/* Correct Answer Selection */}
+                                                    <FormControl sx={{ width: '50%', mt: 2 }}>
+                                                        <InputLabel>Correct</InputLabel>
+                                                        <Select
+                                                            label="Correct"
+                                                            value={(() => {
+                                                                const idx = q.answers.findIndex((a) => a.isRight);
+                                                                return idx === -1 ? '0' : idx.toString();
+                                                            })()}
+                                                            onChange={(e) =>
+                                                                handleCorrectAnswerChange(qIndex, e.target.value)
+                                                            }
+                                                        >
+                                                            {q.answers.map((_, idx) => (
+                                                                <MenuItem key={idx} value={idx.toString()}>
+                                                                    {String.fromCharCode(65 + idx)}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Select>
+                                                    </FormControl>
+
+                                                    {/* Save Button */}
+                                                    <Button
+                                                        variant="contained"
+                                                        sx={{ mt: 2, float: 'right', bgcolor: '#051D40' }}
+                                                        onClick={() => createQuestion(qIndex)}
+                                                    >
+                                                        Save
+                                                    </Button>
+                                                </Box>
+                                            )}
+                                        </AccordionDetails>
+                                    </Accordion>
+                                ))}
+
+                                {/* Add Question Button */}
+                                {quiz && (
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        sx={{
+                                            mt: 4,
+                                            border: '2px dashed darkgrey',
+                                            padding: 2,
+                                            backgroundColor: '#f5f5f5',
+                                            boxShadow: 'none',
+                                            color: '#0f6cbf',
+                                            ':hover': {
+                                                backgroundColor: '#f5f5f5',
+                                                border: '2px solid #0f6cbf',
+                                                boxShadow: 'none',
+                                            },
+                                        }}
+                                        onClick={addQuestion}
+                                    >
+                                        + Add Question
+                                    </Button>
+                                )}
+                            </Box>
+                        </Box>
+                    )}
+                </TabPanel>
+                <TabPanel value="4">
                     <EmployeeList />
                 </TabPanel>
             </TabContext>
