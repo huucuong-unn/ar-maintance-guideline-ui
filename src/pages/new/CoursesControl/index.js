@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CourseAPI from '~/API/CourseAPI';
+import ModelAPI from '~/API/ModelAPI';
 import CardCourse from '~/components/CardCourse';
 import storageService from '~/components/StorageService/storageService';
 
@@ -32,6 +33,7 @@ export default function CoursesControl() {
 
     // Original states
     const [courses, setCourses] = useState([]);
+    const [unusedModel, setUnusedModel] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // States for filtering
@@ -60,6 +62,21 @@ export default function CoursesControl() {
     // Fetch data on mount
     useEffect(() => {
         fetchCourses();
+    }, []);
+
+    useEffect(() => {
+        const fetchModelUnused = async () => {
+            try {
+                const response = await ModelAPI.getUnusedModelByCompany(userInfo?.company?.id);
+                console.log(response);
+
+                const data = response?.result || [];
+                setUnusedModel(data);
+            } catch (error) {
+                console.error('Failed to fetch accounts:', error);
+            }
+        };
+        fetchModelUnused();
     }, []);
 
     const fetchCourses = async () => {
@@ -217,7 +234,6 @@ export default function CoursesControl() {
                     </Button>
                 </Box>
                 {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
-
                 <Box
                     sx={{
                         borderRadius: '20px',
@@ -267,7 +283,6 @@ export default function CoursesControl() {
                                         description={data.description}
                                         image={data.imageUrl}
                                         viewers={data.numberOfParticipants}
-                                        lessons={data.lessons.length}
                                         duration={data.duration}
                                         status={data.status}
                                     />
@@ -300,6 +315,9 @@ export default function CoursesControl() {
                             <InputLabel>Model*</InputLabel>
                             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
                                 <MenuItem value={defaultModel}>Default model</MenuItem>
+                                {unusedModel.map((data, index) => (
+                                    <MenuItem value={data.modelTypeId}>{data.modelTypeName}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
 

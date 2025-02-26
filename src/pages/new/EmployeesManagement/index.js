@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
+import storageService from '~/components/StorageService/storageService';
 import AccountAPI from '~/API/AccountAPI';
 
 function Copyright(props) {
@@ -50,6 +51,7 @@ export default function EmployeesManagement() {
         page: 0,
         pageSize: 5,
     });
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     const [total, setTotal] = useState(0);
 
     const columns = [
@@ -75,7 +77,7 @@ export default function EmployeesManagement() {
 
                 console.log(params);
 
-                const response = await AccountAPI.getStaffByCompanyId('f608be70-fa3a-47cd-bb7a-751c16452f87', params);
+                const response = await AccountAPI.getStaffByCompanyId(userInfo?.company?.id, params, params);
                 console.log(response);
 
                 const data = response?.result?.objectList || [];

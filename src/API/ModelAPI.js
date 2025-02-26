@@ -13,7 +13,7 @@ const ModelAPI = {
         return config;
     },
 
-    createModel(data, includeAuthorization = false) {
+    createModel(data) {
         return axiosClient.post('/v1/model', data, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -21,8 +21,11 @@ const ModelAPI = {
         });
     },
 
-    getByCompany(companyId, includeAuthorization = false) {
-        return axiosClient.get(`/v1/model/company/${companyId}?page=1&size=1&type=&name=`);
+    getByCompany(companyId, params) {
+        return axiosClient.get(`/v1/model/company/${companyId}`, { params });
+    },
+    getUnusedModelByCompany(companyId) {
+        return axiosClient.get(`/v1/model/unused/company/${companyId}`);
     },
 
     getById(id, includeAuthorization = false) {
