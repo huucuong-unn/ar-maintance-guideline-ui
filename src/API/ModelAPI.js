@@ -20,7 +20,6 @@ const ModelAPI = {
             },
         });
     },
-
     getByCompany(companyId, params) {
         return axiosClient.get(`/v1/model/company/${companyId}`, { params });
     },
@@ -28,8 +27,15 @@ const ModelAPI = {
         return axiosClient.get(`/v1/model/unused/company/${companyId}`);
     },
 
-    getById(id, includeAuthorization = false) {
+    getById(id) {
         return axiosClient.get(`/v1/model/${id}`);
+    },
+    updateModel(id, data) {
+        return axiosClient.put(`/v1/model/${id}`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
 };
 

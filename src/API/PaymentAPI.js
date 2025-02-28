@@ -16,9 +16,9 @@ const PaymentAPI = {
         return axiosClient.get(url);
     },
 
-    getPaymentsByCompanyId(id) {
+    getPaymentsByCompanyId(id, params) {
         const url = `/v1/order-transaction/company/${id}`;
-        return axiosClient.get(url);
+        return axiosClient.get(url, { params });
     },
 
     getPaymentsDashboard() {

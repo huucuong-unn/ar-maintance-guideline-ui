@@ -23,6 +23,7 @@ import {
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
 import PaymentAPI from '~/API/PaymentAPI';
+import storageService from '~/components/StorageService/storageService';
 import { format } from 'date-fns';
 
 function Copyright(props) {
@@ -44,13 +45,47 @@ export default function PaymentAndSubscriptionManagement() {
         pageSize: 5,
     });
     const [total, setTotal] = useState(0);
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
 
     const columns = [
         { field: 'itemCode', headerName: 'Item Code', width: 200 },
         { field: 'orderCode', headerName: 'Order Code', width: 200 },
-        { field: 'createdDate', headerName: 'Create At', width: 250 },
-        { field: 'updatedDate', headerName: 'Update At', width: 250 },
-        { field: 'status', headerName: 'Status', width: 200 },
+        { field: 'createdDate', headerName: 'Create At', width: 200 },
+        { field: 'updatedDate', headerName: 'Update At', width: 200 },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 200,
+            renderCell: (params) => {
+                let color = 'black';
+
+                switch (params.value) {
+                    case 'PENDING':
+                        color = 'orange';
+                        break;
+                    case 'PAID':
+                        color = 'green';
+                        break;
+                    case 'UNSUCCESSFUL':
+                        color = 'red';
+                        break;
+                    default:
+                        color = 'black';
+                }
+
+                return (
+                    <Box
+                        sx={{
+                            color,
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        {params.value}
+                    </Box>
+                );
+            },
+        },
     ];
 
     useEffect(() => {
@@ -59,8 +94,15 @@ export default function PaymentAndSubscriptionManagement() {
                 const pageParam = paginationModel.page + 1;
                 const sizeParam = paginationModel.pageSize;
 
-                const response = await PaymentAPI.getPaymentsByCompanyId('f608be70-fa3a-47cd-bb7a-751c16452f87');
+                const params = {
+                    page: pageParam,
+                    size: sizeParam,
+                };
+
+                const response = await PaymentAPI.getPaymentsByCompanyId(userInfo?.company?.id, params);
+
                 const data = response?.result?.objectList || [];
+                console.log(data);
 
                 const formattedData = data.map((item) => ({
                     ...item,
