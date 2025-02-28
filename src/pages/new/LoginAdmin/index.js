@@ -49,7 +49,7 @@ export default function LoginAdmin() {
                 storageService.setItem('userInfo', userInfo?.result); // Store user info
 
                 if (userInfo?.result?.user?.role?.roleName === adminRole) {
-                    navigate('/admin/dashboard'); // Navigate
+                    navigate('/admin/account-management'); // Navigate
                 }
 
                 if (userInfo?.result?.user?.role?.roleName === companyRole) {

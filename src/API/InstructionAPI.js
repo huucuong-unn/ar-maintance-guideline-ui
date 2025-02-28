@@ -18,6 +18,12 @@ const InstructionAPI = {
     getByCourse(courseId) {
         return axiosClient.get(`/v1/instruction/course/${courseId}`);
     },
+    getByCourseToSwap(courseId) {
+        return axiosClient.get(`/v1/instruction/no-paging/course/${courseId}`);
+    },
+    getById(id) {
+        return axiosClient.get(`/v1/instruction/${id}`);
+    },
     create(data) {
         return axiosClient.post('/v1/instruction', data, {
             headers: {
@@ -27,6 +33,21 @@ const InstructionAPI = {
     },
     createDetail(data, includeAuthorization = false) {
         return axiosClient.post(instructionDetail, data);
+    },
+    deleteById(id) {
+        return axiosClient.delete(`/v1/instruction/${id}`);
+    },
+    swapOrder(instructionIdCurrent, instructionIdSwap) {
+        return axiosClient.put(
+            `/v1/instruction/swap-order?instructionIdCurrent=${instructionIdCurrent}&instructionIdSwap=${instructionIdSwap}`,
+        );
+    },
+    update(id, data) {
+        return axiosClient.put(`/v1/instruction/${id}`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
 };
 

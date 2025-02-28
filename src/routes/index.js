@@ -84,17 +84,9 @@ const publicRoutes = [
     },
 
     { path: '/admin/dashboard', component: DashboardManagement, layout: AdminLayout },
-    {
-        path: '/admin/company-management',
-        component: CompaniesManagement,
-        layout: AdminLayout,
-    },
+    { path: '/admin/company-management', component: CompaniesManagement, layout: AdminLayout },
     { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
-    {
-        path: '/admin/account-management',
-        component: AccountsManagement,
-        layout: AdminPlatformLayout,
-    },
+    { path: '/admin/account-management', component: AccountsManagement, layout: AdminPlatformLayout },
 ];
 
 const adminRoutes = [];

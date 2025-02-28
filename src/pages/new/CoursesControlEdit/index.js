@@ -758,7 +758,7 @@ export default function CoursesControlEdit() {
     };
 
     const [openDeleteSectionDialog, setOpenDeleteSectionDialog] = useState(false);
-    const [sectionToDelete, setSectionToDelete] = useState(null);
+    const [sectionToDelete, setSectionToDelete] = useState('');
     // Open the delete confirmation dialog
     const handleClickDeleteSection = (sectionId) => {
         setSectionToDelete(sectionId);
@@ -771,6 +771,32 @@ export default function CoursesControlEdit() {
         setSectionToDelete(null);
     };
 
+    const [openDeleteInstructionDialog, setOpenDeleteInstructionDialog] = useState(false);
+    const [instructionToDelete, setInstructionToDelete] = useState('');
+
+    const handleClickDeleteInstruction = (sectionId) => {
+        setInstructionToDelete(sectionId);
+        setOpenDeleteInstructionDialog(true);
+    };
+
+    const handleCloseDeleteInstructionDialog = () => {
+        setOpenDeleteInstructionDialog(false);
+        setInstructionToDelete(null);
+    };
+
+    const handleDeleteInstruction = async (event) => {
+        try {
+            setIsLoadingSections(true);
+            await InstructionAPI.deleteById(instructionToDelete);
+            fetchInstructionByCourseId();
+            setOpenDeleteInstructionDialog(false);
+        } catch (error) {
+            console.error('Failed to delete instruction:', error);
+            alert('Failed to delete instruction. Please try again.');
+        } finally {
+            setIsLoadingSections(false);
+        }
+    };
     //Open handleSwapOrderInstructionDetail
     const [instructionIdCurrent, setInstructionIdCurrent] = useState('');
     const [instructionDetailIdCurrent, setInstructionDetailIdCurrent] = useState('');
@@ -823,7 +849,7 @@ export default function CoursesControlEdit() {
             console.log(data);
             setInstructionDetailList(data);
         } catch (error) {
-            console.error('Failed to fetch models:', error);
+            console.error('Failed to fetch instruction detail:', error);
         }
     };
 
@@ -841,8 +867,62 @@ export default function CoursesControlEdit() {
     useEffect(() => {
         fetchInstructionDetailByInstructionId();
     }, [instructionIdCurrent]);
-
     //Close handleSwapOrderInstructionDetail
+
+    //Open handleSwapOrderInstruction
+    const [instructionIdCurrentForFindById, setInstructionIdCurrentForFindById] = useState({});
+    const [instructionIdCurrentForSwap, setInstructionIdCurrentForSwap] = useState('');
+    const [instructionIdToSwap, setInstructionIdToSwap] = useState('');
+    const [openSwapOrderDialogForInstruction, setOpenSwapOrderDialogForInstruction] = useState(false);
+    const [instructionList, setInstructionList] = useState([]);
+    const handleClickSwapOrderIntruction = (instructionId) => {
+        setInstructionIdCurrentForSwap(instructionId);
+        fetchInstructionById(instructionId);
+        fetchInstructionByCourseIdToSwap();
+        setOpenSwapOrderDialogForInstruction(true);
+    };
+
+    const handleCloseSwapOrderIntruction = () => {
+        setInstructionIdCurrentForFindById({});
+        setInstructionIdCurrentForSwap('');
+        setInstructionIdToSwap('');
+        setInstructionList([]);
+        setOpenSwapOrderDialogForInstruction(false);
+    };
+
+    const fetchInstructionById = async (instructionId) => {
+        try {
+            const response = await InstructionAPI.getById(instructionId);
+            const data = response?.result || {};
+            setInstructionIdCurrentForFindById(data);
+        } catch (error) {
+            console.error('Failed to fetch Instruction:', error);
+        }
+    };
+
+    const fetchInstructionByCourseIdToSwap = async () => {
+        try {
+            const response = await InstructionAPI.getByCourseToSwap(courseId);
+            const data = response?.result || {};
+            setInstructionList(data);
+        } catch (error) {
+            console.error('Failed to fetch Instructions:', error);
+        }
+    };
+
+    const handleClickSaveSwapOrderForInstruction = async () => {
+        try {
+            const response = await InstructionAPI.swapOrder(instructionIdCurrentForSwap, instructionIdToSwap);
+
+            if (response?.result) {
+                alert('Instruction swap successfully!');
+                fetchInstructionByCourseId();
+                handleCloseSwapOrderIntruction();
+            }
+        } catch (error) {
+            console.error('Failed to swap Instruction:', error);
+        }
+    };
 
     // Delete section logic
     const handleDeleteSection = async () => {
@@ -1176,7 +1256,7 @@ export default function CoursesControlEdit() {
 
         try {
             const formDataForInstruction = new FormData();
-            formDataForInstruction.append('courseId', '45252911-662c-4f30-a6fb-3f3be967b257');
+            formDataForInstruction.append('courseId', courseId);
             formDataForInstruction.append('name', instructionName);
             formDataForInstruction.append('description', instructionDescription);
 
@@ -1216,7 +1296,7 @@ export default function CoursesControlEdit() {
     const [isUpdatingForInstructionDetail, setIsUpdatingForInstructionDetail] = useState(false);
     const [openUpdateLessonDialog, setOpenUpdateLessonDialog] = useState(false);
     const [currentInstructionDetailId, setcurrentInstructionDetailId] = useState('');
-    // Update lesson
+    // Update Instruction Detail
     const [isEditingLesson, setIsEditingLesson] = useState(false);
     const [editingLessonId, setEditingLessonId] = useState(null);
     const [anchorElMap, setAnchorElMap] = useState({});
@@ -1225,7 +1305,16 @@ export default function CoursesControlEdit() {
         setAnchorElMap((prev) => ({ ...prev, [id]: event.currentTarget }));
     };
 
+    const handleClickMenuInstruction = (event, id) => {
+        event.stopPropagation();
+        setAnchorElMap((prev) => ({ ...prev, [id]: event.currentTarget }));
+    };
+
     const handleCloseMenuss = (id) => {
+        setAnchorElMap((prev) => ({ ...prev, [id]: null }));
+    };
+
+    const handleCloseMenuInstruction = (id) => {
         setAnchorElMap((prev) => ({ ...prev, [id]: null }));
     };
 
@@ -1249,13 +1338,71 @@ export default function CoursesControlEdit() {
         setcurrentInstructionDetailId(data.id);
         setNameForInstructionDetail(data.name);
         setDescriptionForInstructionDetail(data.description);
-
         setOpenUpdateLessonDialog(true);
     };
 
+    //Instruction
+    const [nameForInstruction, setNameForInstruction] = useState('');
+    const [descriptionForInstruction, setDescriptionForInstruction] = useState('');
+    const [translationForInstruction, setTranslationForInstruction] = useState([]);
+    const [rotationForInstruction, setRotationForInstruction] = useState([]);
+    const [currentInstrutionIdForUpdate, setCurrentInstrutionIdForUpdate] = useState([]);
+    const [openUpdateInstructionDialog, setOpenUpdateInstructionDialog] = useState(false);
+    const [isUpdatingForInstruction, setIsUpdatingForInstruction] = useState(false);
+    const handleEditInstruction = async (instructionId) => {
+        const response = await InstructionAPI.getById(instructionId);
+        const data = response?.result || {};
+
+        setCurrentInstrutionIdForUpdate(data.id);
+        setNameForInstruction(data.name);
+        setDescriptionForInstruction(data.description);
+        setTranslationForInstruction(data.position?.split(', ').map(Number) || [0, 0, 0]);
+        setRotationForInstruction(data.rotation?.split(', ').map(Number) || [0, 0, 0]);
+        setOpenUpdateInstructionDialog(true);
+    };
+
+    const handleCloseUpdateInstructionDialog = () => {
+        setOpenUpdateInstructionDialog(false);
+        setCurrentInstrutionIdForUpdate([]);
+        setNameForInstruction('');
+        setDescriptionForInstruction(null);
+        setTranslationForInstruction([]);
+        setRotationForInstruction([]);
+    };
+
+    const handleUpdateInstruction = async () => {
+        if (!nameForInstruction.trim()) return alert('Please enter an instruction name.');
+        if (!descriptionForInstruction.trim()) return alert('Please enter an instruction description.');
+
+        setIsUpdatingForInstruction(true);
+
+        try {
+            const formDataForUpdateInstruction = new FormData();
+
+            formDataForUpdateInstruction.append('name', nameForInstruction);
+            formDataForUpdateInstruction.append('description', descriptionForInstruction);
+            formDataForUpdateInstruction.append('guideViewPosition.translation', translationForInstruction);
+            formDataForUpdateInstruction.append('guideViewPosition.rotation', rotationForInstruction);
+
+            console.log([...formDataForUpdateInstruction]);
+            const response = await InstructionAPI.update(currentInstrutionIdForUpdate, formDataForUpdateInstruction);
+            if (response?.result) {
+                alert('Instruction updated successfully!');
+                setOpenUpdateInstructionDialog(false);
+                handleCloseUpdateInstructionDialog();
+                fetchInstructionByCourseId();
+            }
+        } catch (error) {
+            console.error('Failed to update instruction:', error);
+            alert('Failed to update instruction. Please try again.');
+        } finally {
+            setIsUpdatingForInstruction(false);
+        }
+    };
+
     useEffect(() => {
-        console.log(currentInstructionDetailId);
-    }, [currentInstructionDetailId]);
+        console.log(translationForInstruction);
+    }, [translationForInstruction]);
 
     const handleImageSelectForInstructionDetail = (e) => {
         if (e.target.files[0]) {
@@ -1297,7 +1444,7 @@ export default function CoursesControlEdit() {
 
         try {
             const formDataForInstructionDetail = new FormData();
-            formDataForInstructionDetail.append('instructionId', '635750f7-a39e-4d5d-9b1a-706484f346bc');
+            formDataForInstructionDetail.append('instructionId', currentSectionId);
             formDataForInstructionDetail.append('name', nameForInstructionDetail);
             formDataForInstructionDetail.append('description', descriptionForInstructionDetail);
             formDataForInstructionDetail.append('file', file3DForInstructionDetail);
@@ -1595,9 +1742,63 @@ export default function CoursesControlEdit() {
                                     }}
                                 >
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                        <Typography fontSize={24} fontWeight={700}>
-                                            {instruction.name}
-                                        </Typography>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                width: '100%',
+                                                justifyContent: 'space-between',
+                                            }}
+                                        >
+                                            <Typography fontSize={24} fontWeight={700}>
+                                                {instruction.name}
+                                            </Typography>
+                                            {/* IconButton và Menu cho Instruction */}
+                                            <div>
+                                                <IconButton
+                                                    aria-label="more"
+                                                    aria-controls={openMenu ? 'instruction-menu' : undefined}
+                                                    aria-expanded={openMenu ? 'true' : undefined}
+                                                    aria-haspopup="true"
+                                                    onClick={(event) =>
+                                                        handleClickMenuInstruction(event, instruction.id)
+                                                    }
+                                                >
+                                                    <MoreVerticalIcon />
+                                                </IconButton>
+                                                <Menu
+                                                    id="instruction-menu"
+                                                    MenuListProps={{
+                                                        'aria-labelledby': 'instruction-menu-button',
+                                                    }}
+                                                    anchorEl={anchorElMap[instruction.id]}
+                                                    open={Boolean(anchorElMap[instruction.id])}
+                                                    onClose={() => handleCloseMenuInstruction(instruction.id)}
+                                                    slotProps={{
+                                                        paper: {
+                                                            style: {
+                                                                maxHeight: ITEM_HEIGHT * 4.5,
+                                                                width: '20ch',
+                                                            },
+                                                        },
+                                                    }}
+                                                >
+                                                    <MenuItem onClick={() => handleEditInstruction(instruction.id)}>
+                                                        Update
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        onClick={() => handleClickDeleteInstruction(instruction.id)}
+                                                    >
+                                                        Delete
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        onClick={() => handleClickSwapOrderIntruction(instruction.id)}
+                                                    >
+                                                        Swap Order
+                                                    </MenuItem>
+                                                </Menu>
+                                            </div>
+                                        </Box>
                                     </AccordionSummary>
                                     <Divider />
                                     {/* ====== Render Lessons within Section ====== */}
@@ -2124,7 +2325,7 @@ export default function CoursesControlEdit() {
                     </Button>
                 </DialogActions>
             </Dialog>
-            {/* ==================== Swap Order Dialog ==================== */}
+            {/* ==================== Swap Order Dialog For Instruction Detail ==================== */}
             <Dialog
                 open={openSwapOrderDialog}
                 onClose={handleCloseSwapOrderIntructionDetail}
@@ -2161,6 +2362,50 @@ export default function CoursesControlEdit() {
                 <DialogActions>
                     <Button onClick={handleCloseSwapOrderIntructionDetail}>Cancel</Button>
                     <Button sx={{ backgroundColor: 'blue', color: 'white' }} onClick={handleClickSaveSwapOrder}>
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            {/* ==================== Swap Order Dialog For Instruction ==================== */}
+            <Dialog
+                open={openSwapOrderDialogForInstruction}
+                onClose={handleCloseSwapOrderIntruction}
+                aria-labelledby="swap-dialog-title"
+            >
+                <DialogTitle id="swap-dialog-title">Swap Order Number</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="Current Order Number"
+                        value={instructionIdCurrentForFindById.orderNumber}
+                        fullWidth
+                        variant="outlined"
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                        margin="dense"
+                    />
+                    <TextField
+                        select
+                        label="Order Number to Swap"
+                        fullWidth
+                        margin="dense"
+                        value={instructionIdToSwap}
+                        onChange={(e) => setInstructionIdToSwap(e.target.value)}
+                    >
+                        {instructionList
+                            .filter((item) => item.id !== instructionIdCurrentForSwap) // Loại bỏ ID hiện tại khỏi danh sách
+                            .map((instruction) => (
+                                <MenuItem key={instruction.id} value={instruction.id}>
+                                    {instruction.name} - {instruction.orderNumber}
+                                </MenuItem>
+                            ))}
+                    </TextField>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseSwapOrderIntruction}>Cancel</Button>
+                    <Button
+                        sx={{ backgroundColor: 'blue', color: 'white' }}
+                        onClick={handleClickSaveSwapOrderForInstruction}
+                    >
                         Save
                     </Button>
                 </DialogActions>
@@ -2291,6 +2536,82 @@ export default function CoursesControlEdit() {
                     </Button>
                     <Button onClick={handleCreateInstruction} disabled={isCreating}>
                         {isCreating ? <CircularProgress size={24} /> : 'Create'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={openUpdateInstructionDialog}
+                onClose={handleCloseUpdateInstructionDialog}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Update Instruction</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        label="Name"
+                        value={nameForInstruction}
+                        onChange={(e) => setNameForInstruction(e.target.value)}
+                        margin="dense"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Description"
+                        value={descriptionForInstruction}
+                        onChange={(e) => setDescriptionForInstruction(e.target.value)}
+                        margin="dense"
+                    />
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        {['X', 'Y', 'Z'].map((axis, index) => (
+                            <TextField
+                                key={axis}
+                                label={`Position ${axis}`}
+                                type="number"
+                                value={translationForInstruction[index] || ''}
+                                onChange={(e) => {
+                                    const newTranslation = [...translationForInstruction];
+                                    newTranslation[index] = e.target.value ? parseFloat(e.target.value) : 0;
+                                    setTranslationForInstruction(newTranslation);
+                                }}
+                                margin="dense"
+                            />
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        {['Pitch', 'Yaw', 'Roll'].map((angle, index) => (
+                            <TextField
+                                key={angle}
+                                label={`Rotation ${angle}`}
+                                type="number"
+                                value={rotationForInstruction[index] || ''}
+                                onChange={(e) => {
+                                    const newRotation = [...rotationForInstruction];
+                                    newRotation[index] = e.target.value ? parseFloat(e.target.value) : 0;
+                                    setRotationForInstruction(newRotation);
+                                }}
+                                margin="dense"
+                            />
+                        ))}
+                    </div>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        color="secondary"
+                        onClick={handleCloseUpdateInstructionDialog}
+                        disabled={isUpdatingForInstruction}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={handleUpdateInstruction}
+                        disabled={isUpdatingForInstruction}
+                    >
+                        {isUpdatingForInstruction ? <CircularProgress size={24} /> : 'Update'}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -2570,15 +2891,35 @@ export default function CoursesControlEdit() {
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description"
             >
-                <DialogTitle id="alert-dialog-title">{'Delete Section'}</DialogTitle>
+                <DialogTitle id="alert-dialog-title">{'Delete Instruction Detail'}</DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
-                        Are you sure you want to delete this section? This action cannot be undone.
+                        Are you sure you want to delete this instruction detail? This action cannot be undone.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDeleteSectionDialog}>Cancel</Button>
                     <Button sx={{ backgroundColor: 'red', color: 'white' }} onClick={handleDeleteSection} autoFocus>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            {/* Delete confirmation dialog for instruction */}
+            <Dialog
+                open={openDeleteInstructionDialog}
+                onClose={handleCloseDeleteInstructionDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{'Delete Instruction'}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete this instrction? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDeleteInstructionDialog}>Cancel</Button>
+                    <Button sx={{ backgroundColor: 'red', color: 'white' }} onClick={handleDeleteInstruction} autoFocus>
                         Delete
                     </Button>
                 </DialogActions>

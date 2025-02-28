@@ -25,6 +25,7 @@ import CourseAPI from '~/API/CourseAPI';
 import ModelAPI from '~/API/ModelAPI';
 import CardCourse from '~/components/CardCourse';
 import storageService from '~/components/StorageService/storageService';
+import { getImage } from '~/Constant';
 
 const defaultTheme = createTheme();
 
@@ -157,7 +158,7 @@ export default function CoursesControl() {
         formData.append('type', type);
         formData.append('isMandatory', isMandatory);
         formData.append('companyId', userInfo?.company?.id);
-        formData.append('imageUrl', selectedImage); // Attach the selected image
+        formData.append('imageUrl', selectedImage);
         formData.append('modelId', model);
 
         try {
@@ -242,7 +243,6 @@ export default function CoursesControl() {
                         px: 2,
                         margin: 'auto autto',
                         minHeight: '50vh',
-                        companyId: 'f608be70-fa3a-47cd-bb7a-751c16452f87',
                     }}
                 >
                     {isLoading ? (
@@ -281,9 +281,7 @@ export default function CoursesControl() {
                                     <CardCourse
                                         title={data.title}
                                         description={data.description}
-                                        image={data.imageUrl}
-                                        viewers={data.numberOfParticipants}
-                                        duration={data.duration}
+                                        image={getImage(data.imageUrl)}
                                         status={data.status}
                                     />
                                 </Grid>
@@ -316,7 +314,7 @@ export default function CoursesControl() {
                             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
                                 <MenuItem value={defaultModel}>Default model</MenuItem>
                                 {unusedModel.map((data, index) => (
-                                    <MenuItem value={data.modelTypeId}>{data.modelTypeName}</MenuItem>
+                                    <MenuItem value={data.id}>{data.name}</MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
@@ -366,8 +364,6 @@ export default function CoursesControl() {
                             onChange={(e) => setNewDescription(e.target.value)}
                             sx={{ mt: 3 }}
                         />
-
-                        <Typography sx={{ mt: 1 }}>Type: {type}</Typography>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleCloseCreateDialog} disabled={isCreating}>

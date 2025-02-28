@@ -58,7 +58,37 @@ export default function EmployeesManagement() {
         { field: 'username', headerName: 'Username', width: 200 },
         { field: 'email', headerName: 'Email', width: 200 },
         { field: 'phone', headerName: 'Phone', width: 200 },
-        { field: 'status', headerName: 'Status Account', width: 200 },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 200,
+            renderCell: (params) => {
+                let color = 'black';
+
+                switch (params.value) {
+                    case 'ACTIVE':
+                        color = 'green';
+                        break;
+                    case 'INACTIVE':
+                        color = 'orange';
+                        break;
+                    default:
+                        color = 'black';
+                }
+
+                return (
+                    <Box
+                        sx={{
+                            color,
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        {params.value}
+                    </Box>
+                );
+            },
+        },
     ];
 
     useEffect(() => {
