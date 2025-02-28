@@ -251,7 +251,7 @@ export default function CompanyRegister() {
                                 <Typography variant="body2" align="center" sx={{ mt: 2 }}>
                                     You have an account?{' '}
                                     <Link
-                                        to="/company/login"
+                                        to="/login"
                                         style={{ textDecoration: 'none', color: '#051D40', fontWeight: 'bold' }}
                                     >
                                         Login

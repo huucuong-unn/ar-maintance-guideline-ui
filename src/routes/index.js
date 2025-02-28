@@ -42,8 +42,7 @@ import ModelDetail from '~/pages/new/ModelDetail';
 
 const publicRoutes = [
     //new
-    { path: '/login', component: LoginUser, layout: null },
-    { path: '/admin/login', component: LoginAdmin, layout: null },
+    // { path: '/admin/login', component: LoginAdmin, layout: null },
     { path: '/business/login', component: LoginBusiness, layout: null },
     { path: '/register', component: RegisterUser, layout: null },
     { path: '/forgot-password', component: ForgotPassword, layout: null },
@@ -74,7 +73,7 @@ const publicRoutes = [
     { path: '/company/model-management', component: ModelsManagement, layout: AdminLayout },
     { path: '/company/model-management/view/:id', component: ModelDetail, layout: AdminLayout },
     { path: '/company/model-request-management', component: ModelRequestManagement, layout: AdminLayout },
-    { path: '/company/login', component: CompanyLogin, layout: null },
+    { path: '/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },
     { path: '/company/waiting', component: CompanyWaiting, layout: null },
     {

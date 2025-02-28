@@ -76,7 +76,7 @@ export default function CardCourse({ title, description, image, viewers, lessons
                     {description}
                 </Typography>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+                {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
                     <Typography sx={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>
                         <PeopleIcon fontSize="small" sx={{ marginRight: '4px' }} /> {viewers}
                     </Typography>
@@ -86,7 +86,7 @@ export default function CardCourse({ title, description, image, viewers, lessons
                     <Typography sx={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>
                         <AccessTimeIcon fontSize="small" sx={{ marginRight: '4px' }} /> {duration}
                     </Typography>
-                </Box>
+                </Box> */}
 
                 <Typography
                     variant="body2"

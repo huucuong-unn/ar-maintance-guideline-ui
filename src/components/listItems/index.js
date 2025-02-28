@@ -70,11 +70,6 @@ export const SecondaryListItems = () => {
             title: 'Dashboard',
         },
         {
-            route: '/company/course-management',
-            icon: <Book />,
-            title: 'Guidelines',
-        },
-        {
             route: '/company/model-management',
             icon: <Bot />,
             title: '3D Models',

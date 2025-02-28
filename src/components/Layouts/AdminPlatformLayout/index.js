@@ -148,7 +148,7 @@ export function Sidebar() {
         localStorage.removeItem('userInfo');
 
         // Redirect to the sign-up page
-        navigate('/admin/login');
+        navigate('/login');
     };
     const [open, setOpen] = useState(true);
     const toggleDrawer = () => {

@@ -1,30 +1,14 @@
+import { Box, Button, CircularProgress, Grid, Paper, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
-import {
-    Box,
-    Typography,
-    Skeleton,
-    TextField,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText,
-    DialogActions,
-    Button,
-    CircularProgress,
-    Grid,
-    Paper,
-    Modal,
-} from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { useEffect, useState } from 'react';
-import PaymentAPI from '~/API/PaymentAPI';
-import storageService from '~/components/StorageService/storageService';
 import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PaymentAPI from '~/API/PaymentAPI';
+import PayosAPI from '~/API/PayosAPI';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import PackagesDialog from '~/components/PackagesDialog';
+import storageService from '~/components/StorageService/storageService';
 
 function Copyright(props) {
     return (
@@ -46,6 +30,60 @@ export default function PaymentAndSubscriptionManagement() {
     });
     const [total, setTotal] = useState(0);
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
+    const [isLoadingClickSilverTee, setIsLoadingClickSilverTee] = useState(false);
+    const [isLoadingClickGoldenTee, setIsLoadingClickGoldenTee] = useState(false);
+    const [openPackagesDialog, setOpenPackagesDialog] = useState(false);
+
+    const handleOpenPackagesDialog = () => setOpenPackagesDialog(true);
+    const handleClosePackagesDialog = () => setOpenPackagesDialog(false);
+    const navigate = useNavigate();
+
+    const handleGoCheckoutSilverTee = async (event) => {
+        try {
+            if (userInfo) {
+                if (userInfo?.planType === 'Golden Tee' || userInfo?.planType === 'Silver Tee') return;
+
+                setIsLoadingClickSilverTee(true);
+                const response = await PayosAPI.goCheckout({
+                    productName: 'basic',
+                    userId: userInfo?.id,
+                });
+                console.log(response);
+                if (response.data.checkoutUrl) {
+                    setIsLoadingClickSilverTee(false);
+                    window.location.href = response.data.checkoutUrl;
+                }
+            } else {
+                navigate('/login');
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleGoCheckoutGoldenTee = async (event) => {
+        try {
+            if (userInfo) {
+                if (userInfo?.planType === 'Golden Tee' || userInfo?.planType === 'Silver Tee') return;
+
+                setIsLoadingClickGoldenTee(true);
+
+                const response = await PayosAPI.goCheckout({
+                    productName: 'basic',
+                    userId: userInfo?.id,
+                });
+                console.log(response);
+                if (response.data.checkoutUrl) {
+                    setIsLoadingClickGoldenTee(false);
+                    window.location.href = response.data.checkoutUrl;
+                }
+            } else {
+                navigate('/login');
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     const columns = [
         { field: 'itemCode', headerName: 'Item Code', width: 200 },
@@ -164,6 +202,9 @@ export default function PaymentAndSubscriptionManagement() {
                         }}
                     >
                         <Box sx={{ width: '100%', typography: 'body1' }}>
+                            <Button variant="outlined" onClick={handleOpenPackagesDialog} sx={{ mb: 4 }}>
+                                View Subscription Packages
+                            </Button>
                             <Paper sx={{ height: 400, width: '100%' }}>
                                 <DataGrid
                                     rows={rows}
@@ -182,6 +223,16 @@ export default function PaymentAndSubscriptionManagement() {
                                     slots={{ toolbar: GridToolbar }}
                                 />
                             </Paper>
+
+                            <PackagesDialog
+                                userInfo={userInfo}
+                                handleGoCheckoutSilverTee={handleGoCheckoutSilverTee}
+                                handleGoCheckoutGoldenTee={handleGoCheckoutGoldenTee}
+                                isLoadingClickSilverTee={isLoadingClickSilverTee}
+                                isLoadingClickGoldenTee={isLoadingClickGoldenTee}
+                                openPackagesDialog={openPackagesDialog}
+                                handleClosePackagesDialog={handleClosePackagesDialog}
+                            />
 
                             <Copyright sx={{ mt: 5 }} />
                         </Box>

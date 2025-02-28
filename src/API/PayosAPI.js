@@ -12,7 +12,7 @@ const PayosAPI = {
     },
 
     goCheckout(data, includeAuthorization = false) {
-        return axiosClient.post('/v1/order/create', data);
+        return axiosClient.post('/v1/order-transaction', data);
     },
 };
 

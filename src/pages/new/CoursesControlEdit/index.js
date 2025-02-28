@@ -51,6 +51,7 @@ import { getImage } from '~/Constant';
 import InstructionAPI from '~/API/InstructionAPI';
 import InstructionDetailAPI from '~/API/InstructionDetailAPI';
 import ModelAPI from '~/API/ModelAPI';
+import toast from 'react-hot-toast';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
@@ -596,16 +597,8 @@ export default function CoursesControlEdit() {
     // ==================== Start/Stop Course Handlers ====================
     const handleClickToggleCourseStatus = () => {
         // If there's no quiz but user attempts "start"
-        if (!quiz && course?.status === 'INACTIVE') {
-            alert('Please create a quiz before starting the course!');
-            return;
-        }
-        if (questions.length <= 0 && course?.status === 'INACTIVE') {
-            alert('Please create a question before starting the course!');
-            return;
-        }
-        if (sections.length <= 0 && course?.status === 'INACTIVE') {
-            alert('Please create a section before starting the course!');
+        if (instructions.length <= 0 && instructions?.status === 'INACTIVE') {
+            toast.alert('Please create a instruction before starting the guideline!');
             return;
         }
         setOpenCourseStatusDialog(true);
@@ -1596,8 +1589,7 @@ export default function CoursesControlEdit() {
                             fontSize: '16px',
                         }}
                     >
-                        You must create a FINAL QUIZ, AT LEAST 1 QUESTION, and AT LEAST 1 SECTION before starting the
-                        course!
+                        You must create an Instruction before starting the guideline.
                     </Typography>
                 </Box>
             </Box>
