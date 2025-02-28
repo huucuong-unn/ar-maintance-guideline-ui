@@ -1599,7 +1599,7 @@ export default function CoursesControlEdit() {
                     <TabList onChange={handleTabChange} textColor="#051D40">
                         <Tab label="Model" value="1" />
                         <Tab label="INSTRUCTION" value="2" />
-                        <Tab label="Assign Employee" value="4" />
+                        {/* <Tab label="Assign Employee" value="4" /> */}
                     </TabList>
                 </Box>
                 {/* ================= TabPanel 0: Model ================= */}
