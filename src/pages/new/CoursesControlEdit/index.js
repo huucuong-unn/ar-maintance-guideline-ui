@@ -1598,7 +1598,7 @@ export default function CoursesControlEdit() {
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
                         <Tab label="Model" value="1" />
-                        <Tab label="INSTRUCTION" value="2" />
+                        <Tab label="Instruction" value="2" />
                         {/* <Tab label="Assign Employee" value="4" /> */}
                     </TabList>
                 </Box>

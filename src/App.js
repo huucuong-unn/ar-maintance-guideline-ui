@@ -4,8 +4,9 @@ import toast, { Toaster } from 'react-hot-toast';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { generateToken, messaging } from './firebase';
 import FullLayout from './components/Layouts/FullLayout';
-import { adminRoutes, publicRoutes } from './routes';
+import { adminRoutes, publicRoutes, companyRoutes } from './routes';
 import ProtectedRoutes from './components/ProtectedRoutes';
+import AdminLayout from './components/Layouts/AdminLayout';
 function App() {
     useEffect(() => {
         generateToken();
@@ -42,10 +43,33 @@ function App() {
                                 />
                             );
                         })}
-                        <Route element={<ProtectedRoutes roleName={'admin'} />}>
+                        <Route element={<ProtectedRoutes roleName={'ADMIN'} />}>
                             {adminRoutes.map((route, index) => {
                                 const Page = route.component;
-                                let Layout = FullLayout;
+                                let Layout = AdminLayout;
+
+                                if (route.layout) {
+                                    Layout = route.layout;
+                                } else if (route.layout === null) {
+                                    Layout = Fragment;
+                                }
+                                return (
+                                    <Route
+                                        key={index}
+                                        path={route.path}
+                                        element={
+                                            <Layout>
+                                                <Page />
+                                            </Layout>
+                                        }
+                                    />
+                                );
+                            })}
+                        </Route>
+                        <Route element={<ProtectedRoutes roleName={'COMPANY'} />}>
+                            {companyRoutes.map((route, index) => {
+                                const Page = route.component;
+                                let Layout = AdminLayout;
 
                                 if (route.layout) {
                                     Layout = route.layout;

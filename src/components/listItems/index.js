@@ -5,6 +5,7 @@ import ListItemText from '@mui/material/ListItemText';
 import { Book, Bot, Building, CreditCard, Mail, Users, AppWindowMac } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import storageService from '../StorageService/storageService';
 
 export const MainListItems = () => {
     const navigate = useNavigate();
@@ -14,7 +15,9 @@ export const MainListItems = () => {
         window.scrollTo(0, 0); // Cuộn lên đầu trang
     };
 
-    const role = 'company';
+    const [userInfo, setUserInfo] = React.useState(storageService.getItem('userInfo')?.user || null);
+    const role = userInfo?.role?.roleName;
+    console.log('role', role);
 
     const companyRoutes = [
         {
@@ -34,7 +37,7 @@ export const MainListItems = () => {
 
     return (
         <React.Fragment>
-            {role === 'company' &&
+            {role === 'COMPANY' &&
                 companyRoutes.map((route, index) => (
                     <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
                         <ListItemIcon>{route.icon}</ListItemIcon>
@@ -42,7 +45,7 @@ export const MainListItems = () => {
                     </ListItemButton>
                 ))}
 
-            {role === 'admin' &&
+            {role === 'ADMIN' &&
                 adminRoutes.map((route, index) => (
                     <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
                         <ListItemIcon>{route.icon}</ListItemIcon>
@@ -54,14 +57,14 @@ export const MainListItems = () => {
 };
 
 export const SecondaryListItems = () => {
+    const [userInfo, setUserInfo] = React.useState(storageService.getItem('userInfo')?.user || null);
+    const role = userInfo?.role?.roleName;
     const navigate = useNavigate();
 
     const handleNavigate = (path) => {
         navigate(path);
         window.scrollTo(0, 0); // Cuộn lên đầu trang
     };
-
-    const role = 'company';
 
     const companyRoutes = [
         {
@@ -88,11 +91,6 @@ export const SecondaryListItems = () => {
 
     const adminRoutes = [
         {
-            route: '/admin/dashboard',
-            icon: <DashboardIcon />,
-            title: 'Dashboard',
-        },
-        {
             route: '/admin/company-management',
             icon: <Building />,
             title: 'Companies',
@@ -106,7 +104,7 @@ export const SecondaryListItems = () => {
 
     return (
         <React.Fragment>
-            {role === 'company' &&
+            {role === 'COMPANY' &&
                 companyRoutes.map((route, index) => (
                     <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
                         <ListItemIcon>{route.icon}</ListItemIcon>
@@ -114,7 +112,7 @@ export const SecondaryListItems = () => {
                     </ListItemButton>
                 ))}
 
-            {role === 'admin' &&
+            {role === 'ADMIN' &&
                 adminRoutes.map((route, index) => (
                     <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
                         <ListItemIcon>{route.icon}</ListItemIcon>

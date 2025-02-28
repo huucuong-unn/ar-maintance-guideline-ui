@@ -63,6 +63,19 @@ const publicRoutes = [
     { path: '/test/admin-test', component: AdminTestPage, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
+    { path: '/login', component: CompanyLogin, layout: null },
+    { path: '/company/register', component: CompanyRegister, layout: null },
+    { path: '/company/waiting', component: CompanyWaiting, layout: null },
+];
+
+const adminRoutes = [
+    { path: '/admin/dashboard', component: DashboardManagement, layout: AdminLayout },
+    { path: '/admin/company-management', component: CompaniesManagement, layout: AdminLayout },
+    { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
+    { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
+];
+
+const companyRoutes = [
     { path: '/company/course', component: CoursesControl, layout: AdminLayout },
     { path: '/company/course/view/:id', component: CoursesControlEdit, layout: AdminLayout },
     { path: '/company/blog-management', component: BlogsManagement, layout: AdminLayout },
@@ -73,23 +86,13 @@ const publicRoutes = [
     { path: '/company/model-management', component: ModelsManagement, layout: AdminLayout },
     { path: '/company/model-management/view/:id', component: ModelDetail, layout: AdminLayout },
     { path: '/company/model-request-management', component: ModelRequestManagement, layout: AdminLayout },
-    { path: '/login', component: CompanyLogin, layout: null },
-    { path: '/company/register', component: CompanyRegister, layout: null },
-    { path: '/company/waiting', component: CompanyWaiting, layout: null },
     {
         path: '/company/payment-subscription-management',
         component: PaymentAndSubscriptionManagement,
         layout: AdminLayout,
     },
-
-    { path: '/admin/dashboard', component: DashboardManagement, layout: AdminLayout },
-    { path: '/admin/company-management', component: CompaniesManagement, layout: AdminLayout },
-    { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
-    { path: '/admin/account-management', component: AccountsManagement, layout: AdminPlatformLayout },
 ];
-
-const adminRoutes = [];
 
 const privateRoutes = [];
 
-export { adminRoutes, privateRoutes, publicRoutes };
+export { adminRoutes, privateRoutes, publicRoutes, companyRoutes };
