@@ -25,6 +25,9 @@ const CourseAPI = {
     update(data, includeAuthorization = false) {
         return axiosClient.put('/v1/course/' + data.courseId, data);
     },
+    changeStatus(id) {
+        return axiosClient.put(`/v1/course/status/${id}`);
+    },
     getSections(courseId, includeAuthorization = false) {
         return axiosClient.get('/v1/lesson/course/' + courseId);
     },
@@ -69,6 +72,9 @@ const CourseAPI = {
     },
     getImageUrl(image) {
         return `${host}/api/v1/files/${image}`;
+    },
+    delete(id) {
+        return axiosClient.delete(`/v1/course/${id}`);
     },
 };
 

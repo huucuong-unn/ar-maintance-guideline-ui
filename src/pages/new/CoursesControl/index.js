@@ -25,6 +25,8 @@ import CourseAPI from '~/API/CourseAPI';
 import ModelAPI from '~/API/ModelAPI';
 import CardCourse from '~/components/CardCourse';
 import storageService from '~/components/StorageService/storageService';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { getImage } from '~/Constant';
 
 const defaultTheme = createTheme();
@@ -124,6 +126,12 @@ export default function CoursesControl() {
     };
 
     const handleCloseCreateDialog = () => {
+        setNewTitle('');
+        setNewDescription('');
+        setNewStatus('ACTIVE');
+        setSelectedImage(null);
+        setImagePreview('');
+        setModel('');
         setOpenCreateDialog(false);
     };
 
@@ -141,19 +149,29 @@ export default function CoursesControl() {
     };
 
     const handleCreateCourse = async () => {
-        if (!newTitle.trim()) {
-            alert('Please enter a title');
+        if (newTitle.trim().length < 5 || newTitle.trim().length > 50) {
+            toast.error('Title must be between 5 and 50 characters.', { position: 'top-right' });
+            return;
+        }
+
+        if (newDescription.trim().length < 10 || newDescription.trim().length > 200) {
+            toast.error('Description must be between 10 and 200 characters.', { position: 'top-right' });
+            return;
+        }
+
+        if (!selectedImage) {
+            toast.error('Please select an image.', { position: 'top-right' });
             return;
         }
 
         if (!model) {
-            alert('Please select a model');
+            toast.error('Please select a model.', { position: 'top-right' });
             return;
         }
 
         const formData = new FormData();
-        formData.append('title', newTitle);
-        formData.append('description', newDescription);
+        formData.append('title', newTitle.trim());
+        formData.append('description', newDescription.trim());
         formData.append('status', newStatus);
         formData.append('type', type);
         formData.append('isMandatory', isMandatory);
@@ -166,17 +184,18 @@ export default function CoursesControl() {
             const response = await CourseAPI.create(formData);
 
             if (response?.result) {
-                alert('Guideline created successfully!');
+                toast.success('Guideline created successfully!', { position: 'top-right' });
                 await fetchCourses();
                 handleCloseCreateDialog();
             }
         } catch (error) {
-            console.error('Failed to guideline course:', error);
-            alert('Failed to create guideline. Please try again.');
+            console.error('Failed to create guideline course:', error);
+            toast.error('Failed to create guideline. Please try again.', { position: 'top-right' });
         } finally {
             setIsCreating(false);
         }
     };
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box
@@ -312,7 +331,6 @@ export default function CoursesControl() {
                         <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
                             <InputLabel>Model*</InputLabel>
                             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
-                                <MenuItem value={defaultModel}>Default model</MenuItem>
                                 {unusedModel.map((data, index) => (
                                     <MenuItem value={data.id}>{data.name}</MenuItem>
                                 ))}
