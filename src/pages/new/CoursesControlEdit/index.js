@@ -2999,7 +2999,7 @@ export default function CoursesControlEdit() {
                             ),
                         }}
                     />
-                    <img src={`http://localhost:8086/api/v1/files/${lessonDetails?.imgString}`} />
+                    <img src={getImage(lessonDetails?.imgString)} alt="img" />
                     {/* Show Lesson Content for READING type */}
                     <Typography
                         variant="body2"
