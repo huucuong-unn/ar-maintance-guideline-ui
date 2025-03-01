@@ -212,6 +212,7 @@ export default function EmployeesManagement() {
                                 color="error"
                                 size="small"
                                 onClick={() => handleOpenStatusConfirm(params.row.id)}
+                                sx={{ width: '100px' }}
                             >
                                 Disable
                             </Button>
@@ -221,6 +222,7 @@ export default function EmployeesManagement() {
                                 color="success"
                                 size="small"
                                 onClick={() => handleOpenStatusConfirm(params.row.id)}
+                                sx={{ width: '100px' }}
                             >
                                 Active
                             </Button>
