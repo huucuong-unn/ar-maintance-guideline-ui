@@ -31,12 +31,15 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import ModelAPI from '~/API/ModelAPI';
 import { useNavigate } from 'react-router-dom';
 import storageService from '~/components/StorageService/storageService';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Copyright(props) {
     return (
@@ -52,7 +55,6 @@ const defaultTheme = createTheme();
 
 export default function ModelsManagement() {
     const navigate = useNavigate();
-
     // Data states
     const [models, setModels] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -96,10 +98,35 @@ export default function ModelsManagement() {
     const [imageFile, setImageFile] = useState(null);
     const [modelFile, setModelFile] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+    const handleOpenConfirmDelete = () => {
+        setConfirmDeleteOpen(true);
+    };
+
+    const handleCloseConfirmDelete = () => {
+        setConfirmDeleteOpen(false);
+    };
+
+    const handleDeleteModel = async () => {
+        setConfirmDeleteOpen(false);
+        try {
+            console.log(selectedModel.id);
+
+            const response = await ModelAPI.deleteById(selectedModel.id);
+            if (response?.result) {
+                toast.success('Model deleted successfully!', { position: 'top-right' });
+                handleCloseModal();
+                fetchModels();
+            }
+        } catch (error) {
+            console.error('Failed to delete model:', error);
+            toast.error('Failed to delete model. Please try again.', { position: 'top-right' });
+        }
+    };
 
     const columns = [
         { field: 'modelCode', headerName: 'Model Code', width: 200 },
-        { field: 'imageUrl', headerName: 'Image', width: 150 },
         { field: 'name', headerName: 'Name', width: 150 },
         { field: 'modelTypeName', headerName: 'Type', width: 180 },
         { field: 'courseName', headerName: 'Course Name', width: 200 },
@@ -202,6 +229,29 @@ export default function ModelsManagement() {
             return;
         }
 
+        // Trim spaces
+        const trimmedName = updatedModel.name.trim();
+        const trimmedCode = updatedModel.modelCode.trim();
+        const trimmedVersion = updatedModel.version.trim();
+        const trimmedScale = updatedModel.scale.trim();
+
+        // Validate required fields
+        if (trimmedName.length < 5 || trimmedName.length > 50) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+            return toast.error('Code must be between 5 and 50 characters.');
+        }
+        if (!updatedModel.modelTypeId.trim()) {
+            return toast.error('Please enter model type.');
+        }
+        if (parseFloat(trimmedVersion) === 0 || isNaN(trimmedVersion)) {
+            return toast.error('Version must be greater than 0.');
+        }
+        if (parseFloat(trimmedScale) === 0 || isNaN(trimmedScale)) {
+            return toast.error('Scale must be greater than 0.');
+        }
+
         setIsUpdating(true);
         try {
             const formDataForUpdate = new FormData();
@@ -225,13 +275,13 @@ export default function ModelsManagement() {
             }
             const response = await ModelAPI.updateModel(updatedModel.id, formDataForUpdate);
             if (response?.result) {
-                alert('Model updaye successfully!');
+                toast.success('Model updated successfully!', { position: 'top-right' });
                 setUpdateOpenModal(false);
                 fetchModels();
             }
         } catch (error) {
             console.error('Failed to update model:', error);
-            alert('Failed to update model. Please try again.');
+            toast.error('Failed to update model. Please try again.', { position: 'top-right' });
         } finally {
             setIsUpdating(false);
         }
@@ -291,6 +341,7 @@ export default function ModelsManagement() {
     // Dialog handlers
     const handleOpenCreateDialog = () => {
         setName('');
+        setCode('');
         setDescription('');
         setImage(null);
         setVersion('');
@@ -301,6 +352,14 @@ export default function ModelsManagement() {
     };
 
     const handleCloseCreateDialog = () => {
+        setName('');
+        setDescription('');
+        setCode('');
+        setImage(null);
+        setVersion('');
+        setScale('');
+        setFile3D(null);
+        setModelTypeId('');
         setOpenCreateDialog(false);
     };
 
@@ -317,37 +376,57 @@ export default function ModelsManagement() {
     };
 
     const handleCreateModel = async () => {
+        // Trim spaces
+        const trimmedName = name.trim();
+        const trimmedCode = code.trim();
+        const trimmedVersion = version.trim();
+        const trimmedScale = scale.trim();
+
         // Validate required fields
-        if (!name.trim()) return alert('Please enter a name.');
-        if (!code.trim()) return alert('Please enter a code.');
-        if (!image) return alert('Please select an image.');
-        if (!version.trim()) return alert('Please enter a version.');
-        if (!scale.trim()) return alert('Please enter a scale.');
-        if (!file3D) return alert('Please select a 3D file.');
-        if (!modelTypeId.trim()) return alert('Please enter model type id.');
+        if (trimmedName.length < 5 || trimmedName.length > 50) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+            return toast.error('Code must be between 5 and 50 characters.');
+        }
+        if (!modelTypeId.trim()) {
+            return toast.error('Please enter model type.');
+        }
+        if (!image) {
+            return toast.error('Please select an image.');
+        }
+        if (parseFloat(trimmedVersion) === 0 || isNaN(trimmedVersion)) {
+            return toast.error('Version must be greater than 0.');
+        }
+        if (parseFloat(trimmedScale) === 0 || isNaN(trimmedScale)) {
+            return toast.error('Scale must be greater than 0.');
+        }
+        if (!file3D) {
+            return toast.error('Please select a 3D file.');
+        }
 
         setIsCreating(true);
 
         try {
             const formData = new FormData();
-            formData.append('name', name);
-            formData.append('modelCode', code);
+            formData.append('name', trimmedName);
+            formData.append('modelCode', trimmedCode);
             formData.append('description', description);
             formData.append('imageUrl', image);
-            formData.append('version', version);
-            formData.append('scale', scale);
+            formData.append('version', trimmedVersion);
+            formData.append('scale', trimmedScale);
             formData.append('file', file3D);
             formData.append('modelTypeId', modelTypeId);
             formData.append('companyId', userInfo?.company?.id);
 
             const response = await ModelAPI.createModel(formData);
             if (response?.result) {
-                alert('Model created successfully!');
+                toast.success('Model created successfully!', { position: 'top-right' });
                 setOpenCreateDialog(false);
             }
         } catch (error) {
             console.error('Failed to create model:', error);
-            alert('Failed to create model. Please try again.');
+            toast.error('Failed to create model. Please try again.', { position: 'top-right' });
         } finally {
             setIsCreating(false);
         }
@@ -848,6 +927,27 @@ export default function ModelsManagement() {
                         </Button>
                     )}
 
+                    <Button
+                        onClick={handleOpenConfirmDelete}
+                        variant="contained"
+                        color="error"
+                        fullWidth
+                        startIcon={<DeleteIcon />}
+                        sx={{
+                            mt: 2,
+                            borderRadius: 2,
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            textTransform: 'none',
+                            background: 'linear-gradient(135deg, #D32F2F, #B71C1C)',
+                            ':hover': {
+                                background: 'linear-gradient(135deg, #C62828, #880E4F)',
+                            },
+                        }}
+                    >
+                        Delete Model
+                    </Button>
+
                     {/* Nút Close */}
                     <Button
                         onClick={handleCloseModal}
@@ -861,6 +961,23 @@ export default function ModelsManagement() {
                     </Button>
                 </Box>
             </Modal>
+
+            <Dialog open={confirmDeleteOpen} onClose={handleCloseConfirmDelete}>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this model? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseConfirmDelete} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDeleteModel} color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </ThemeProvider>
     );
 }

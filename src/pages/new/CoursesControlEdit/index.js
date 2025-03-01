@@ -31,15 +31,15 @@ import {
     Tab,
     TextField,
     Typography,
+    Modal,
 } from '@mui/material';
 import { File, FileText, MoreVerticalIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AccountAPI from '~/API/AccountAPI';
-
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
-import toast from 'react-hot-toast';
 import CourseAPI from '~/API/CourseAPI';
 import EnrollmentAPI from '~/API/EnrollmentAPI';
 import InstructionAPI from '~/API/InstructionAPI';
@@ -51,9 +51,14 @@ import storageService from '~/components/StorageService/storageService';
 import { getImage } from '~/Constant';
 import ModelViewer from '~/components/ModelViewer';
 import modelTest from '~/assets/models/mouseclean.glb';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
+    const navigate = useNavigate();
+
     // ==================== Tab State ====================
     const [tabValue, setTabValue] = useState('1');
     const handleTabChange = (e, newValue) => setTabValue(newValue);
@@ -350,7 +355,7 @@ export default function CoursesControlEdit() {
 
     const handleDownloadFile = async (fileUrl, fileName = 'attachment') => {
         try {
-            const response = await CourseAPI.readVideo(fileUrl); // API call (same as video)
+            const response = await CourseAPI.readVideo(fileUrl);
 
             // Create a Blob URL
             const fileObjectUrl = URL.createObjectURL(response);
@@ -607,25 +612,8 @@ export default function CoursesControlEdit() {
         try {
             setIsLoadingStartCourse(true);
             if (!course) return;
-            const data = {
-                courseId: courseId,
-                companyId: course.companyId,
-                title: course.title,
-                description: course.description,
-                duration: course.duration,
-                imageUrl: course.imageUrl,
-                isMandatory: course.isMandatory,
-                status: course.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE', // Toggle
-                type: course.type,
-                numberOfLessons: course.numberOfLessons,
-                numberOfParticipants: course.numberOfParticipants,
-            };
-            const updateResponse = await CourseAPI.update(data);
-            console.log('Course status updated:', updateResponse);
-
-            if (updateResponse) {
-                setCourse(updateResponse?.result);
-            }
+            const updateResponse = await CourseAPI.changeStatus(courseId);
+            fetchCourse();
         } catch (error) {
             console.error('Failed to update course status:', error);
         } finally {
@@ -782,9 +770,10 @@ export default function CoursesControlEdit() {
             await InstructionAPI.deleteById(instructionToDelete);
             fetchInstructionByCourseId();
             setOpenDeleteInstructionDialog(false);
+            toast.success('Instruction deleted successfully!');
         } catch (error) {
             console.error('Failed to delete instruction:', error);
-            alert('Failed to delete instruction. Please try again.');
+            toast.error('Failed to delete instruction. Please try again.');
         } finally {
             setIsLoadingSections(false);
         }
@@ -816,12 +805,13 @@ export default function CoursesControlEdit() {
             );
 
             if (response?.result) {
-                alert('Instruction Detail swap successfully!');
+                toast.success('Instruction Detail swapped successfully!');
                 fetchInstructionByCourseId();
                 handleCloseSwapOrderIntructionDetail();
             }
         } catch (error) {
             console.error('Failed to swap Instruction Detail:', error);
+            toast.error('An error occurred while swapping Instruction Detail.');
         }
     };
 
@@ -907,12 +897,13 @@ export default function CoursesControlEdit() {
             const response = await InstructionAPI.swapOrder(instructionIdCurrentForSwap, instructionIdToSwap);
 
             if (response?.result) {
-                alert('Instruction swap successfully!');
+                toast.success('Instruction swapped successfully!');
                 fetchInstructionByCourseId();
                 handleCloseSwapOrderIntruction();
             }
         } catch (error) {
             console.error('Failed to swap Instruction:', error);
+            toast.error('An error occurred while swapping Instruction.');
         }
     };
 
@@ -926,9 +917,10 @@ export default function CoursesControlEdit() {
             setSections((prevSections) => prevSections.filter((section) => section.id !== sectionToDelete));
             fetchInstructionByCourseId();
             setOpenDeleteSectionDialog(false);
+            toast.success('Instruction detail deleted successfully!');
         } catch (error) {
             console.error('Failed to delete instruction detail:', error);
-            alert('Failed to delete instruction detail. Please try again.');
+            toast.error('Failed to delete instruction detail. Please try again.');
         } finally {
             setIsLoadingSections(false);
         }
@@ -1182,6 +1174,8 @@ export default function CoursesControlEdit() {
             imageFile: null,
             name: '',
         });
+        setFile3D(null);
+        setImage(null);
     };
 
     const handleTranslationChange = (axis, value) => {
@@ -1237,14 +1231,56 @@ export default function CoursesControlEdit() {
     };
 
     const handleCreateInstruction = async () => {
-        // Validate required fields
-        if (!instructionName.trim()) return alert('Please enter an instruction name.');
-        if (!instructionDescription.trim()) return alert('Please enter an instruction description.');
-        if (!file3D) return alert('Please select a 3D file.');
-        if (!image) return alert('Please select an image.');
+        // Validate instructionName
+        if (instructionName.trim().length < 5 || instructionName.trim().length > 50) {
+            return toast.error('Instruction name must be between 5 and 50 characters.', { position: 'top-right' });
+        }
+
+        // Validate instructionDescription
+        if (instructionDescription.trim().length < 10 || instructionDescription.trim().length > 200) {
+            return toast.error('Instruction description must be between 10 and 200 characters.', {
+                position: 'top-right',
+            });
+        }
+
+        // Validate instructionDetailRequest.name
+        if (instructionDetailRequest.name.trim().length < 5 || instructionDetailRequest.name.trim().length > 50) {
+            return toast.error('Detail name must be between 5 and 50 characters.', { position: 'top-right' });
+        }
+
+        // Validate instructionDetailRequest.description
+        if (
+            instructionDetailRequest.description.trim().length < 10 ||
+            instructionDetailRequest.description.trim().length > 200
+        ) {
+            return toast.error('Detail description must be between 10 and 200 characters.', { position: 'top-right' });
+        }
+
+        // Validate file3D
+        if (!file3D) {
+            return toast.error('Please select a 3D file.', { position: 'top-right' });
+        }
+
+        // Validate image
+        if (!image) {
+            return toast.error('Please select an image.', { position: 'top-right' });
+        }
+
+        // Validate guideViewPosition.translation (Tất cả phải khác 0 và không được để trống)
+        if (guideViewPosition.translation.some((value) => !value || Number(value) === 0)) {
+            return toast.error('Translation values (X, Y, Z) must all be non-zero and non-empty.', {
+                position: 'top-right',
+            });
+        }
+
+        // Validate guideViewPosition.rotation (Tất cả phải khác 0 và không được để trống)
+        if (guideViewPosition.rotation.some((value) => !value || Number(value) === 0)) {
+            return toast.error('Rotation values (Pitch, Yaw, Roll) must all be non-zero and non-empty.', {
+                position: 'top-right',
+            });
+        }
 
         setIsCreating(true);
-        console.log(image);
 
         try {
             const formDataForInstruction = new FormData();
@@ -1256,7 +1292,7 @@ export default function CoursesControlEdit() {
             formDataForInstruction.append('guideViewPosition.translation', guideViewPosition.translation.join(','));
             formDataForInstruction.append('guideViewPosition.rotation', guideViewPosition.rotation.join(','));
 
-            // Thêm dữ liệu instructionDetailRequest từng key riêng biệt
+            // Thêm dữ liệu instructionDetailRequest
             formDataForInstruction.append('instructionDetailRequest.name', instructionDetailRequest.name);
             formDataForInstruction.append('instructionDetailRequest.description', instructionDetailRequest.description);
             formDataForInstruction.append('instructionDetailRequest.file', file3D);
@@ -1266,13 +1302,14 @@ export default function CoursesControlEdit() {
 
             const response = await InstructionAPI.create(formDataForInstruction);
             if (response?.result) {
-                alert('Instruction created successfully!');
+                toast.success('Instruction created successfully!', { position: 'top-right' });
                 setOpenAddSectionDialog(false);
-                handleCloseAddSectionDialog(); // Reset form
+                handleCloseAddSectionDialog();
+                fetchInstructionByCourseId();
             }
         } catch (error) {
             console.error('Failed to create instruction:', error);
-            alert('Failed to create instruction. Please try again.');
+            toast.error('Failed to create instruction. Please try again.', { position: 'top-right' });
         } finally {
             setIsCreating(false);
         }
@@ -1318,18 +1355,23 @@ export default function CoursesControlEdit() {
         setFile3DForInstructionDetail(null);
         setNameForInstructionDetail('');
         setDescriptionForInstructionDetail('');
+        setImageOfInstructionDetail(null);
+        setImagePreview('');
     };
 
+    const [imageOfInstructionDetail, setImageOfInstructionDetail] = useState(null);
+    const [fileOfInstructionDetail, setFileOfInstructionDetail] = useState(null);
     const handleEditLesson = async (instructionDetailId) => {
         console.log(instructionDetailId);
         const response = await InstructionDetailAPI.getById(instructionDetailId);
         const data = response?.result || {};
-        console.log(data);
 
         setIsEditingLesson(true);
         setcurrentInstructionDetailId(data.id);
         setNameForInstructionDetail(data.name);
         setDescriptionForInstructionDetail(data.description);
+        setImageOfInstructionDetail(data.imgString);
+        setFileOfInstructionDetail(data.fileString);
         setOpenUpdateLessonDialog(true);
     };
 
@@ -1363,30 +1405,51 @@ export default function CoursesControlEdit() {
     };
 
     const handleUpdateInstruction = async () => {
-        if (!nameForInstruction.trim()) return alert('Please enter an instruction name.');
-        if (!descriptionForInstruction.trim()) return alert('Please enter an instruction description.');
+        // Kiểm tra nameForInstruction (5 - 50 ký tự)
+        if (nameForInstruction.trim().length < 5 || nameForInstruction.trim().length > 50) {
+            toast.error('Instruction name must be between 5 and 50 characters.');
+            return;
+        }
+
+        // Kiểm tra descriptionForInstruction (10 - 200 ký tự)
+        if (descriptionForInstruction.trim().length < 10 || descriptionForInstruction.trim().length > 200) {
+            toast.error('Instruction description must be between 10 and 200 characters.');
+            return;
+        }
+
+        // Kiểm tra giá trị của translationForInstruction (x, y, z phải khác 0)
+        if (translationForInstruction.some((val) => val === 0 || isNaN(val))) {
+            toast.error('Translation values (X, Y, Z) must be non-zero numbers.');
+            return;
+        }
+
+        // Kiểm tra giá trị của rotationForInstruction (pitch, yaw, roll phải khác 0)
+        if (rotationForInstruction.some((val) => val === 0 || isNaN(val))) {
+            toast.error('Rotation values (Pitch, Yaw, Roll) must be non-zero numbers.');
+            return;
+        }
 
         setIsUpdatingForInstruction(true);
 
         try {
             const formDataForUpdateInstruction = new FormData();
-
             formDataForUpdateInstruction.append('name', nameForInstruction);
             formDataForUpdateInstruction.append('description', descriptionForInstruction);
             formDataForUpdateInstruction.append('guideViewPosition.translation', translationForInstruction);
             formDataForUpdateInstruction.append('guideViewPosition.rotation', rotationForInstruction);
 
             console.log([...formDataForUpdateInstruction]);
+
             const response = await InstructionAPI.update(currentInstrutionIdForUpdate, formDataForUpdateInstruction);
             if (response?.result) {
-                alert('Instruction updated successfully!');
+                toast.success('Instruction updated successfully!');
                 setOpenUpdateInstructionDialog(false);
                 handleCloseUpdateInstructionDialog();
                 fetchInstructionByCourseId();
             }
         } catch (error) {
             console.error('Failed to update instruction:', error);
-            alert('Failed to update instruction. Please try again.');
+            toast.error('Failed to update instruction. Please try again.');
         } finally {
             setIsUpdatingForInstruction(false);
         }
@@ -1396,10 +1459,11 @@ export default function CoursesControlEdit() {
         console.log(translationForInstruction);
     }, [translationForInstruction]);
 
-    const handleImageSelectForInstructionDetail = (e) => {
-        if (e.target.files[0]) {
-            setImageForInstructionDetail(e.target.files[0]);
-        }
+    const [imagePreview, setImagePreview] = useState(null);
+
+    const handleImageSelectForInstructionDetail = (event) => {
+        setImageForInstructionDetail(event.target.files[0]);
+        setImagePreview(URL.createObjectURL(event.target.files[0]));
     };
 
     const handle3DFileSelectForInstructionDetail = (e) => {
@@ -1426,11 +1490,28 @@ export default function CoursesControlEdit() {
     };
 
     const handleCreateInstructionDetail = async () => {
-        // Validate required fields
-        if (!nameForInstructionDetail.trim()) return alert('Please enter an instruction detail name.');
-        if (!descriptionForInstructionDetail.trim()) return alert('Please enter an instruction detail description.');
-        if (!file3DForInstructionDetail) return alert('Please select a 3D file.');
-        if (!imageForInstructionDetail) return alert('Please select an image.');
+        // Kiểm tra nameForInstructionDetail (5 - 50 ký tự)
+        if (nameForInstructionDetail.trim().length < 5 || nameForInstructionDetail.trim().length > 50) {
+            toast.error('Instruction detail name must be between 5 and 50 characters.');
+            return;
+        }
+
+        // Kiểm tra descriptionForInstructionDetail (10 - 200 ký tự)
+        if (descriptionForInstructionDetail.trim().length < 10 || descriptionForInstructionDetail.trim().length > 200) {
+            toast.error('Instruction detail description must be between 10 and 200 characters.');
+            return;
+        }
+
+        if (!imageForInstructionDetail) {
+            toast.error('Please select an image for the instruction detail.');
+            return;
+        }
+
+        // Kiểm tra xem file 3D đã chọn chưa
+        if (!file3DForInstructionDetail) {
+            toast.error('Please select a 3D file (.glb or .gltf).');
+            return;
+        }
 
         setIsCreatingForInstructionDetail(true);
 
@@ -1444,14 +1525,14 @@ export default function CoursesControlEdit() {
 
             const response = await InstructionDetailAPI.create(formDataForInstructionDetail);
             if (response?.result) {
-                alert('Instruction created successfully!');
+                toast.success('Instruction detail created successfully!');
                 setOpenAddSectionDialog(false);
                 handleCloseAddLessonDialog();
                 fetchInstructionByCourseId();
             }
         } catch (error) {
-            console.error('Failed to create instruction:', error);
-            alert('Failed to create instruction. Please try again.');
+            console.error('Failed to create instruction detail:', error);
+            toast.error('Failed to create instruction detail. Please try again.');
         } finally {
             setIsCreatingForInstructionDetail(false);
         }
@@ -1459,47 +1540,65 @@ export default function CoursesControlEdit() {
 
     const handleUpdateInstructionDetail = async () => {
         // Validate required fields
-        if (!nameForInstructionDetail.trim()) return alert('Please enter an instruction detail name.');
-        if (!descriptionForInstructionDetail.trim()) return alert('Please enter an instruction detail description.');
+        if (
+            !nameForInstructionDetail.trim() ||
+            nameForInstructionDetail.length < 5 ||
+            nameForInstructionDetail.length > 50
+        ) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+        if (
+            !descriptionForInstructionDetail.trim() ||
+            descriptionForInstructionDetail.length < 10 ||
+            descriptionForInstructionDetail.length > 200
+        ) {
+            return toast.error('Description must be between 10 and 200 characters.');
+        }
 
         setIsUpdatingForInstructionDetail(true);
 
         try {
             const formDataForUpdateInstructionDetail = new FormData();
-
             formDataForUpdateInstructionDetail.append('name', nameForInstructionDetail);
             formDataForUpdateInstructionDetail.append('description', descriptionForInstructionDetail);
-            if (file3DForInstructionDetail != null && imageForInstructionDetail != null) {
+
+            if (imageForInstructionDetail != null && file3DForInstructionDetail == null) {
+                formDataForUpdateInstructionDetail.append('imageFile', imageForInstructionDetail);
+            }
+
+            if (imageForInstructionDetail == null && file3DForInstructionDetail != null) {
                 formDataForUpdateInstructionDetail.append('file', file3DForInstructionDetail);
-                formDataForUpdateInstructionDetail.append('imageFile', imageForInstructionDetail);
             }
 
-            if (file3DForInstructionDetail == null && imageForInstructionDetail != null) {
+            if (imageForInstructionDetail != null && file3DForInstructionDetail != null) {
                 formDataForUpdateInstructionDetail.append('imageFile', imageForInstructionDetail);
-            }
-
-            if (file3DForInstructionDetail != null && imageForInstructionDetail == null) {
                 formDataForUpdateInstructionDetail.append('file', file3DForInstructionDetail);
             }
 
             console.log([...formDataForUpdateInstructionDetail]);
+
             const response = await InstructionDetailAPI.update(
                 currentInstructionDetailId,
                 formDataForUpdateInstructionDetail,
             );
+
             if (response?.result) {
-                alert('Instruction updated successfully!');
+                toast.success('Instruction updated successfully!');
                 setOpenUpdateLessonDialog(false);
                 handleCloseAddLessonDialog();
                 fetchInstructionByCourseId();
             }
         } catch (error) {
             console.error('Failed to update instruction detail:', error);
-            alert('Failed to update instruction detail. Please try again.');
+            toast.error('Failed to update instruction detail. Please try again.');
         } finally {
             setIsUpdatingForInstructionDetail(false);
         }
     };
+
+    useEffect(() => {
+        console.log(file3DForInstructionDetail);
+    }, [file3DForInstructionDetail]);
 
     async function handleDownloadQrCode(qrCodeUrl, fileName) {
         if (!qrCodeUrl) return;
@@ -1527,6 +1626,28 @@ export default function CoursesControlEdit() {
         }
     }
 
+    const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+
+    const handleOpenDeleteConfirm = () => {
+        setOpenDeleteConfirm(true);
+    };
+
+    const handleCloseDeleteConfirm = () => {
+        setOpenDeleteConfirm(false);
+    };
+
+    const handleDeleteGuideline = async () => {
+        try {
+            await CourseAPI.delete(course.id);
+            toast.success('Guideline deleted successfully!', { position: 'top-right' });
+            setOpenDeleteConfirm(false);
+            navigate('/company/course');
+        } catch (error) {
+            console.error('Failed to delete guideline:', error);
+            toast.error('Failed to delete guideline. Please try again.', { position: 'top-right' });
+        }
+    };
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             <Box
@@ -1549,49 +1670,104 @@ export default function CoursesControlEdit() {
                             color: '#051D40',
                             mb: 4,
                             textShadow: `
-                            -2px -2px 0 #FFFFFF, 
-                            2px -2px 0 #FFFFFF, 
-                            -2px 2px 0 #FFFFFF, 
-                            2px 2px 0 #FFFFFF, 
-                            0px -2px 0 #FFFFFF, 
-                            0px 2px 0 #FFFFFF, 
-                            -2px 0px 0 #FFFFFF, 
-                            2px 0px 0 #FFFFFF
-                        `,
+                -2px -2px 0 #FFFFFF, 
+                2px -2px 0 #FFFFFF, 
+                -2px 2px 0 #FFFFFF, 
+                2px 2px 0 #FFFFFF, 
+                0px -2px 0 #FFFFFF, 
+                0px 2px 0 #FFFFFF, 
+                -2px 0px 0 #FFFFFF, 
+                2px 0px 0 #FFFFFF
+            `,
                         }}
                     >
                         {course?.title || 'Course Title'}
                     </Typography>
-                    {/* ====== Start/Stop Course Button ====== */}
-                    <Button
-                        variant="contained"
-                        sx={{
-                            mb: 2,
-                            padding: '12px 20px',
-                            backgroundColor: 'green', // Set the background color conditionally
-                            ':hover': {
-                                opacity: '0.9',
-                                backgroundColor: course?.status === 'INACTIVE' ? 'darkgreen' : 'darkred', // Darker hover color
-                            },
-                            display: course?.status === 'ACTIVE' ? 'none' : 'inline-block', // Hide if course is active
-                        }}
-                        onClick={handleClickToggleCourseStatus}
-                    >
-                        {isLoadingStartCourse ? <CircularProgress size={24} /> : 'Start this guideline'}
-                    </Button>
+
+                    {/* ====== Action Buttons ====== */}
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                        {/* Start/Stop Course Button */}
+                        <Button
+                            variant="contained"
+                            sx={{
+                                padding: '12px 20px',
+                                backgroundColor: course?.status === 'INACTIVE' ? 'green' : 'red',
+                                ':hover': {
+                                    opacity: '0.9',
+                                    backgroundColor: course?.status === 'INACTIVE' ? 'darkgreen' : 'darkred',
+                                },
+                            }}
+                            onClick={handleClickToggleCourseStatus}
+                        >
+                            {isLoadingStartCourse ? (
+                                <CircularProgress size={24} />
+                            ) : course?.status === 'INACTIVE' ? (
+                                'Start this guideline'
+                            ) : (
+                                'Stop this guideline'
+                            )}
+                        </Button>
+
+                        {/* Delete Course Button */}
+                        <Button
+                            variant="contained"
+                            color="error"
+                            sx={{ padding: '12px 20px' }}
+                            onClick={handleOpenDeleteConfirm}
+                        >
+                            Delete this guideline
+                        </Button>
+                    </Box>
+
+                    {/* ====== Instruction Note ====== */}
                     <Typography
                         variant="body2"
                         sx={{
                             color: 'white',
-                            mb: 4,
+                            mt: 2,
                             fontStyle: 'italic',
                             fontSize: '16px',
                         }}
                     >
-                        You must create an Instruction before starting the guideline.
+                        You can create an Instruction before starting the guideline.
                     </Typography>
                 </Box>
             </Box>
+
+            {/* ====== Delete Confirmation Modal ====== */}
+            <Modal open={openDeleteConfirm} onClose={handleCloseDeleteConfirm}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        borderRadius: 3,
+                        boxShadow: 10,
+                        p: 3,
+                        textAlign: 'center',
+                    }}
+                >
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                        Confirm Deletion
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 3 }}>
+                        Are you sure you want to delete this guideline? This action cannot be undone.
+                    </Typography>
+
+                    {/* Action Buttons */}
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                        <Button variant="contained" color="error" onClick={handleDeleteGuideline}>
+                            Delete
+                        </Button>
+                        <Button variant="outlined" onClick={handleCloseDeleteConfirm}>
+                            Cancel
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
             {/* ====== Tab Context ====== */}
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
@@ -2419,13 +2595,13 @@ export default function CoursesControlEdit() {
                 aria-describedby="start-stop-dialog-description"
             >
                 <DialogTitle id="start-stop-dialog-title">
-                    {course?.status === 'INACTIVE' ? 'Start Course' : 'Stop Course'}
+                    {course?.status === 'INACTIVE' ? 'Start guideline' : 'Stop guideline'}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText id="start-stop-dialog-description">
                         {course?.status === 'INACTIVE'
-                            ? 'Are you sure you want to start this course?'
-                            : 'Are you sure you want to stop this course?'}
+                            ? 'Are you sure you want to start this guideline?'
+                            : 'Are you sure you want to stop this guideline?'}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -2437,10 +2613,10 @@ export default function CoursesControlEdit() {
             </Dialog>
             {/* ==================== Add Section Dialog ==================== */}
             <Dialog open={openAddSectionDialog} onClose={handleCloseAddSectionDialog} fullWidth maxWidth="sm">
-                <DialogTitle>Add New Section</DialogTitle>
+                <DialogTitle>Add New Instruction</DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ mb: 2 }}>
-                        Please fill out the form below to add a new section to the course.
+                        Please fill out the form below to add a new instruction to the guideline.
                     </DialogContentText>
 
                     {/* Section Title */}
@@ -2517,19 +2693,33 @@ export default function CoursesControlEdit() {
                     <Typography variant="body2" sx={{ mt: 2 }}>
                         Select an image for instruction detail (required):
                     </Typography>
-                    <input type="file" accept="image/*" onChange={handleImageSelect} style={{ marginBottom: '8px' }} />
-                    {image && <Typography variant="body2">File: {image.name}</Typography>}
+                    <Box display="flex" alignItems="center" gap={2} sx={{ mt: 1 }}>
+                        <Button variant="contained" component="label" startIcon={<CloudUploadIcon />}>
+                            Upload Image
+                            <input type="file" accept="image/*" onChange={handleImageSelect} hidden />
+                        </Button>
+                        {image && <Typography variant="body2">{image.name}</Typography>}
+                    </Box>
+                    {image && (
+                        <Box sx={{ mt: 2 }}>
+                            <img
+                                src={URL.createObjectURL(image)}
+                                alt="Preview"
+                                style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                            />
+                        </Box>
+                    )}
 
                     <Typography variant="body2" sx={{ mt: 2 }}>
                         Select 3D file (required, e.g. .glb):
                     </Typography>
-                    <input
-                        type="file"
-                        accept=".glb,.gltf"
-                        onChange={handle3DFileSelect}
-                        style={{ marginBottom: '8px' }}
-                    />
-                    {file3D && <Typography variant="body2">File: {file3D.name}</Typography>}
+                    <Box display="flex" alignItems="center" gap={2} sx={{ mt: 1 }}>
+                        <Button variant="contained" component="label" startIcon={<CloudUploadIcon />}>
+                            Upload 3D File
+                            <input type="file" accept=".glb,.gltf" onChange={handle3DFileSelect} hidden />
+                        </Button>
+                        {file3D && <Typography variant="body2">{file3D.name}</Typography>}
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddSectionDialog} disabled={isCreatingSection}>
@@ -2624,6 +2814,7 @@ export default function CoursesControlEdit() {
                         Please fill out the form below to create a new instruction detail.
                     </DialogContentText>
 
+                    {/* Name Input */}
                     <TextField
                         fullWidth
                         margin="normal"
@@ -2632,6 +2823,7 @@ export default function CoursesControlEdit() {
                         value={nameForInstructionDetail}
                         onChange={(e) => setNameForInstructionDetail(e.target.value)}
                     />
+                    {/* Description Input */}
                     <TextField
                         fullWidth
                         margin="normal"
@@ -2642,110 +2834,72 @@ export default function CoursesControlEdit() {
                         onChange={(e) => setDescriptionForInstructionDetail(e.target.value)}
                     />
 
+                    {/* Upload Image */}
                     <Typography variant="body2" sx={{ mt: 2 }}>
                         Select an image (required):
                     </Typography>
                     <input
                         type="file"
                         accept="image/*"
+                        hidden
+                        id="upload-image"
                         onChange={handleImageSelectForInstructionDetail}
-                        style={{ marginBottom: '8px' }}
                     />
-                    {imageForInstructionDetail && (
-                        <Typography variant="body2">File: {imageForInstructionDetail.name}</Typography>
+                    <label htmlFor="upload-image">
+                        <Button variant="contained" component="span" fullWidth color="primary" sx={{ mt: 1, mb: 1 }}>
+                            {imageForInstructionDetail ? 'Change Image' : 'Upload Image'}
+                        </Button>
+                    </label>
+
+                    {/* Hiển thị ảnh preview nếu có */}
+                    {imagePreview && (
+                        <Box sx={{ mt: 2, textAlign: 'center' }}>
+                            <img
+                                src={imagePreview}
+                                alt="Preview"
+                                style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: '8px' }}
+                            />
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                {imageForInstructionDetail?.name}
+                            </Typography>
+                        </Box>
                     )}
 
+                    {/* Upload 3D File */}
                     <Typography variant="body2" sx={{ mt: 2 }}>
                         Select 3D file (required, e.g. .glb):
                     </Typography>
                     <input
                         type="file"
                         accept=".glb,.gltf"
+                        hidden
+                        id="upload-3d-file"
                         onChange={handle3DFileSelectForInstructionDetail}
-                        style={{ marginBottom: '8px' }}
                     />
+                    <label htmlFor="upload-3d-file">
+                        <Button variant="contained" component="span" fullWidth color="primary" sx={{ mt: 1, mb: 1 }}>
+                            {file3DForInstructionDetail ? 'Change 3D Model' : 'Upload 3D Model'}
+                        </Button>
+                    </label>
+
+                    {/* Hiển thị tên file 3D nếu có */}
                     {file3DForInstructionDetail && (
-                        <Typography variant="body2">File: {file3DForInstructionDetail.name}</Typography>
-                    )}
-
-                    {selectedLessonType === 'READING' && (
-                        <>
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Reading Title"
-                                value={newLessonData.title || ''}
-                                onChange={(e) => handleLessonInputChange('title', e.target.value)}
-                                sx={{ mb: 3 }}
-                            />
-
-                            <Box>
-                                <MyEditor
-                                    value={newLessonData.content || ''}
-                                    onChange={(data) => {
-                                        handleLessonInputChange('content', data);
-                                        console.log(data);
-                                    }}
-                                />
-                            </Box>
-
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Estimation Time (minutes)"
-                                type="number" // Enforces numerical input
-                                inputProps={{ min: 1 }} // Optional: Set minimum value to 1 to prevent negative numbers
-                                value={newLessonData.duration || ''}
-                                onChange={(e) => handleLessonInputChange('duration', e.target.value)}
-                                sx={{ mt: 3 }}
-                            />
-
-                            {/* Attach File Input (For non-video files) */}
-                            <input
-                                type="file"
-                                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" // Restrict to non-video files
-                                style={{ display: 'none' }}
-                                id="file-attach"
-                                onChange={handleFileUpload}
-                            />
-                            <label htmlFor="file-attach">
-                                <Button
-                                    component="span"
-                                    fullWidth
-                                    variant="contained"
-                                    sx={{
-                                        border: '2px dashed darkgrey',
-                                        padding: 2,
-                                        backgroundColor: '#f5f5f5',
-                                        boxShadow: 'none',
-                                        color: '#0f6cbf',
-                                        ':hover': {
-                                            backgroundColor: '#f5f5f5',
-                                            border: '2px solid #0f6cbf',
-                                            boxShadow: 'none',
-                                        },
-                                    }}
-                                >
-                                    {newLessonData.attachFileUrl ? 'Change Attachment' : 'Attach File'}
-                                </Button>
-                            </label>
-
-                            {/* Show Selected Attached File Name */}
-                            {newLessonData.attachFileUrl && (
-                                <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Attached File: {newLessonData.attachFileUrl.name || newLessonData.attachFileUrl}
-                                </Typography>
-                            )}
-                        </>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                            File: {file3DForInstructionDetail.name}
+                        </Typography>
                     )}
                 </DialogContent>
+
                 <DialogActions>
                     <Button onClick={handleCloseAddLessonDialog} disabled={isCreatingLesson}>
                         Cancel
                     </Button>
-                    <Button onClick={handleCreateInstructionDetail} disabled={isCreatingForInstructionDetail}>
+                    <Button
+                        onClick={handleCreateInstructionDetail}
+                        disabled={isCreatingForInstructionDetail}
+                        variant="contained"
+                        color="primary"
+                    >
                         {isCreatingForInstructionDetail ? <CircularProgress size={24} /> : 'Create'}
                     </Button>
                 </DialogActions>
@@ -2776,104 +2930,62 @@ export default function CoursesControlEdit() {
                         onChange={(e) => setDescriptionForInstructionDetail(e.target.value)}
                     />
 
-                    <Typography variant="body2" sx={{ mt: 2 }}>
-                        Select an image :
-                    </Typography>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageSelectForInstructionDetail}
-                        style={{ marginBottom: '8px' }}
-                    />
-                    {imageForInstructionDetail && (
-                        <Typography variant="body2">File: {imageForInstructionDetail.name}</Typography>
-                    )}
-
-                    <Typography variant="body2" sx={{ mt: 2 }}>
-                        Select 3D file :
-                    </Typography>
-                    <input
-                        type="file"
-                        accept=".glb,.gltf"
-                        onChange={handle3DFileSelectForInstructionDetail}
-                        style={{ marginBottom: '8px' }}
-                    />
-                    {file3DForInstructionDetail && (
-                        <Typography variant="body2">File: {file3DForInstructionDetail.name}</Typography>
-                    )}
-
-                    {selectedLessonType === 'READING' && (
-                        <>
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Reading Title"
-                                value={newLessonData.title || ''}
-                                onChange={(e) => handleLessonInputChange('title', e.target.value)}
-                                sx={{ mb: 3 }}
+                    {(imageForInstructionDetail || imageOfInstructionDetail) && (
+                        <Box sx={{ mt: 2, textAlign: 'center' }}>
+                            <Typography variant="subtitle1">Current Image</Typography>
+                            <img
+                                src={
+                                    imageForInstructionDetail
+                                        ? URL.createObjectURL(imageForInstructionDetail)
+                                        : getImage(imageOfInstructionDetail)
+                                }
+                                alt="Model Image"
+                                style={{
+                                    width: '100%', // Đảm bảo ảnh phù hợp với container
+                                    maxWidth: '100%', // Giữ ảnh không bị vỡ
+                                    maxHeight: '300px', // Tăng chiều cao tối đa
+                                    objectFit: 'contain', // Hiển thị toàn bộ ảnh mà không cắt xén
+                                    borderRadius: 8,
+                                    border: '2px solid #ddd',
+                                }}
                             />
-
-                            <Box>
-                                <MyEditor
-                                    value={newLessonData.content || ''}
-                                    onChange={(data) => {
-                                        handleLessonInputChange('content', data);
-                                        console.log(data);
-                                    }}
-                                />
-                            </Box>
-
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                required
-                                label="Estimation Time (minutes)"
-                                type="number" // Enforces numerical input
-                                inputProps={{ min: 1 }} // Optional: Set minimum value to 1 to prevent negative numbers
-                                value={newLessonData.duration || ''}
-                                onChange={(e) => handleLessonInputChange('duration', e.target.value)}
-                                sx={{ mt: 3 }}
-                            />
-
-                            {/* Attach File Input (For non-video files) */}
-                            <input
-                                type="file"
-                                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" // Restrict to non-video files
-                                style={{ display: 'none' }}
-                                id="file-attach"
-                                onChange={handleFileUpload}
-                            />
-                            <label htmlFor="file-attach">
-                                <Button
-                                    component="span"
-                                    fullWidth
-                                    variant="contained"
-                                    sx={{
-                                        border: '2px dashed darkgrey',
-                                        padding: 2,
-                                        backgroundColor: '#f5f5f5',
-                                        boxShadow: 'none',
-                                        color: '#0f6cbf',
-                                        ':hover': {
-                                            backgroundColor: '#f5f5f5',
-                                            border: '2px solid #0f6cbf',
-                                            boxShadow: 'none',
-                                        },
-                                    }}
-                                >
-                                    {newLessonData.attachFileUrl ? 'Change Attachment' : 'Attach File'}
-                                </Button>
-                            </label>
-
-                            {/* Show Selected Attached File Name */}
-                            {newLessonData.attachFileUrl && (
-                                <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                    Attached File: {newLessonData.attachFileUrl.name || newLessonData.attachFileUrl}
-                                </Typography>
-                            )}
-                        </>
+                        </Box>
                     )}
+                    <Button
+                        variant="contained"
+                        component="label"
+                        fullWidth
+                        startIcon={<CloudUploadIcon />}
+                        sx={{ mt: 2 }}
+                    >
+                        Upload Image
+                        <input type="file" accept="image/*" hidden onChange={handleImageSelectForInstructionDetail} />
+                        {imageForInstructionDetail && (
+                            <Typography variant="body2"> File: {imageForInstructionDetail.name}</Typography>
+                        )}
+                    </Button>
+
+                    <Button
+                        variant="contained"
+                        component="label"
+                        fullWidth
+                        startIcon={<CloudUploadIcon />}
+                        sx={{ mt: 2 }}
+                    >
+                        Upload 3D Model
+                        <input
+                            type="file"
+                            accept=".glb,.gltf"
+                            hidden
+                            onChange={handle3DFileSelectForInstructionDetail}
+                        />
+                        {(file3DForInstructionDetail || fileOfInstructionDetail) && (
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                File:{' '}
+                                {file3DForInstructionDetail ? file3DForInstructionDetail.name : fileOfInstructionDetail}
+                            </Typography>
+                        )}
+                    </Button>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddLessonDialog} disabled={isUpdatingForInstructionDetail}>
@@ -3024,9 +3136,9 @@ export default function CoursesControlEdit() {
                             <Button
                                 variant="contained"
                                 startIcon={<FileText />}
-                                onClick={() => handleDownloadFile(lessonDetails.fileString, lessonDetails.name)}
+                                onClick={() => handleDownloadQrCode(lessonDetails.fileString, lessonDetails.name)}
                             >
-                                Download File Instruction Detail
+                                Download Model File
                             </Button>
                         </Box>
                     )}
