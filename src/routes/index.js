@@ -1,65 +1,43 @@
 import AdminLayout from '~/components/Layouts/AdminLayout';
-import ForgotPassword from '~/pages/new/ForgotPassword';
 
 //new
-import FullLayout from '~/components/Layouts/FullLayout';
 import AdminTestPage from '~/pages/new/BaseAdmin';
 import BlogsManagement from '~/pages/new/BlogsManagement';
-import Course from '~/pages/new/Course';
+import CompaniesManagement from '~/pages/new/CompaniesManagement';
 import CourseLearning from '~/pages/new/CourseLearning';
+import CoursesManagement from '~/pages/new/CoursesManagement';
 import DashboardManagement from '~/pages/new/DashboardManagement';
+import EmployeesManagement from '~/pages/new/EmployeesManagement';
 import Homepage from '~/pages/new/Homepage';
-import LoginAdmin from '~/pages/new/LoginAdmin';
-import LoginBusiness from '~/pages/new/LoginBusiness';
-import LoginUser from '~/pages/new/LoginUser';
-import MyLearning from '~/pages/new/MyLearning';
+import ModelRequestManagement from '~/pages/new/ModelRequestManagement';
+import ModelsManagement from '~/pages/new/ModelsManagement';
+import PaymentAndSubscriptionManagement from '~/pages/new/PaymentAndSubscriptionManagement';
 import PaymentFailed from '~/pages/new/PaymentFailed';
 import PaymentsManagement from '~/pages/new/PaymentsManagement';
 import PaymentSuccess from '~/pages/new/PaymentSuccess';
-import RegisterUser from '~/pages/new/RegisterUser';
-import ResetPassword from '~/pages/new/ResetPassword';
-import TestPage from '~/pages/new/TestPage';
-import UserProfile from '~/pages/new/UserProfile';
 import NotAuthorized from '~/pages/NotAuthorized';
-import FooterHome from '~/parts/FooterHome';
-import Header from '~/parts/Header';
-import CoursesManagement from '~/pages/new/CoursesManagement';
-import ModelsManagement from '~/pages/new/ModelsManagement';
-import ModelRequestManagement from '~/pages/new/ModelRequestManagement';
-import PaymentAndSubscriptionManagement from '~/pages/new/PaymentAndSubscriptionManagement';
-import EmployeesManagement from '~/pages/new/EmployeesManagement';
-import CompaniesManagement from '~/pages/new/CompaniesManagement';
 // import AccountsManagement from '~/pages/new/AccountsManagement ';
-import CoursesControl from '~/pages/new/CoursesControl';
-import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
-import UsersManagement from '~/pages/new/UsersManagement';
 import AdminPlatformLayout from '~/components/Layouts/AdminPlatformLayout';
+import ModelViewer from '~/components/ModelViewer';
 import AccountsManagement from '~/pages/new/AccountsManagement';
 import CompanyLogin from '~/pages/new/CompanyLogin';
 import CompanyRegister from '~/pages/new/CompanyRegister';
 import CompanyWaiting from '~/pages/new/CompanyWaiting';
+import CoursesControl from '~/pages/new/CoursesControl';
+import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
+import UsersManagement from '~/pages/new/UsersManagement';
 
 const publicRoutes = [
     //new
     // { path: '/admin/login', component: LoginAdmin, layout: null },
-    { path: '/business/login', component: LoginBusiness, layout: null },
-    { path: '/register', component: RegisterUser, layout: null },
-    { path: '/forgot-password', component: ForgotPassword, layout: null },
-    { path: '/reset-password', component: ResetPassword, layout: null },
-    { path: '/home', component: Homepage, layout: FullLayout },
     { path: '/', component: Homepage, layout: CompanyLogin },
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
-    { path: '/profile/:userId', component: UserProfile, layout: FullLayout },
-    { path: '/my-learning', component: MyLearning, layout: FullLayout },
-    { path: '/course', component: Course, layout: FullLayout },
 
     { path: '/NotAuthorized', component: NotAuthorized, layout: null },
 
-    { path: '/test/footer', component: FooterHome, layout: null },
-    { path: '/test/header', component: Header, layout: null },
-    { path: '/test/test-page', component: TestPage, layout: null },
+    { path: '/test/test-page', component: ModelViewer, layout: null },
     { path: '/test/admin-test', component: AdminTestPage, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
@@ -95,4 +73,4 @@ const companyRoutes = [
 
 const privateRoutes = [];
 
-export { adminRoutes, privateRoutes, publicRoutes, companyRoutes };
+export { adminRoutes, companyRoutes, privateRoutes, publicRoutes };

@@ -2,13 +2,14 @@
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { useParams } from 'react-router-dom';
 import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Avatar,
     Box,
     Button,
+    Checkbox,
     CircularProgress,
     Dialog,
     DialogActions,
@@ -19,39 +20,37 @@ import {
     FormControl,
     IconButton,
     InputLabel,
+    List,
+    ListItem,
+    ListItemAvatar,
+    ListItemText,
     Menu,
     MenuItem,
+    Pagination,
     Select,
     Tab,
     TextField,
     Typography,
-    List,
-    ListItem,
-    Avatar,
-    ListItemText,
-    Checkbox,
-    ListItemAvatar,
-    FormControlLabel,
-    Pagination,
 } from '@mui/material';
-import { Divide, File, FileText, MoreVerticalIcon, Video } from 'lucide-react';
+import { File, FileText, MoreVerticalIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import AccountAPI from '~/API/AccountAPI';
 
-import CourseAPI from '~/API/CourseAPI';
-import QuizAPI from '~/API/QuizAPI';
-import EnrollmentAPI from '~/API/EnrollmentAPI';
 import axios from 'axios';
-import { set } from 'date-fns';
-import { Attachment } from '@mui/icons-material';
-import storageService from '~/components/StorageService/storageService';
-import MyEditor from '~/components/MyEditor';
 import DOMPurify from 'dompurify';
-import { getImage } from '~/Constant';
+import toast from 'react-hot-toast';
+import CourseAPI from '~/API/CourseAPI';
+import EnrollmentAPI from '~/API/EnrollmentAPI';
 import InstructionAPI from '~/API/InstructionAPI';
 import InstructionDetailAPI from '~/API/InstructionDetailAPI';
 import ModelAPI from '~/API/ModelAPI';
-import toast from 'react-hot-toast';
+import QuizAPI from '~/API/QuizAPI';
+import MyEditor from '~/components/MyEditor';
+import storageService from '~/components/StorageService/storageService';
+import { getImage } from '~/Constant';
+import ModelViewer from '~/components/ModelViewer';
+import modelTest from '~/assets/models/mouseclean.glb';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
@@ -1607,103 +1606,113 @@ export default function CoursesControlEdit() {
                     {isLoadingModel ? (
                         <CircularProgress />
                     ) : (
-                        <Box sx={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
-                            {/* LEFT COLUMN: QR Code & Download Button */}
-                            <Box
-                                sx={{
-                                    width: '30%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: 2,
-                                }}
-                            >
-                                {/* QR Code Image */}
-                                <img
-                                    src={getImage(course?.qrCode)}
-                                    alt="QR Code"
-                                    style={{
-                                        maxWidth: '100%',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+                        <Box>
+                            <Box sx={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
+                                {/* LEFT COLUMN: QR Code & Download Button */}
+                                <Box
+                                    sx={{
+                                        width: '30%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: 2,
                                     }}
-                                />
-
-                                {/* Download Button */}
-                                <Button
-                                    variant="contained"
-                                    onClick={() => handleDownloadQrCode(course?.qrCode, model?.name + '_QRCode.png')}
-                                    sx={{ alignSelf: 'center' }}
                                 >
-                                    Download QR Code
-                                </Button>
-                            </Box>
+                                    {/* QR Code Image */}
+                                    <img
+                                        src={getImage(course?.qrCode)}
+                                        alt="QR Code"
+                                        style={{
+                                            maxWidth: '100%',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+                                        }}
+                                    />
 
-                            {/* RIGHT COLUMN: Model Info */}
-                            <Box
-                                sx={{
-                                    width: '60%',
-                                    backgroundColor: 'rgba(255,255,255,0.8)',
-                                    p: 3,
-                                    borderRadius: 2,
-                                    boxShadow: 3,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 2,
-                                    textAlign: 'left',
-                                }}
-                            >
-                                {/* Model Image */}
-                                <img
-                                    src={getImage(model?.imageUrl)}
-                                    alt="Model Preview"
-                                    style={{
-                                        width: '100%',
-                                        borderRadius: '8px',
-                                        marginBottom: '16px',
-                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                    {/* Download Button */}
+                                    <Button
+                                        variant="contained"
+                                        onClick={() =>
+                                            handleDownloadQrCode(course?.qrCode, model?.name + '_QRCode.png')
+                                        }
+                                        sx={{ alignSelf: 'center' }}
+                                    >
+                                        Download QR Code
+                                    </Button>
+                                </Box>
+
+                                {/* RIGHT COLUMN: Model Info */}
+                                <Box
+                                    sx={{
+                                        width: '60%',
+                                        backgroundColor: 'rgba(255,255,255,0.8)',
+                                        p: 3,
+                                        borderRadius: 2,
+                                        boxShadow: 3,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 2,
+                                        textAlign: 'left',
                                     }}
-                                />
+                                >
+                                    {/* Model Image */}
+                                    <img
+                                        src={getImage(model?.imageUrl)}
+                                        alt="Model Preview"
+                                        style={{
+                                            width: '200px',
+                                            borderRadius: '8px',
+                                            marginBottom: '16px',
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                            margin: 'auto auto',
+                                        }}
+                                    />
 
-                                {/* Model Details */}
-                                <Box sx={{ display: 'flex', mb: 1, textAlign: 'left' }}>
-                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                        Model Name
-                                    </Typography>
-                                    <Typography variant="body1">{model?.name || 'N/A'}</Typography>
-                                </Box>
-                                <Divider />
-                                {/* Aligned details */}
-                                <Box sx={{ display: 'flex', mb: 1 }}>
-                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                        Type
-                                    </Typography>
-                                    <Typography variant="body1">{model?.modelTypeName || 'N/A'}</Typography>
-                                </Box>
-                                <Divider />
+                                    {/* Model Details */}
+                                    <Box sx={{ display: 'flex', mb: 1, textAlign: 'left' }}>
+                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                            Model Name
+                                        </Typography>
+                                        <Typography variant="body1">{model?.name || 'N/A'}</Typography>
+                                    </Box>
+                                    <Divider />
+                                    {/* Aligned details */}
+                                    <Box sx={{ display: 'flex', mb: 1 }}>
+                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                            Type
+                                        </Typography>
+                                        <Typography variant="body1">{model?.modelTypeName || 'N/A'}</Typography>
+                                    </Box>
+                                    <Divider />
 
-                                <Box sx={{ display: 'flex', mb: 1 }}>
-                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                        Description
-                                    </Typography>
-                                    <Typography variant="body1">{model?.description || 'No description'}</Typography>
-                                </Box>
-                                <Divider />
+                                    <Box sx={{ display: 'flex', mb: 1 }}>
+                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                            Description
+                                        </Typography>
+                                        <Typography variant="body1">
+                                            {model?.description || 'No description'}
+                                        </Typography>
+                                    </Box>
+                                    <Divider />
 
-                                <Box sx={{ display: 'flex', mb: 1 }}>
-                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                        Version
-                                    </Typography>
-                                    <Typography variant="body1">{model?.version || 'N/A'}</Typography>
-                                </Box>
-                                <Divider />
+                                    <Box sx={{ display: 'flex', mb: 1 }}>
+                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                            Version
+                                        </Typography>
+                                        <Typography variant="body1">{model?.version || 'N/A'}</Typography>
+                                    </Box>
+                                    <Divider />
 
-                                <Box sx={{ display: 'flex' }}>
-                                    <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                        Scale
-                                    </Typography>
-                                    <Typography variant="body1">{model?.scale || 'N/A'}</Typography>
+                                    <Box sx={{ display: 'flex' }}>
+                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
+                                            Scale
+                                        </Typography>
+                                        <Typography variant="body1">{model?.scale || 'N/A'}</Typography>
+                                    </Box>
                                 </Box>
+                            </Box>
+                            <Box sx={{ mt: 4 }}>
+                                <ModelViewer model={model ? getImage(model?.file) : modelTest} />
                             </Box>
                         </Box>
                     )}
@@ -3002,6 +3011,11 @@ export default function CoursesControlEdit() {
                             ),
                         }}
                     />
+
+                    <Box>
+                        <ModelViewer model={getImage(lessonDetails?.fileString)} />
+                    </Box>
+
                     <Divider />
 
                     {/* Attached File Download */}
