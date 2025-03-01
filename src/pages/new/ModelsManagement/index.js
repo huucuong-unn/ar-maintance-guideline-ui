@@ -37,6 +37,8 @@ import ModelAPI from '~/API/ModelAPI';
 import { useNavigate } from 'react-router-dom';
 import storageService from '~/components/StorageService/storageService';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Copyright(props) {
     return (
@@ -52,7 +54,6 @@ const defaultTheme = createTheme();
 
 export default function ModelsManagement() {
     const navigate = useNavigate();
-
     // Data states
     const [models, setModels] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -99,7 +100,6 @@ export default function ModelsManagement() {
 
     const columns = [
         { field: 'modelCode', headerName: 'Model Code', width: 200 },
-        { field: 'imageUrl', headerName: 'Image', width: 150 },
         { field: 'name', headerName: 'Name', width: 150 },
         { field: 'modelTypeName', headerName: 'Type', width: 180 },
         { field: 'courseName', headerName: 'Course Name', width: 200 },
@@ -202,6 +202,12 @@ export default function ModelsManagement() {
             return;
         }
 
+        if (!updatedModel.name.trim()) return toast.error('Please enter a name.');
+        if (!updatedModel.modelCode.trim()) return toast.error('Please enter a code.');
+        if (!updatedModel.modelTypeId.trim()) return toast.error('Please enter model type.');
+        if (!updatedModel.version.trim()) return toast.error('Please enter a version.');
+        if (!updatedModel.scale.trim()) return toast.error('Please enter a scale.');
+
         setIsUpdating(true);
         try {
             const formDataForUpdate = new FormData();
@@ -225,13 +231,13 @@ export default function ModelsManagement() {
             }
             const response = await ModelAPI.updateModel(updatedModel.id, formDataForUpdate);
             if (response?.result) {
-                alert('Model updaye successfully!');
+                toast.success('Model updated successfully!', { position: 'top-right' });
                 setUpdateOpenModal(false);
                 fetchModels();
             }
         } catch (error) {
             console.error('Failed to update model:', error);
-            alert('Failed to update model. Please try again.');
+            toast.error('Failed to update model. Please try again.', { position: 'top-right' });
         } finally {
             setIsUpdating(false);
         }
@@ -291,6 +297,7 @@ export default function ModelsManagement() {
     // Dialog handlers
     const handleOpenCreateDialog = () => {
         setName('');
+        setCode('');
         setDescription('');
         setImage(null);
         setVersion('');
@@ -301,6 +308,14 @@ export default function ModelsManagement() {
     };
 
     const handleCloseCreateDialog = () => {
+        setName('');
+        setDescription('');
+        setCode('');
+        setImage(null);
+        setVersion('');
+        setScale('');
+        setFile3D(null);
+        setModelTypeId('');
         setOpenCreateDialog(false);
     };
 
@@ -318,13 +333,13 @@ export default function ModelsManagement() {
 
     const handleCreateModel = async () => {
         // Validate required fields
-        if (!name.trim()) return alert('Please enter a name.');
-        if (!code.trim()) return alert('Please enter a code.');
-        if (!image) return alert('Please select an image.');
-        if (!version.trim()) return alert('Please enter a version.');
-        if (!scale.trim()) return alert('Please enter a scale.');
-        if (!file3D) return alert('Please select a 3D file.');
-        if (!modelTypeId.trim()) return alert('Please enter model type id.');
+        if (!name.trim()) return toast.error('Please enter a name.');
+        if (!code.trim()) return toast.error('Please enter a code.');
+        if (!modelTypeId.trim()) return toast.error('Please enter model type.');
+        if (!image) return toast.error('Please select an image.');
+        if (!version.trim()) return toast.error('Please enter a version.');
+        if (!scale.trim()) return toast.error('Please enter a scale.');
+        if (!file3D) return toast.error('Please select a 3D file.');
 
         setIsCreating(true);
 
@@ -342,12 +357,12 @@ export default function ModelsManagement() {
 
             const response = await ModelAPI.createModel(formData);
             if (response?.result) {
-                alert('Model created successfully!');
+                toast.success('Model created successfully!', { position: 'top-right' });
                 setOpenCreateDialog(false);
             }
         } catch (error) {
             console.error('Failed to create model:', error);
-            alert('Failed to create model. Please try again.');
+            toast.error('Failed to create model. Please try again.', { position: 'top-right' });
         } finally {
             setIsCreating(false);
         }

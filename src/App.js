@@ -7,6 +7,8 @@ import FullLayout from './components/Layouts/FullLayout';
 import { adminRoutes, publicRoutes, companyRoutes } from './routes';
 import ProtectedRoutes from './components/ProtectedRoutes';
 import AdminLayout from './components/Layouts/AdminLayout';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function App() {
     useEffect(() => {
         generateToken();
@@ -21,6 +23,7 @@ function App() {
             <Router>
                 <div className="App">
                     <Toaster position="top-right"></Toaster>
+                    <ToastContainer />
                     <Routes>
                         {publicRoutes.map((route, index) => {
                             const Page = route.component;
