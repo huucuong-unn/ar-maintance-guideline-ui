@@ -281,7 +281,7 @@ export default function CoursesControl() {
                                     <CardCourse
                                         title={data.title}
                                         description={data.description}
-                                        image={getImage(data.imageUrl)}
+                                        image={data.imageUrl}
                                         status={data.status}
                                     />
                                 </Grid>
