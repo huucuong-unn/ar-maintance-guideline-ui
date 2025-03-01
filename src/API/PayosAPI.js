@@ -14,6 +14,10 @@ const PayosAPI = {
     goCheckout(data, includeAuthorization = false) {
         return axiosClient.post('/v1/order-transaction', data);
     },
+
+    getSubscriptions() {
+        return axiosClient.get('/v1/subscription');
+    },
 };
 
 export default PayosAPI;

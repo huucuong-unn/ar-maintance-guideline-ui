@@ -38,7 +38,7 @@ const publicRoutes = [
 
     { path: '/NotAuthorized', component: NotAuthorized, layout: null },
 
-    { path: '/test/test-page', component: ModelViewer, layout: null },
+    { path: '/test/test-page', component: PaymentFailed, layout: null },
     { path: '/test/admin-test', component: AdminTestPage, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
@@ -52,7 +52,7 @@ const adminRoutes = [
     { path: '/admin/company-management', component: CompaniesManagement, layout: AdminLayout },
     { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
     { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
-    { path: '/admin/payment-management', component: PaymentAdmin, layout: AdminLayout },
+    { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
 ];
 
 const companyRoutes = [

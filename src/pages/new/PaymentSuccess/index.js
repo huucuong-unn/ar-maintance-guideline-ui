@@ -58,8 +58,8 @@ export default function PaymentSuccess() {
                     padding: '2%',
                 }}
             >
-                <Box>
-                    <Box>
+                <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <SuccessCircle />
                     </Box>
                     <h1>Payment Successful</h1>
@@ -81,10 +81,11 @@ export default function PaymentSuccess() {
                                 bgcolor: '#02F18D',
                                 color: '#051D40',
                             },
+                            mt: 2,
                         }}
                         onClick={() => {
                             fetchUser();
-                            window.location.href = '/';
+                            window.location.href = '/company/payment-subscription-management';
                         }}
                     >
                         Back to Home

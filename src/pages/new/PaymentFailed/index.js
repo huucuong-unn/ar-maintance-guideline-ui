@@ -1,4 +1,4 @@
-import { Box, Button, Grid } from '@mui/material';
+import { Box, Button, Divider, Grid } from '@mui/material';
 import FailedCircle from '~/components/new/FailedCircle';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,15 +24,16 @@ export default function PaymentFailed() {
                     padding: '2%',
                 }}
             >
-                <Box>
-                    <Box>
+                <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <FailedCircle />
                     </Box>
                     <h1>Payment Failed</h1>
                     <p>Some error occur, please check again</p>
                 </Box>
 
-                <Box></Box>
+                <Divider />
+
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <Button
                         type="submit"
@@ -47,9 +48,10 @@ export default function PaymentFailed() {
                                 bgcolor: '#02F18D',
                                 color: '#051D40',
                             },
+                            mt: 2,
                         }}
                         onClick={() => {
-                            navigate('/');
+                            navigate('/company/payment-subscription-management');
                         }}
                     >
                         Back to Home

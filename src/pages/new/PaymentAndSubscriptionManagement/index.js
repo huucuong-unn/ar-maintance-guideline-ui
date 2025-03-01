@@ -30,51 +30,40 @@ export default function PaymentAndSubscriptionManagement() {
     });
     const [total, setTotal] = useState(0);
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
-    const [isLoadingClickSilverTee, setIsLoadingClickSilverTee] = useState(false);
-    const [isLoadingClickGoldenTee, setIsLoadingClickGoldenTee] = useState(false);
+    const [isLoadingClickPurchase, setIsLoadingClickPurchase] = useState(false);
     const [openPackagesDialog, setOpenPackagesDialog] = useState(false);
+    const [subscriptions, setSubScriptions] = useState([]);
 
     const handleOpenPackagesDialog = () => setOpenPackagesDialog(true);
     const handleClosePackagesDialog = () => setOpenPackagesDialog(false);
     const navigate = useNavigate();
 
-    const handleGoCheckoutSilverTee = async (event) => {
+    const fetchSubscriptions = async () => {
         try {
-            if (userInfo) {
-                if (userInfo?.planType === 'Golden Tee' || userInfo?.planType === 'Silver Tee') return;
-
-                setIsLoadingClickSilverTee(true);
-                const response = await PayosAPI.goCheckout({
-                    productName: 'basic',
-                    userId: userInfo?.id,
-                });
-                console.log(response);
-                if (response.data.checkoutUrl) {
-                    setIsLoadingClickSilverTee(false);
-                    window.location.href = response.data.checkoutUrl;
-                }
-            } else {
-                navigate('/login');
-            }
+            const response = await PayosAPI.getSubscriptions();
+            setSubScriptions(response.result || []);
         } catch (error) {
             console.log(error);
         }
     };
 
-    const handleGoCheckoutGoldenTee = async (event) => {
+    useEffect(() => {
+        fetchSubscriptions();
+    }, []);
+
+    const handleGoCheckout = async (productName) => {
         try {
             if (userInfo) {
-                if (userInfo?.planType === 'Golden Tee' || userInfo?.planType === 'Silver Tee') return;
+                // if (userInfo?.planType === 'Golden Tee' || userInfo?.planType === 'Silver Tee') return;
 
-                setIsLoadingClickGoldenTee(true);
+                setIsLoadingClickPurchase(true);
 
                 const response = await PayosAPI.goCheckout({
-                    productName: 'basic',
+                    productName: productName,
                     userId: userInfo?.id,
                 });
-                console.log(response);
                 if (response.data.checkoutUrl) {
-                    setIsLoadingClickGoldenTee(false);
+                    setIsLoadingClickPurchase(false);
                     window.location.href = response.data.checkoutUrl;
                 }
             } else {
@@ -140,7 +129,6 @@ export default function PaymentAndSubscriptionManagement() {
                 const response = await PaymentAPI.getPaymentsByCompanyId(userInfo?.company?.id, params);
 
                 const data = response?.result?.objectList || [];
-                console.log(data);
 
                 const formattedData = data.map((item) => ({
                     ...item,
@@ -226,12 +214,10 @@ export default function PaymentAndSubscriptionManagement() {
 
                             <PackagesDialog
                                 userInfo={userInfo}
-                                handleGoCheckoutSilverTee={handleGoCheckoutSilverTee}
-                                handleGoCheckoutGoldenTee={handleGoCheckoutGoldenTee}
-                                isLoadingClickSilverTee={isLoadingClickSilverTee}
-                                isLoadingClickGoldenTee={isLoadingClickGoldenTee}
+                                handleGoCheckout={handleGoCheckout}
                                 openPackagesDialog={openPackagesDialog}
                                 handleClosePackagesDialog={handleClosePackagesDialog}
+                                subscriptions={subscriptions}
                             />
 
                             <Copyright sx={{ mt: 5 }} />

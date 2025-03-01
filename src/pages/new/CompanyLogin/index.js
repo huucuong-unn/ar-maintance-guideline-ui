@@ -34,8 +34,6 @@ export default function CompanyLogin() {
             // Make the API call
             const userInfo = await AccountAPI.login(data);
 
-            console.log(userInfo);
-
             // If status is 200, login successful
             if (userInfo) {
                 setLoginLoading(false);
