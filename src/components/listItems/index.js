@@ -100,6 +100,11 @@ export const SecondaryListItems = () => {
             icon: <Users />,
             title: 'Accounts',
         },
+        {
+            route: '/admin/payment-management',
+            icon: <CreditCard />,
+            title: 'Payments',
+        },
     ];
 
     return (
