@@ -1,45 +1,44 @@
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import EditIcon from '@mui/icons-material/Edit';
 import {
     Box,
     Button,
+    Card,
+    CardContent,
+    Chip,
     CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
+    Divider,
     FormControl,
+    Grid,
     InputLabel,
     MenuItem,
+    Modal,
+    Paper,
     Select,
     TextField,
     Typography,
-    Grid,
-    Paper,
-    Skeleton,
-    Modal,
-    Chip,
-    Divider,
-    Card,
-    CardContent,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
-import { getImage } from '~/Constant';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import { Delete as DeleteIcon } from '@mui/icons-material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import EditIcon from '@mui/icons-material/Edit';
-import ModelAPI from '~/API/ModelAPI';
 import { useNavigate } from 'react-router-dom';
-import storageService from '~/components/StorageService/storageService';
-import ModelTypeAPI from '~/API/ModelTypeAPI';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ModelAPI from '~/API/ModelAPI';
+import ModelTypeAPI from '~/API/ModelTypeAPI';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import storageService from '~/components/StorageService/storageService';
+import { getImage } from '~/Constant';
 
 function Copyright(props) {
     return (

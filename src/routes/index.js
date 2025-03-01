@@ -1,7 +1,6 @@
 import AdminLayout from '~/components/Layouts/AdminLayout';
 
 //new
-import AdminTestPage from '~/pages/new/BaseAdmin';
 import BlogsManagement from '~/pages/new/BlogsManagement';
 import CompaniesManagement from '~/pages/new/CompaniesManagement';
 import CourseLearning from '~/pages/new/CourseLearning';
@@ -18,7 +17,6 @@ import PaymentSuccess from '~/pages/new/PaymentSuccess';
 import NotAuthorized from '~/pages/NotAuthorized';
 // import AccountsManagement from '~/pages/new/AccountsManagement ';
 import AdminPlatformLayout from '~/components/Layouts/AdminPlatformLayout';
-import ModelViewer from '~/components/ModelViewer';
 import AccountsManagement from '~/pages/new/AccountsManagement';
 import CompanyLogin from '~/pages/new/CompanyLogin';
 import CompanyRegister from '~/pages/new/CompanyRegister';
@@ -27,7 +25,6 @@ import CoursesControl from '~/pages/new/CoursesControl';
 import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
-import PaymentAdmin from '~/pages/new/PaymentAdmin';
 
 const publicRoutes = [
     //new
@@ -35,11 +32,8 @@ const publicRoutes = [
     { path: '/', component: Homepage, layout: CompanyLogin },
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
-
-    { path: '/NotAuthorized', component: NotAuthorized, layout: null },
-
+    { path: '/not-authorized', component: NotAuthorized, layout: null },
     { path: '/test/test-page', component: PaymentFailed, layout: null },
-    { path: '/test/admin-test', component: AdminTestPage, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
     { path: '/login', component: CompanyLogin, layout: null },

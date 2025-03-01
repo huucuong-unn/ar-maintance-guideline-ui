@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { Book, Bot, Building, CreditCard, Mail, Users, AppWindowMac } from 'lucide-react';
+import { AppWindowMac, Bot, Building, CreditCard, Users } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import storageService from '../StorageService/storageService';

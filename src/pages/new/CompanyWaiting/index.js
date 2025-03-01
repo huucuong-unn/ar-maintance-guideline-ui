@@ -1,7 +1,6 @@
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import { Grid, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Typography, Grid, Paper, Box, TextField, Button } from '@mui/material';
-import { Link } from 'react-router-dom';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
 
 function Copyright(props) {
     return (

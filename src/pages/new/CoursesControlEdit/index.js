@@ -1,5 +1,6 @@
 // CoursesControlEdit.jsx
 
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import {
@@ -26,34 +27,31 @@ import {
     ListItemText,
     Menu,
     MenuItem,
+    Modal,
     Pagination,
     Select,
     Tab,
     TextField,
     Typography,
-    Modal,
 } from '@mui/material';
-import { File, FileText, MoreVerticalIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import AccountAPI from '~/API/AccountAPI';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
+import { File, FileText, MoreVerticalIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AccountAPI from '~/API/AccountAPI';
 import CourseAPI from '~/API/CourseAPI';
 import EnrollmentAPI from '~/API/EnrollmentAPI';
 import InstructionAPI from '~/API/InstructionAPI';
 import InstructionDetailAPI from '~/API/InstructionDetailAPI';
 import ModelAPI from '~/API/ModelAPI';
 import QuizAPI from '~/API/QuizAPI';
-import MyEditor from '~/components/MyEditor';
+import modelTest from '~/assets/models/mouseclean.glb';
+import ModelViewer from '~/components/ModelViewer';
 import storageService from '~/components/StorageService/storageService';
 import { getImage } from '~/Constant';
-import ModelViewer from '~/components/ModelViewer';
-import modelTest from '~/assets/models/mouseclean.glb';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 export default function CoursesControlEdit() {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
