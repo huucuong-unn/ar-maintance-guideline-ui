@@ -65,7 +65,7 @@ export default function CompanyLogin() {
         <ThemeProvider theme={defaultTheme}>
             {showAlertError && (
                 <Alert width="50%" variant="filled" severity="error">
-                    Incorrect username or password or please check login correct role !
+                    Incorrect email or password!
                 </Alert>
             )}
             {loginLoading ? (

@@ -1,29 +1,24 @@
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import {
     Box,
-    Typography,
-    Skeleton,
-    TextField,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
+    Button,
+    Container,
     Dialog,
-    DialogTitle,
+    DialogActions,
     DialogContent,
     DialogContentText,
-    DialogActions,
-    Button,
-    CircularProgress,
-    Grid,
+    DialogTitle,
     Paper,
-    Modal,
+    TextField,
+    Typography,
 } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import storageService from '~/components/StorageService/storageService';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import AccountAPI from '~/API/AccountAPI';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import storageService from '~/components/StorageService/storageService';
 
 function Copyright(props) {
     return (
@@ -44,27 +39,152 @@ export default function EmployeesManagement() {
         email: '',
         status: '',
     });
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [status, setStatus] = useState('');
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
         pageSize: 5,
     });
-    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
+    const userInfo = storageService.getItem('userInfo')?.user || null;
     const [total, setTotal] = useState(0);
 
+    // Dialog state for creating employee
+    const [openCreateDialog, setOpenCreateDialog] = useState(false);
+    const [newEmployee, setNewEmployee] = useState({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phone: '',
+        avatar: '',
+        company: userInfo?.company?.companyName || '',
+        status: 'ACTIVE',
+        expirationDate: '',
+        isPayAdmin: false,
+        roleName: 'STAFF',
+    });
+    const [passwordError, setPasswordError] = useState('');
+
+    // --- State for confirm status change dialog ---
+    const [openStatusConfirmDialog, setOpenStatusConfirmDialog] = useState(false);
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+    // --- State for Reset Password dialog ---
+    const [openResetPasswordDialog, setOpenResetPasswordDialog] = useState(false);
+    const [resetEmployeeId, setResetEmployeeId] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
+
+    const handleOpenCreateDialog = () => {
+        setOpenCreateDialog(true);
+    };
+
+    const handleCloseCreateDialog = () => {
+        setOpenCreateDialog(false);
+        setNewEmployee({
+            email: '',
+            password: '',
+            confirmPassword: '',
+            phone: '',
+            avatar: '',
+            company: userInfo?.company?.companyName || '',
+            status: 'ACTIVE',
+            expirationDate: '',
+            isPayAdmin: false,
+            roleName: 'STAFF',
+        });
+        setPasswordError('');
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setNewEmployee({
+            ...newEmployee,
+            [name]: value,
+        });
+
+        // Password validation
+        if (name === 'confirmPassword' || name === 'password') {
+            if (name === 'confirmPassword' && value !== newEmployee.password) {
+                setPasswordError('Passwords do not match');
+            } else if (name === 'password' && newEmployee.confirmPassword && value !== newEmployee.confirmPassword) {
+                setPasswordError('Passwords do not match');
+            } else {
+                setPasswordError('');
+            }
+        }
+    };
+
+    const handleCreateEmployee = async () => {
+        if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword) {
+            return;
+        }
+        if (passwordError) {
+            return;
+        }
+        try {
+            const response = await AccountAPI.createStaff(newEmployee);
+            if (response?.result?.user) {
+                toast.success('Create employee successfully');
+            }
+            handleCloseCreateDialog();
+            fetchData();
+        } catch (error) {
+            console.error('Failed to create employee:', error);
+            toast.error(`Create employee failed. ${error?.response?.data?.message}`);
+        }
+    };
+
+    // Open confirm dialog for status change
+    const handleOpenStatusConfirm = (id) => {
+        setSelectedEmployeeId(id);
+        setOpenStatusConfirmDialog(true);
+    };
+
+    const handleChangeStatus = async (id) => {
+        try {
+            const response = await AccountAPI.changeStatusStaff(id);
+            if (response?.result) {
+                toast.success('Update status successfully');
+            }
+            fetchData();
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            toast.error('Failed to update status. ' + error?.response?.data?.message);
+        }
+    };
+
+    // Open Reset Password dialog
+    const handleOpenResetPassword = (id) => {
+        setResetEmployeeId(id);
+        setNewPassword('');
+        setOpenResetPasswordDialog(true);
+    };
+
+    const handleResetPassword = async () => {
+        try {
+            const response = await AccountAPI.resetPasswordStaff(resetEmployeeId, { password: newPassword });
+            if (response?.result) {
+                toast.success('Reset password successfully');
+            }
+            fetchData();
+            setOpenResetPasswordDialog(false);
+        } catch (error) {
+            console.error('Failed to reset password:', error);
+            toast.error('Failed to reset password. ' + error?.response?.data?.message);
+        }
+    };
+
     const columns = [
-        { field: 'username', headerName: 'Username', width: 200 },
-        { field: 'email', headerName: 'Email', width: 200 },
+        { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', width: 200 },
+        {
+            field: 'createdDate',
+            headerName: 'Created Date',
+            width: 200,
+            renderCell: (params) => formatDate(params.value),
+        },
         {
             field: 'status',
             headerName: 'Status',
             width: 200,
             renderCell: (params) => {
                 let color = 'black';
-
                 switch (params.value) {
                     case 'ACTIVE':
                         color = 'green';
@@ -75,172 +195,291 @@ export default function EmployeesManagement() {
                     default:
                         color = 'black';
                 }
-
+                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value}</Box>;
+            },
+        },
+        {
+            field: 'action',
+            headerName: 'Action',
+            width: 400,
+            renderCell: (params) => {
+                const currentStatus = params.row.status;
                 return (
-                    <Box
-                        sx={{
-                            color,
-                            fontWeight: 'bold',
-                            textTransform: 'uppercase',
-                        }}
-                    >
-                        {params.value}
+                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                        {currentStatus === 'ACTIVE' ? (
+                            <Button
+                                variant="contained"
+                                color="error"
+                                size="small"
+                                onClick={() => handleOpenStatusConfirm(params.row.id)}
+                            >
+                                Disable
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                onClick={() => handleOpenStatusConfirm(params.row.id)}
+                            >
+                                Active
+                            </Button>
+                        )}
+                        <Button variant="outlined" size="small" onClick={() => handleOpenResetPassword(params.row.id)}>
+                            Reset Password
+                        </Button>
                     </Box>
                 );
             },
         },
     ];
 
+    const fetchData = async () => {
+        try {
+            const pageParam = paginationModel.page + 1;
+            const sizeParam = paginationModel.pageSize;
+            const params = {
+                page: pageParam,
+                size: sizeParam,
+                username: searchParams.username || undefined,
+                email: searchParams.email || undefined,
+                status: searchParams.status || undefined,
+            };
+            const response = await AccountAPI.getStaffByCompanyId(userInfo?.company?.id, params, params);
+            const data = response?.result?.objectList || [];
+            setRows(data);
+            setTotal(response?.result?.totalItems || 0);
+        } catch (error) {
+            console.error('Failed to fetch accounts:', error);
+        }
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const pageParam = paginationModel.page + 1;
-                const sizeParam = paginationModel.pageSize;
-
-                const params = {
-                    page: pageParam,
-                    size: sizeParam,
-                    username: searchParams.username || undefined,
-                    email: searchParams.email || undefined,
-                    status: searchParams.status || undefined,
-                };
-
-                console.log(params);
-
-                const response = await AccountAPI.getStaffByCompanyId(userInfo?.company?.id, params, params);
-                console.log(response);
-
-                const data = response?.result?.objectList || [];
-                console.log(data);
-
-                setRows(data);
-
-                setTotal(response?.result?.totalItems || 0);
-            } catch (error) {
-                console.error('Failed to fetch accounts:', error);
-            }
-        };
         fetchData();
     }, [paginationModel, searchParams]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        // Get the UTC date parts
         const day = date.getUTCDate().toString().padStart(2, '0');
-        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
         const year = date.getUTCFullYear();
-
-        return `${day}/${month}/${year}`; // Format to dd/mm/yyyy
+        return `${month}/${day}/${year}`;
     };
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Grid
-                container
-                component="main"
-                item
+            <Container
+                maxWidth="xl"
                 sx={{
-                    backgroundRepeat: 'no-repeat',
-                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
+                    py: 4,
+                    minHeight: '100vh',
+                    background: `url(${adminLoginBackground}) no-repeat center center`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundImage: `url(${adminLoginBackground})`,
-                    height: '100vh',
-                    width: '100%',
                     display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
                     flexDirection: 'column',
                 }}
             >
-                <Typography
-                    component="h1"
-                    variant="h4"
-                    sx={{
-                        fontWeight: '900',
-                        fontSize: '46px',
-                        color: '#051D40',
-                        // zIndex: 1,
-                        position: 'absolute',
-                        top: '3%',
-                        left: '20%',
-                    }}
-                >
-                    Employees
-                </Typography>
-                {/* ===================== CREATE + SEARCH & FILTER ROW ===================== */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 3 }}>
-                    {/* Search by email */}
-                    <TextField
-                        variant="outlined"
-                        label="Search by Username"
-                        sx={{ width: '300px' }}
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                    <TextField
-                        variant="outlined"
-                        label="Search by Email"
-                        sx={{ width: '300px' }}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-
-                    {/* Filter by status */}
-                    <FormControl sx={{ width: '200px' }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="ACTIVE">Active</MenuItem>
-                            <MenuItem value="INACTIVE">Inactive</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    {/* Create Course button */}
-                    <Button
-                        variant="contained"
-                        sx={{ ml: 'auto' }}
-                        onClick={() => setSearchParams({ username, email, status })}
-                    >
-                        Search
-                    </Button>
-                </Box>
-                {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
-                <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
-                    <Box
+                <Box sx={{ mb: 4 }}>
+                    <Typography
+                        component="h1"
+                        variant="h4"
                         sx={{
-                            my: 8,
-                            mx: 4,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
+                            fontWeight: '900',
+                            fontSize: '36px',
+                            color: '#051D40',
+                            mb: 4,
                         }}
                     >
-                        <Box sx={{ width: '100%', typography: 'body1' }}>
-                            <Paper sx={{ height: 400, width: '100%' }}>
-                                <DataGrid
-                                    rows={rows}
-                                    columns={columns}
-                                    rowCount={total}
-                                    paginationMode="server"
-                                    paginationModel={paginationModel}
-                                    onPaginationModelChange={(newModel) => {
-                                        setPaginationModel((prev) => ({
-                                            ...prev,
-                                            page: newModel.page,
-                                        }));
-                                    }}
-                                    sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                    getRowId={(row) => row.id}
-                                    slots={{ toolbar: GridToolbar }}
-                                />
-                            </Paper>
+                        Employees Management
+                    </Typography>
 
-                            <Copyright sx={{ mt: 5 }} />
-                        </Box>
+                    {/* Search and Filter Section */}
+                    <Box sx={{ mb: 4 }}>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#02F18D',
+                                color: '#051D40',
+                                '&:hover': {
+                                    bgcolor: '#051D40',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleOpenCreateDialog}
+                        >
+                            Create Employee
+                        </Button>
                     </Box>
-                </Grid>
-            </Grid>
+
+                    {/* Data Grid */}
+                    <Paper
+                        sx={{
+                            height: 500,
+                            width: '100%',
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            rowCount={total}
+                            paginationMode="server"
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={(newModel) =>
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: newModel.page,
+                                }))
+                            }
+                            sx={{ border: 'none' }}
+                            getRowId={(row) => row.id}
+                            slots={{ toolbar: GridToolbar }}
+                        />
+                    </Paper>
+                </Box>
+
+                <Box sx={{ mt: 'auto' }}>
+                    <Copyright />
+                </Box>
+
+                {/* Create Employee Dialog */}
+                <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} maxWidth="sm" fullWidth>
+                    <DialogTitle>Create New Employee</DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                label="Email"
+                                name="email"
+                                value={newEmployee.email}
+                                onChange={handleInputChange}
+                            />
+
+                            <TextField
+                                required
+                                fullWidth
+                                label="Password"
+                                name="password"
+                                type="password"
+                                value={newEmployee.password}
+                                onChange={handleInputChange}
+                            />
+
+                            <TextField
+                                required
+                                fullWidth
+                                label="Confirm Password"
+                                name="confirmPassword"
+                                type="password"
+                                value={newEmployee.confirmPassword}
+                                onChange={handleInputChange}
+                                error={!!passwordError}
+                                helperText={passwordError}
+                            />
+
+                            <TextField
+                                fullWidth
+                                label="Phone Number"
+                                name="phone"
+                                value={newEmployee.phone}
+                                onChange={handleInputChange}
+                            />
+
+                            <TextField fullWidth label="Company" name="company" value={newEmployee.company} disabled />
+
+                            <TextField fullWidth label="Role" name="roleName" value={newEmployee.roleName} disabled />
+
+                            <TextField fullWidth label="Status" name="status" value={newEmployee.status} disabled />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+                        <Button
+                            onClick={handleCreateEmployee}
+                            variant="contained"
+                            color="primary"
+                            disabled={
+                                !newEmployee.email ||
+                                !newEmployee.password ||
+                                !newEmployee.confirmPassword ||
+                                !!passwordError
+                            }
+                        >
+                            Create
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Confirm Status Change Dialog */}
+                <Dialog
+                    open={openStatusConfirmDialog}
+                    onClose={() => setOpenStatusConfirmDialog(false)}
+                    fullWidth
+                    maxWidth="xs"
+                >
+                    <DialogTitle>Confirm Action</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>Are you sure to change status of this employee?</DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenStatusConfirmDialog(false)}>Cancel</Button>
+                        <Button
+                            onClick={() => {
+                                handleChangeStatus(selectedEmployeeId);
+                                setOpenStatusConfirmDialog(false);
+                            }}
+                            autoFocus
+                        >
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Reset Password Dialog */}
+                <Dialog
+                    open={openResetPasswordDialog}
+                    onClose={() => setOpenResetPasswordDialog(false)}
+                    fullWidth
+                    maxWidth="xs"
+                >
+                    <DialogTitle>Reset Password</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>Enter the new password for this employee.</DialogContentText>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="New Password"
+                            type="password"
+                            fullWidth
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenResetPasswordDialog(false)}>Cancel</Button>
+                        <Button
+                            onClick={() => {
+                                handleResetPassword();
+                                setOpenResetPasswordDialog(false);
+                            }}
+                        >
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </Container>
         </ThemeProvider>
     );
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = date.getUTCFullYear();
+    return `${month}/${day}/${year}`;
 }

@@ -115,6 +115,15 @@ const AccountAPI = {
     createAccount(data) {
         return axiosClient.post('/v1/register/company', data);
     },
+    createStaff(data) {
+        return axiosClient.post('/v1/register', data);
+    },
+    changeStatusStaff(userId) {
+        return axiosClient.put(`/v1/user/change-status/${userId}`);
+    },
+    resetPasswordStaff(id, params) {
+        return axiosClient.put(`/v1/user/reset/${id}`, params);
+    },
 };
 
 export default AccountAPI;
