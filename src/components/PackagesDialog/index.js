@@ -19,6 +19,7 @@ export default function PackagesDialog({
     openPackagesDialog,
     handleClosePackagesDialog,
 }) {
+    console.log('userInfo', userInfo);
     return (
         <Dialog open={openPackagesDialog} onClose={handleClosePackagesDialog} fullWidth maxWidth="lg" sx={{}}>
             <DialogTitle>Subscription Packages</DialogTitle>
@@ -100,6 +101,7 @@ export default function PackagesDialog({
                         >
                             1 lượt dùng AI Cover Letter
                         </Typography>
+                        <Box></Box>
                     </Box>
 
                     {/* Silver Package */}

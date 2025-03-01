@@ -27,6 +27,7 @@ import CoursesControl from '~/pages/new/CoursesControl';
 import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
+import PaymentAdmin from '~/pages/new/PaymentAdmin';
 
 const publicRoutes = [
     //new
@@ -51,6 +52,7 @@ const adminRoutes = [
     { path: '/admin/company-management', component: CompaniesManagement, layout: AdminLayout },
     { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
     { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
+    { path: '/admin/payment-management', component: PaymentAdmin, layout: AdminLayout },
 ];
 
 const companyRoutes = [
