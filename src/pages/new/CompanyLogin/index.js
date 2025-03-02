@@ -41,7 +41,7 @@ export default function CompanyLogin() {
                 storageService.setItem('userInfo', userInfo?.result); // Store user info
 
                 if (userInfo?.result?.user?.role?.roleName === adminRole) {
-                    navigate('/admin/account-management'); // Navigate
+                    navigate('/admin/dashboard'); // Navigate
                 }
 
                 if (userInfo?.result?.user?.role?.roleName === companyRole) {

@@ -17,7 +17,6 @@ export const MainListItems = () => {
 
     const [userInfo, setUserInfo] = React.useState(storageService.getItem('userInfo')?.user || null);
     const role = userInfo?.role?.roleName;
-    console.log('role', role);
 
     const companyRoutes = [
         {

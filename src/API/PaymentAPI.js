@@ -12,7 +12,7 @@ const PaymentAPI = {
         return config;
     },
     getPayments() {
-        const url = `v1/payment`;
+        const url = `/v1/order-transaction/all`;
         return axiosClient.get(url);
     },
 
@@ -20,7 +20,6 @@ const PaymentAPI = {
         const url = `/v1/order-transaction/company/${id}`;
         return axiosClient.get(url, { params });
     },
-
     getPaymentsDashboard() {
         const url = `v1/payment/dashboard`;
         return axiosClient.get(url);

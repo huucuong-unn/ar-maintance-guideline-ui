@@ -14,6 +14,9 @@ const CompanyAPI = {
     getAll(includeAuthorization = false) {
         return axiosClient.get('/v1/companies');
     },
+    getByUserId(userId) {
+        return axiosClient.get(`/v1/company/userId?userId=${userId}`);
+    },
 };
 
 export default CompanyAPI;

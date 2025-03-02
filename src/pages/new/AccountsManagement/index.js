@@ -1,28 +1,22 @@
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import {
     Box,
-    Typography,
-    Skeleton,
-    TextField,
+    Button,
     FormControl,
+    Grid,
     InputLabel,
     MenuItem,
-    Select,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText,
-    DialogActions,
-    Button,
-    CircularProgress,
-    Grid,
-    Paper,
     Modal,
+    Paper,
+    Select,
+    TextField,
+    Typography,
 } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { render } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import AccountAPI from '~/API/AccountAPI';
+import adminLoginBackground from '~/assets/images/adminlogin.webp';
 
 function Copyright(props) {
     return (
@@ -64,17 +58,9 @@ export default function AccountsManagement() {
                     email: searchParams.email || undefined,
                     status: searchParams.status || undefined,
                 };
-
-                console.log(params);
-
                 const response = await AccountAPI.getAllAccount(params);
-                console.log(response);
-
-                const data = response?.result?.objectList || [];
-                console.log(data);
-
+                var data = response?.result?.objectList || [];
                 setRows(data);
-
                 setTotal(response?.result?.totalItems || 0);
             } catch (error) {
                 console.error('Failed to fetch accounts:', error);
@@ -115,7 +101,6 @@ export default function AccountsManagement() {
     };
 
     const columns = [
-        { field: 'username', headerName: 'Username  ', width: 200 },
         { field: 'email', headerName: 'Email', width: 200 },
         { field: 'phone', headerName: 'Phone', width: 200 },
         {
@@ -123,7 +108,39 @@ export default function AccountsManagement() {
             headerName: 'Role',
             width: 200,
         },
-        { field: 'status', headerName: 'Status', width: 200 },
+        {
+            field: 'company',
+            headerName: 'Company',
+            width: 200,
+            renderCell: (params) => {
+                return params.row.company?.companyName;
+            },
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 200,
+            renderCell: (params) => {
+                let color = 'black';
+                switch (params.value) {
+                    case 'ACTIVE':
+                        color = 'green';
+                        break;
+                    case 'INACTIVE':
+                        color = 'grey';
+                        break;
+                    case 'PENDING':
+                        color = 'orange';
+                        break;
+                    case 'REJECT':
+                        color = 'red';
+                        break;
+                    default:
+                        color = 'black';
+                }
+                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value}</Box>;
+            },
+        },
     ];
 
     return (
@@ -146,167 +163,173 @@ export default function AccountsManagement() {
                     flexDirection: 'column',
                 }}
             >
-                <Typography
-                    component="h1"
-                    variant="h4"
-                    sx={{
-                        fontWeight: '900',
-                        fontSize: '46px',
-                        color: '#051D40',
-                        // zIndex: 1,
-                        position: 'absolute',
-                        top: '3%',
-                        left: '20%',
-                    }}
-                >
-                    Users
-                </Typography>
-                {/* ===================== CREATE + SEARCH & FILTER ROW ===================== */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                    {/* Search by email */}
-                    <TextField
-                        variant="outlined"
-                        label="Search by Email"
-                        sx={{ width: '300px' }}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-
-                    {/* Filter by status */}
-                    <FormControl sx={{ width: '200px' }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="PENDING">Pending</MenuItem>
-                            <MenuItem value="ACTIVE">Active</MenuItem>
-                            <MenuItem value="INACTIVE">Inactive</MenuItem>
-                            <MenuItem value="REJECT">Reject</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    {/* Create Course button */}
-                    <Button variant="contained" sx={{ ml: 'auto' }} onClick={() => setSearchParams({ email, status })}>
-                        Search
-                    </Button>
-                </Box>
-                {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
-
-                <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%' }}>
+                    <Typography
+                        component="h1"
+                        variant="h4"
+                        sx={{
+                            fontWeight: '900',
+                            fontSize: '46px',
+                            color: '#051D40',
+                            my: 5,
+                        }}
+                    >
+                        Account Management
+                    </Typography>
+                    {/* ===================== CREATE + SEARCH & FILTER ROW ===================== */}
                     <Box
                         sx={{
-                            my: 8,
-                            mx: 4,
                             display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
+                            gap: 2,
+                            my: 3,
+                            flexWrap: 'wrap',
+                            width: '100%',
+                            justifyContent: 'right',
                         }}
                     >
-                        <Box sx={{ width: '100%', typography: 'body1' }}>
-                            <Paper sx={{ height: 400, width: '100%' }}>
-                                <DataGrid
-                                    rows={rows}
-                                    columns={columns}
-                                    rowCount={total}
-                                    paginationMode="server"
-                                    paginationModel={paginationModel}
-                                    onPaginationModelChange={(newModel) => {
-                                        setPaginationModel((prev) => ({
-                                            ...prev,
-                                            page: newModel.page,
-                                        }));
-                                    }}
-                                    getRowId={(row) => row.id}
-                                    slots={{ toolbar: GridToolbar }}
-                                    onRowClick={(params) => handleOpenModal(params.row.id)}
-                                />
-                            </Paper>
+                        {/* Search by email */}
+                        <TextField
+                            variant="outlined"
+                            label="Search by Email"
+                            sx={{ width: '300px' }}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
 
-                            <Copyright sx={{ mt: 5 }} />
-                        </Box>
+                        {/* Filter by status */}
+                        <FormControl sx={{ width: '200px' }}>
+                            <InputLabel>Status</InputLabel>
+                            <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                                <MenuItem value="">All</MenuItem>
+                                <MenuItem value="PENDING">Pending</MenuItem>
+                                <MenuItem value="ACTIVE">Active</MenuItem>
+                                <MenuItem value="INACTIVE">Inactive</MenuItem>
+                                <MenuItem value="REJECT">Reject</MenuItem>
+                            </Select>
+                        </FormControl>
+
+                        {/* Create Course button */}
+                        <Button variant="contained" onClick={() => setSearchParams({ email, status })}>
+                            Search
+                        </Button>
                     </Box>
-                </Grid>
-                <Modal
-                    open={openModal}
-                    onClose={handleCloseModal}
-                    aria-labelledby="user-modal-title"
-                    aria-describedby="user-modal-description"
-                >
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: 400,
-                            bgcolor: 'background.paper',
-                            border: '2px solid #000',
-                            boxShadow: 24,
-                            p: 4,
-                            borderRadius: '10px',
-                        }}
+                    {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
+
+                    <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '100%' }}>
+                        <Box
+                            sx={{
+                                my: 8,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                padding: '20px',
+                            }}
+                        >
+                            <Box sx={{ width: '100%', typography: 'body1' }}>
+                                <Paper sx={{ height: 400, width: '100%' }}>
+                                    <DataGrid
+                                        rows={rows}
+                                        columns={columns}
+                                        rowCount={total}
+                                        paginationMode="server"
+                                        paginationModel={paginationModel}
+                                        onPaginationModelChange={(newModel) => {
+                                            setPaginationModel((prev) => ({
+                                                ...prev,
+                                                page: newModel.page,
+                                            }));
+                                        }}
+                                        getRowId={(row) => row.id}
+                                        slots={{ toolbar: GridToolbar }}
+                                        onRowClick={(params) => handleOpenModal(params.row.id)}
+                                    />
+                                </Paper>
+
+                                <Copyright sx={{ mt: 5 }} />
+                            </Box>
+                        </Box>
+                    </Grid>
+                    <Modal
+                        open={openModal}
+                        onClose={handleCloseModal}
+                        aria-labelledby="user-modal-title"
+                        aria-describedby="user-modal-description"
                     >
-                        <Typography id="user-modal-title" variant="h6" component="h2">
-                            User Details
-                        </Typography>
-                        {selectedUser && (
-                            <Box>
-                                <Typography>Username: {selectedUser.username}</Typography>
-                                <Typography>Email: {selectedUser.email}</Typography>
-                                <Typography>Phone: {selectedUser.phone}</Typography>
-                                <Typography>Role: {selectedUser.role.roleName}</Typography>
-                                <Typography>Company: {selectedUser.company.companyName}</Typography>
-                                <Typography>Status: {selectedUser.status}</Typography>
-                                <Typography>Expiration Date: {selectedUser.expirationDate}</Typography>
-                                <Typography>
-                                    Created Date: {new Date(selectedUser.createdDate).toLocaleDateString()}
-                                </Typography>
-                                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                                    {selectedUser.status === 'PENDING' && (
-                                        <>
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: 400,
+                                bgcolor: 'background.paper',
+                                boxShadow: 24,
+                                p: 4,
+                                borderRadius: '10px',
+                            }}
+                        >
+                            <Typography id="user-modal-title" variant="h6" component="h2">
+                                User Details
+                            </Typography>
+                            {selectedUser && (
+                                <Box>
+                                    <Typography>Email: {selectedUser.email}</Typography>
+                                    <Typography>Phone: {selectedUser.phone}</Typography>
+                                    <Typography>Role: {selectedUser.role.roleName}</Typography>
+                                    <Typography>Company: {selectedUser.company.companyName}</Typography>
+                                    <Typography>Status: {selectedUser.status}</Typography>
+                                    <Typography>Expiration Date: {selectedUser.expirationDate}</Typography>
+                                    <Typography>
+                                        Created Date: {new Date(selectedUser.createdDate).toLocaleDateString()}
+                                    </Typography>
+                                    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                                        {selectedUser.status === 'PENDING' && (
+                                            <>
+                                                <Button
+                                                    variant="contained"
+                                                    color="success"
+                                                    onClick={() => handleChangeStatus(selectedUser.id, 'ACTIVE', true)}
+                                                >
+                                                    Accept
+                                                </Button>
+                                                <Button
+                                                    variant="contained"
+                                                    color="error"
+                                                    onClick={() => handleChangeStatus(selectedUser.id, 'REJECT', true)}
+                                                >
+                                                    Reject
+                                                </Button>
+                                            </>
+                                        )}
+
+                                        {selectedUser.status === 'ACTIVE' && (
+                                            <Button
+                                                variant="contained"
+                                                color="warning"
+                                                onClick={() => handleChangeStatus(selectedUser.id, 'INACTIVE', false)}
+                                            >
+                                                Inactive
+                                            </Button>
+                                        )}
+
+                                        {selectedUser.status === 'INACTIVE' && (
                                             <Button
                                                 variant="contained"
                                                 color="success"
-                                                onClick={() => handleChangeStatus(selectedUser.id, 'ACTIVE', true)}
+                                                onClick={() => handleChangeStatus(selectedUser.id, 'ACTIVE', false)}
                                             >
-                                                Accept
+                                                Activate
                                             </Button>
-                                            <Button
-                                                variant="contained"
-                                                color="error"
-                                                onClick={() => handleChangeStatus(selectedUser.id, 'REJECT', true)}
-                                            >
-                                                Reject
-                                            </Button>
-                                        </>
-                                    )}
-
-                                    {selectedUser.status === 'ACTIVE' && (
-                                        <Button
-                                            variant="contained"
-                                            color="warning"
-                                            onClick={() => handleChangeStatus(selectedUser.id, 'INACTIVE', false)}
-                                        >
-                                            Inactive
-                                        </Button>
-                                    )}
-
-                                    {selectedUser.status === 'INACTIVE' && (
-                                        <Button
-                                            variant="contained"
-                                            color="success"
-                                            onClick={() => handleChangeStatus(selectedUser.id, 'ACTIVE', false)}
-                                        >
-                                            Activate
-                                        </Button>
-                                    )}
+                                        )}
+                                    </Box>
                                 </Box>
-                            </Box>
-                        )}
-                        <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 2 }}>
-                            Close
-                        </Button>
-                    </Box>
-                </Modal>
+                            )}
+                            <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 2 }}>
+                                Close
+                            </Button>
+                        </Box>
+                    </Modal>
+                </Box>
             </Grid>
         </ThemeProvider>
     );

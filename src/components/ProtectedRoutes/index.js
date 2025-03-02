@@ -3,8 +3,6 @@ import storageService from '../StorageService/storageService';
 
 const ProtectedRoutes = ({ roleName }) => {
     const user = storageService.getItem('userInfo')?.user || null;
-    console.log('user', user);
-    console.log('roleName', roleName);
     if (user !== null) {
         switch (roleName) {
             case 'ADMIN':

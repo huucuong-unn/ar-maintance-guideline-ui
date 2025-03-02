@@ -7,12 +7,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import { useNavigate } from 'react-router-dom';
 import { AlignJustify } from 'lucide-react';
-import { ListItemForAdminPlatform } from '~/components/ListItemsForAdminPlatform';
-import { SecondaryListItemsForAdminPlatForm } from '~/components/ListItemsForAdminPlatform';
-
-import { MainListItems, SecondaryListItems } from '~/components/listItems';
+import { useNavigate } from 'react-router-dom';
+import { ListItemForAdminPlatform, SecondaryListItemsForAdminPlatForm } from '~/components/ListItemsForAdminPlatform';
 
 import { useState } from 'react';
 

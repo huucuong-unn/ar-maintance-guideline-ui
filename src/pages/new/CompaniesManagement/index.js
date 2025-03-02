@@ -61,44 +61,43 @@ export default function CompaniesManagement() {
                     alignItems: 'center',
                 }}
             >
-                <Typography
-                    component="h1"
-                    variant="h4"
-                    sx={{
-                        fontWeight: '900',
-                        fontSize: '46px',
-                        color: '#051D40',
-                        // zIndex: 1,
-                        position: 'absolute',
-                        top: '3%',
-                        left: '20%',
-                    }}
-                >
-                    Companies
-                </Typography>
-                <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
-                    <Box
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%' }}>
+                    <Typography
+                        component="h1"
+                        variant="h4"
                         sx={{
-                            my: 8,
-                            mx: 4,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
+                            fontWeight: '900',
+                            fontSize: '46px',
+                            color: '#051D40',
+                            my: 5,
                         }}
                     >
-                        <Box sx={{ width: '100%', typography: 'body1' }}>
-                            <Paper sx={{ height: 400, width: '100%' }}>
-                                <DataGrid
-                                    rows={rows}
-                                    columns={columns}
-                                    sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                />
-                            </Paper>
+                        Companies
+                    </Typography>
+                    <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '100%' }}>
+                        <Box
+                            sx={{
+                                my: 8,
+                                mx: 4,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Box sx={{ width: '100%', typography: 'body1' }}>
+                                <Paper sx={{ height: 400, width: '100%' }}>
+                                    <DataGrid
+                                        rows={rows}
+                                        columns={columns}
+                                        sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                                    />
+                                </Paper>
 
-                            <Copyright sx={{ mt: 5 }} />
+                                <Copyright sx={{ mt: 5 }} />
+                            </Box>
                         </Box>
-                    </Box>
-                </Grid>
+                    </Grid>
+                </Box>
             </Grid>
         </ThemeProvider>
     );
