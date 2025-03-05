@@ -9,7 +9,6 @@ import AccountAPI from '~/API/AccountAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import ChartUserByCountry from '~/components/new/ChartUserByCountry';
 import PageViewsBarChart from '~/components/new/PageViewsBarChart';
-import CustomizedTreeView from '../CustomizedTreeView';
 import PaymentAPI from '~/API/PaymentAPI';
 import SessionsChart from '~/components/new/SessionsChart';
 
@@ -207,9 +206,6 @@ export default function DashboardManagement() {
                     >
                         <Box sx={{ width: '60%' }}>
                             <ChartUserByCountry />
-                        </Box>
-                        <Box sx={{ width: '40%' }}>
-                            <CustomizedTreeView />
                         </Box>
                     </Grid>
                     <Grid

@@ -49,6 +49,7 @@ import InstructionDetailAPI from '~/API/InstructionDetailAPI';
 import ModelAPI from '~/API/ModelAPI';
 import QuizAPI from '~/API/QuizAPI';
 import modelTest from '~/assets/models/mouseclean.glb';
+import ModelEditor from '~/components/ModelEditor';
 import ModelViewer from '~/components/ModelViewer';
 import storageService from '~/components/StorageService/storageService';
 import { getImage } from '~/Constant';
@@ -1792,6 +1793,14 @@ export default function CoursesControlEdit() {
                                         gap: 2,
                                     }}
                                 >
+                                    <Typography
+                                        variant="h7"
+                                        sx={{ fontWeight: '400', fontStyle: 'italic', fontSize: '14px' }}
+                                    >
+                                        QR Code must be placed correctly on real model by the reality view in 3D Model
+                                        Editor for right alignment when scanning.
+                                    </Typography>
+
                                     {/* QR Code Image */}
                                     <img
                                         src={getImage(course?.qrCode)}
@@ -1886,7 +1895,7 @@ export default function CoursesControlEdit() {
                                 </Box>
                             </Box>
                             <Box sx={{ mt: 4 }}>
-                                <ModelViewer model={model ? getImage(model?.file) : modelTest} />
+                                <ModelEditor model={model ? getImage(model?.file) : modelTest} />
                             </Box>
                         </Box>
                     )}

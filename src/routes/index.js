@@ -25,6 +25,7 @@ import CoursesControl from '~/pages/new/CoursesControl';
 import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
+import ModelEditor from '~/pages/new/TestPage';
 
 const publicRoutes = [
     //new
@@ -33,7 +34,7 @@ const publicRoutes = [
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
     { path: '/not-authorized', component: NotAuthorized, layout: null },
-    { path: '/test/test-page', component: PaymentFailed, layout: null },
+    { path: '/test/test-page', component: ModelEditor, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
     { path: '/login', component: CompanyLogin, layout: null },
