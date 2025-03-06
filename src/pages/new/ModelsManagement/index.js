@@ -126,9 +126,8 @@ export default function ModelsManagement() {
 
     const columns = [
         { field: 'modelCode', headerName: 'Model Code', width: 200 },
-        { field: 'name', headerName: 'Name', width: 150 },
-        { field: 'modelTypeName', headerName: 'Type', width: 180 },
-        { field: 'courseName', headerName: 'Course Name', width: 200 },
+        { field: 'name', headerName: 'Name', width: 200 },
+        { field: 'courseName', headerName: 'Course Name', width: 250 },
         {
             field: 'isUsed',
             headerName: 'Is Used',
@@ -388,9 +387,9 @@ export default function ModelsManagement() {
         if (trimmedCode.length < 5 || trimmedCode.length > 50) {
             return toast.error('Code must be between 5 and 50 characters.');
         }
-        if (!modelTypeId.trim()) {
-            return toast.error('Please enter model type.');
-        }
+        // if (!modelTypeId.trim()) {
+        //     return toast.error('Please enter model type.');
+        // }
         if (!image) {
             return toast.error('Please select an image.');
         }
@@ -415,7 +414,7 @@ export default function ModelsManagement() {
             formData.append('version', trimmedVersion);
             formData.append('scale', trimmedScale);
             formData.append('file', file3D);
-            formData.append('modelTypeId', modelTypeId);
+            formData.append('modelTypeId', '0e553950-2a32-44cd-bd53-ed680a00f2e5');
             formData.append('companyId', userInfo?.company?.id);
 
             const response = await ModelAPI.createModel(formData);
@@ -425,7 +424,13 @@ export default function ModelsManagement() {
             }
         } catch (error) {
             console.error('Failed to create model:', error);
-            toast.error('Failed to create model. Please try again.', { position: 'top-right' });
+            if (error?.response?.data?.code === 1095) {
+                toast.error('Model already exists with this name. Please choose a different name.', {
+                    position: 'top-right',
+                });
+            } else {
+                toast.error('Failed to create model. Please try again.', { position: 'top-right' });
+            }
         } finally {
             setIsCreating(false);
         }
@@ -579,17 +584,6 @@ export default function ModelsManagement() {
                         onChange={(e) => setDescription(e.target.value)}
                     />
 
-                    <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
-                        <InputLabel>Type</InputLabel>
-                        <Select fullWidth value={modelTypeId} onChange={(e) => setModelTypeId(e.target.value)}>
-                            {modelTypes.map((data) => (
-                                <MenuItem key={data.id} value={data.id}>
-                                    {data.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
                     {/* Upload Image */}
                     <Typography variant="body2" sx={{ mt: 2 }}>
                         Select an image (required):
@@ -619,23 +613,6 @@ export default function ModelsManagement() {
                         Upload Image
                         <input type="file" accept="image/*" hidden onChange={handleImageSelect} />
                     </Button>
-
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        required
-                        label="Version"
-                        value={version}
-                        onChange={(e) => setVersion(e.target.value)}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        required
-                        label="Scale"
-                        value={scale}
-                        onChange={(e) => setScale(e.target.value)}
-                    />
 
                     {/* Upload Model File */}
                     <Typography variant="body2" sx={{ mt: 2 }}>
@@ -685,7 +662,7 @@ export default function ModelsManagement() {
                     }}
                 >
                     <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
-                        ✏️ Update Model
+                        Update Model
                     </Typography>
 
                     <Grid container spacing={2}>
@@ -720,41 +697,7 @@ export default function ModelsManagement() {
                         multiline
                         rows={3}
                     />
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Model Type</InputLabel>
-                        <Select
-                            value={updatedModel?.modelTypeId || ''}
-                            onChange={(e) => handleChangeModelType(e.target.value)}
-                        >
-                            {modelTypes.map((data) => (
-                                <MenuItem key={data.id} value={data.id}>
-                                    {data.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                            <TextField
-                                fullWidth
-                                label="Version"
-                                name="version"
-                                value={updatedModel?.version || ''}
-                                onChange={handleChange}
-                                margin="normal"
-                            />
-                        </Grid>
-                        <Grid item xs={6}>
-                            <TextField
-                                fullWidth
-                                label="Scale"
-                                name="scale"
-                                value={updatedModel?.scale || ''}
-                                onChange={handleChange}
-                                margin="normal"
-                            />
-                        </Grid>
-                    </Grid>
+
                     <FormControl fullWidth margin="normal">
                         <InputLabel>Status</InputLabel>
                         <Select name="status" value={updatedModel?.status || 'ACTIVE'} onChange={handleChange}>
@@ -867,9 +810,6 @@ export default function ModelsManagement() {
                             </Typography>
                             <Typography variant="subtitle1">
                                 <strong>Description:</strong> {selectedModel.description}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Version:</strong> {selectedModel.version}
                             </Typography>
                             <Typography variant="subtitle1">
                                 <strong>Scale:</strong> {selectedModel.scale}

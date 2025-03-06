@@ -375,6 +375,7 @@ export default function CoursesControl() {
                             margin="normal"
                             label="Description"
                             fullWidth
+                            required
                             multiline
                             minRows={3}
                             value={newDescription}
