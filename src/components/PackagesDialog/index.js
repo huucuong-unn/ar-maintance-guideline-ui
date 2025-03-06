@@ -38,10 +38,9 @@ export default function PackagesDialog({
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [newSubscription, setNewSubscription] = useState({
         subscriptionCode: '',
-        maxEmployees: '',
-        maxModels: '',
+        maxNumberOfUsers: '',
+        maxStorageUsage: '',
         monthlyFee: '',
-        extraModelFee: '',
     });
 
     // Handlers cho Delete
@@ -74,15 +73,26 @@ export default function PackagesDialog({
     };
 
     const handleSubmitUpdate = () => {
-        // Kiểm tra validation
-        const { subscriptionCode, maxEmployees, maxModels, monthlyFee, extraModelFee } = selectedSubscription;
-        if (!subscriptionCode || !maxEmployees || !maxModels || !monthlyFee || !extraModelFee) {
-            alert('All fields are required.');
-            return;
+        try {
+            // Kiểm tra validation
+            const { subscriptionCode, maxNumberOfUsers, maxStorageUsage, monthlyFee } = selectedSubscription;
+            if (!subscriptionCode || !maxNumberOfUsers || !maxStorageUsage || !monthlyFee) {
+                toast.error('All fields are required.');
+                return;
+            }
+
+            setOpenUpdateDialog(false);
+            const response = SubscriptionAPI.updateSubscription(selectedSubscription);
+            if (response) {
+                toast.success(`Subscription updated successfully.`);
+                setOpenCreateDialog(false);
+                handleClosePackagesDialog();
+            }
+        } catch (error) {
+            toast.error('Failed to update subscription. ', error?.response?.data?.message);
+        } finally {
+            setIsCreateLoading(false);
         }
-        console.log('Updating subscription:', selectedSubscription);
-        alert(`Subscription ${selectedSubscription.subscriptionCode} updated (mock).`);
-        setOpenUpdateDialog(false);
     };
 
     // Handlers cho Create Subscription
@@ -90,10 +100,9 @@ export default function PackagesDialog({
         // Reset các trường
         setNewSubscription({
             subscriptionCode: '',
-            maxEmployees: '',
-            maxModels: '',
+            maxNumberOfUsers: '',
+            maxStorageUsage: '',
             monthlyFee: '',
-            extraModelFee: '',
         });
         setOpenCreateDialog(true);
     };
@@ -113,8 +122,8 @@ export default function PackagesDialog({
     const handleSubmitCreate = async () => {
         try {
             setIsCreateLoading(true);
-            const { subscriptionCode, maxEmployees, maxModels, monthlyFee, extraModelFee } = newSubscription;
-            if (!subscriptionCode || !maxEmployees || !maxModels || !monthlyFee || !extraModelFee) {
+            const { subscriptionCode, maxNumberOfUsers, maxStorageUsage, monthlyFee } = newSubscription;
+            if (!subscriptionCode || !maxNumberOfUsers || !maxStorageUsage || !monthlyFee) {
                 toast.error('All fields are required.');
                 return;
             }
@@ -125,9 +134,8 @@ export default function PackagesDialog({
             };
 
             const response = SubscriptionAPI.createSubscription(payload);
-            toast.success(`Subscription created successfully.`);
-            if (response?.data?.result) {
-                console.log('Created subscription:', response.data.result);
+            if (response) {
+                toast.success(`Subscription created successfully.`);
                 setOpenCreateDialog(false);
                 handleClosePackagesDialog();
             }
@@ -176,7 +184,7 @@ export default function PackagesDialog({
                                 <Box
                                     sx={{
                                         backgroundColor: '#051D40',
-                                        height: '450px',
+                                        height: '350px',
                                         borderRadius: '20px',
                                         p: 3,
                                         textAlign: 'center',
@@ -235,7 +243,7 @@ export default function PackagesDialog({
                                                 <Check />
                                             </Box>
                                             <Typography sx={{ fontWeight: 500, fontSize: 20, color: '#fff', ml: 1 }}>
-                                                {subscription?.maxEmployees} employees
+                                                {subscription?.maxNumberOfUsers} employees
                                             </Typography>
                                         </Box>
                                         <Box
@@ -249,21 +257,7 @@ export default function PackagesDialog({
                                                 <Check />
                                             </Box>
                                             <Typography sx={{ fontWeight: 500, fontSize: 20, color: '#fff', ml: 1 }}>
-                                                {subscription?.maxModels} models
-                                            </Typography>
-                                        </Box>
-                                        <Box
-                                            sx={{
-                                                display: 'grid',
-                                                gridTemplateColumns: '30px 1fr',
-                                                alignItems: 'center',
-                                            }}
-                                        >
-                                            <Box sx={{ display: 'flex', justifyContent: 'center', color: 'white' }}>
-                                                <Check />
-                                            </Box>
-                                            <Typography sx={{ fontWeight: 500, fontSize: 20, color: '#fff', ml: 1 }}>
-                                                {subscription?.extraModelFee}$ / model extra
+                                                {subscription?.maxStorageUsage} MB storage
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -317,11 +311,11 @@ export default function PackagesDialog({
                                 required
                                 label="Max Employees"
                                 type="number"
-                                value={selectedSubscription.maxEmployees || ''}
+                                value={selectedSubscription.maxNumberOfUsers || ''}
                                 onChange={(e) =>
                                     setSelectedSubscription({
                                         ...selectedSubscription,
-                                        maxEmployees: e.target.value,
+                                        maxNumberOfUsers: e.target.value,
                                     })
                                 }
                             />
@@ -330,11 +324,11 @@ export default function PackagesDialog({
                                 required
                                 label="Max Models"
                                 type="number"
-                                value={selectedSubscription.maxModels || ''}
+                                value={selectedSubscription.maxStorageUsage || ''}
                                 onChange={(e) =>
                                     setSelectedSubscription({
                                         ...selectedSubscription,
-                                        maxModels: e.target.value,
+                                        maxStorageUsage: e.target.value,
                                     })
                                 }
                             />
@@ -351,26 +345,13 @@ export default function PackagesDialog({
                                     })
                                 }
                             />
-                            <TextField
-                                fullWidth
-                                required
-                                label="Extra Model Fee"
-                                type="number"
-                                value={selectedSubscription.extraModelFee || ''}
-                                onChange={(e) =>
-                                    setSelectedSubscription({
-                                        ...selectedSubscription,
-                                        extraModelFee: e.target.value,
-                                    })
-                                }
-                            />
                         </Box>
                     )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseUpdateDialog}>Cancel</Button>
                     <Button onClick={handleSubmitUpdate} color="primary">
-                        Save Changes
+                        {isCreateLoading ? <CircularProgress /> : 'Save Changes'}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -393,8 +374,8 @@ export default function PackagesDialog({
                             required
                             label="Max Employees"
                             type="number"
-                            name="maxEmployees"
-                            value={newSubscription.maxEmployees}
+                            name="maxNumberOfUsers"
+                            value={newSubscription.maxNumberOfUsers}
                             onChange={handleChangeNewSubscription}
                         />
                         <TextField
@@ -402,8 +383,8 @@ export default function PackagesDialog({
                             required
                             label="Max Models"
                             type="number"
-                            name="maxModels"
-                            value={newSubscription.maxModels}
+                            name="maxStorageUsage"
+                            value={newSubscription.maxStorageUsage}
                             onChange={handleChangeNewSubscription}
                         />
                         <TextField
@@ -413,15 +394,6 @@ export default function PackagesDialog({
                             type="number"
                             name="monthlyFee"
                             value={newSubscription.monthlyFee}
-                            onChange={handleChangeNewSubscription}
-                        />
-                        <TextField
-                            fullWidth
-                            required
-                            label="Extra Model Fee"
-                            type="number"
-                            name="extraModelFee"
-                            value={newSubscription.extraModelFee}
                             onChange={handleChangeNewSubscription}
                         />
                         <Typography variant="caption" color="text.secondary">

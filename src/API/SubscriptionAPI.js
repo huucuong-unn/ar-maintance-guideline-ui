@@ -11,6 +11,10 @@ const SubscriptionAPI = {
     deleteSubscription(id) {
         return axiosClient.delete(`/v1/subscription/${id}`);
     },
+
+    updateSubscription(data) {
+        return axiosClient.put(`/v1/subscription/${data.id}`, data);
+    },
 };
 
 export default SubscriptionAPI;
