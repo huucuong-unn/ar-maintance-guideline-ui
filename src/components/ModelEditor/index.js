@@ -23,7 +23,19 @@ import {
     Tabs,
     IconButton,
     Collapse,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Select,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
 } from '@mui/material';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -32,6 +44,10 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ModelAPI from '~/API/ModelAPI';
+import { getImage } from '~/Constant';
+import storageService from '~/components/StorageService/storageService';
+import InstructionDetailAPI from '~/API/InstructionDetailAPI';
 
 // Helper function to round values to 2 decimal places
 const roundValue = (val) => Math.round(val * 100) / 100;
@@ -313,62 +329,30 @@ function CollapsibleCard({ title, children, darkMode, defaultExpanded = true }) 
 }
 
 // Draggable Panel Component
-function DraggablePanel({ children, darkMode, position, onPositionChange, minimized, onMinimizeToggle }) {
+function DraggablePanel({ children, darkMode, viewerRef, minimized, onMinimizeToggle }) {
     const panelRef = useRef(null);
-    const headerRef = useRef(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const hasInitialized = useRef(false);
+    const [position, setPosition] = useState({ left: 0, top: 0 });
 
-    const handleMouseDown = (e) => {
-        if (headerRef.current && headerRef.current.contains(e.target)) {
-            setIsDragging(true);
-            const rect = panelRef.current.getBoundingClientRect();
-            setDragOffset({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top,
-            });
-        }
-    };
-
-    const handleMouseMove = (e) => {
-        if (isDragging && panelRef.current) {
-            const newLeft = e.clientX - dragOffset.x;
-            const newTop = e.clientY - dragOffset.y;
-
-            // Make sure panel stays within viewport
-            const maxX = window.innerWidth - panelRef.current.offsetWidth;
-            const maxY = window.innerHeight - panelRef.current.offsetHeight;
-
-            const clampedLeft = Math.max(0, Math.min(newLeft, maxX));
-            const clampedTop = Math.max(0, Math.min(newTop, maxY));
-
-            onPositionChange({ left: clampedLeft, top: clampedTop });
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
-
+    // Chỉ thiết lập vị trí mặc định một lần
     useEffect(() => {
-        if (isDragging) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        } else {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+        if (!hasInitialized.current && viewerRef?.current && panelRef?.current) {
+            const viewerRect = viewerRef.current.getBoundingClientRect();
+            if (!viewerRect) return;
+
+            // Đặt vị trí cố định bên trong viewer (bên trái)
+            const defaultLeft = viewerRect.left + 20;
+            const defaultTop = viewerRect.top + 20;
+
+            setPosition({ left: defaultLeft, top: defaultTop });
+            hasInitialized.current = true;
         }
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging]);
+    }, [viewerRef]);
 
     return (
         <Paper
             ref={panelRef}
             elevation={5}
-            onMouseDown={handleMouseDown}
             sx={{
                 position: 'absolute',
                 zIndex: 1000,
@@ -379,13 +363,12 @@ function DraggablePanel({ children, darkMode, position, onPositionChange, minimi
                 color: 'text.primary',
                 transition: 'width 0.3s ease',
                 overflow: 'hidden',
-                height: minimized ? 'auto' : 'auto',
                 maxHeight: minimized ? 'auto' : 'calc(100vh - 100px)',
                 display: 'flex',
                 flexDirection: 'column',
             }}
         >
-            <DraggablePanelHeader ref={headerRef}>
+            <DraggablePanelHeader>
                 <DragIndicatorIcon sx={{ mr: 1 }} />
                 <Typography variant="subtitle1" sx={{ flexGrow: 1, color: 'text.primary' }}>
                     {minimized ? 'Controls' : 'Control Panel'}
@@ -409,7 +392,16 @@ function DraggablePanel({ children, darkMode, position, onPositionChange, minimi
     );
 }
 
-export default function SimplifiedModelViewer({ model }) {
+export default function SimplifiedModelViewer({
+    modelId,
+    action,
+    handleCloseModal,
+    modelFile3D,
+    modelFile3DToCreate,
+    currentInstructionId,
+    currentInstructionDetailId,
+}) {
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     // State for model transform
     const [modelTransform, setModelTransform] = useState({
         position: [0, 0, 0],
@@ -428,14 +420,27 @@ export default function SimplifiedModelViewer({ model }) {
     // Mesh visibility state
     const [meshVisibility, setMeshVisibility] = useState({});
 
+    useEffect(() => {
+        if (meshes.length > 0) {
+            const initialVisibility = meshes.reduce((acc, mesh) => {
+                acc[mesh.name] = true; // Mặc định hiển thị
+                return acc;
+            }, {});
+            setMeshVisibility(initialVisibility);
+        }
+    }, [meshes]);
+
     // UI states
     const [showGrid, setShowGrid] = useState(true);
     const [showEnvironment, setShowEnvironment] = useState(true);
     const [darkMode, setDarkMode] = useState(true);
 
     // Panel states
-    const [panelPosition, setPanelPosition] = useState({ left: 20, top: 80 });
+    const viewerRef = useRef(null);
+    const [panelPosition, setPanelPosition] = useState({ left: 0, top: 0 });
     const [panelMinimized, setPanelMinimized] = useState(false);
+
+    const [hiddenMeshes, setHiddenMeshes] = useState([]);
 
     const handleMeshVisibilityToggle = (meshName) => {
         setMeshVisibility((prev) => ({
@@ -444,14 +449,354 @@ export default function SimplifiedModelViewer({ model }) {
         }));
     };
 
-    // Initialize mesh visibility when meshes are loaded
+    // useEffect để cập nhật danh sách hiddenMeshes khi meshVisibility thay đổi
     useEffect(() => {
-        const initialVisibility = meshes.reduce((acc, mesh) => {
-            acc[mesh.name] = true;
-            return acc;
-        }, {});
-        setMeshVisibility(initialVisibility);
-    }, [meshes]);
+        const updatedHiddenMeshes = Object.keys(meshVisibility).filter(
+            (meshName) => !meshVisibility[meshName], // Lấy các mesh có checked === false
+        );
+        setHiddenMeshes(updatedHiddenMeshes);
+    }, [meshVisibility]);
+
+    useEffect(() => {
+        console.log(hiddenMeshes);
+    }, [hiddenMeshes]);
+
+    const [modelById, setModelById] = useState(null);
+
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        code: '',
+    });
+    const [previewImage, setPreviewImage] = useState('');
+    const [imageFile, setImageFile] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!modelId) return;
+        fetchModel();
+    }, [modelId]);
+
+    useEffect(() => {
+        if (modelById?.imageUrl) {
+            setPreviewImage(modelById.imageUrl); // Load ảnh từ model khi có dữ liệu
+        }
+    }, [modelById]);
+
+    const fetchModel = async () => {
+        setLoading(true);
+        try {
+            if (modelId != null) {
+                const response = await ModelAPI.getById(modelId);
+                setModelById(response.result);
+                setFormData({
+                    name: response.result.name || '',
+                    description: response.result.description || '',
+                    code: response.result.modelCode || '',
+                    status: response.result.status,
+                });
+
+                setModelTransform({
+                    position: response.result.position || [0, 0, 0],
+                    rotation: response.result.rotation || [0, 0, 0],
+                    scale: parseFloat(response.result.scale) || 1,
+                });
+            }
+        } catch (err) {
+            setError('Failed to load model');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const [modelError, setModelError] = useState(false);
+    useEffect(() => {
+        if (modelId) {
+            fetch(getImage(modelById?.file))
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Không tìm thấy file trên server');
+                    }
+                    return response.blob();
+                })
+                .then(() => setModelError(false))
+                .catch(() => setModelError(true));
+        }
+    }, [modelId, modelById]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleImageUpload = (e) => {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            setImageFile(file);
+            setFormData((prev) => ({
+                ...prev,
+                image: file,
+            }));
+
+            // Cập nhật ảnh xem trước khi chọn file mới
+            setPreviewImage(URL.createObjectURL(file));
+        }
+    };
+
+    const updateModelInfo = async () => {
+        if (!modelById?.id) {
+            console.error('Model ID is required for update.');
+            return;
+        }
+
+        // Trim spaces
+        const trimmedName = formData.name.trim();
+        const trimmedCode = formData.code.trim();
+
+        // Validate required fields
+        if (trimmedName.length < 5 || trimmedName.length > 50) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+            return toast.error('Code must be between 5 and 50 characters.');
+        }
+
+        try {
+            const formDataForUpdate = new FormData();
+            formDataForUpdate.append('modelCode', formData?.code);
+            formDataForUpdate.append('name', formData?.name);
+            formDataForUpdate.append('description', formData.description || '');
+            formDataForUpdate.append('modelTypeId', formData?.modelTypeId || '0e553950-2a32-44cd-bd53-ed680a00f2e5');
+            formDataForUpdate.append('scale', modelTransform?.scale || 0);
+            formDataForUpdate.append('position', modelTransform?.position || [0, 0, 0]);
+            formDataForUpdate.append('rotation', modelTransform?.rotation || [0, 0, 0]);
+            formDataForUpdate.append('status', formData?.status);
+            if (imageFile != null) {
+                formDataForUpdate.append('imageUrl', imageFile);
+            }
+            const response = await ModelAPI.updateModel(modelById?.id, formDataForUpdate);
+            if (response?.result) {
+                toast.success('Model updated successfully!', { position: 'top-right' });
+                fetchModel();
+                resetFormData();
+            }
+        } catch (error) {
+            console.error('Failed to update model:', error);
+            toast.error('Failed to update model. Please try again.', { position: 'top-right' });
+        }
+    };
+
+    const resetFormData = () => {
+        setFormData({
+            name: '',
+            code: '',
+            description: '',
+            status: '',
+            image: null,
+            instructionDetailName: '',
+            instructionDetailDescription: '',
+        });
+    };
+
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const handleOpenConfirmDelete = () => {
+        setConfirmDeleteOpen(true);
+    };
+
+    const handleCloseConfirmDelete = () => {
+        setConfirmDeleteOpen(false);
+    };
+
+    const handleDeleteModel = async () => {
+        setConfirmDeleteOpen(false);
+        try {
+            const response = await ModelAPI.deleteById(modelById.id);
+            if (response?.result) {
+                toast.success('Model deleted successfully!', { position: 'top-right' });
+                handleCloseModal();
+                resetFormData();
+            }
+        } catch (error) {
+            console.error('Failed to delete model:', error);
+            toast.error('Failed to delete model. Please try again.', { position: 'top-right' });
+        }
+    };
+
+    useEffect(() => {
+        if (action === 'CreateModel') {
+            resetFormData();
+            setImageFile(null);
+        }
+    }, [action]);
+
+    const handleCreateModel = async () => {
+        // Trim spaces
+        const trimmedName = formData.name.trim();
+        const trimmedCode = formData.code.trim();
+
+        // Validate required fields
+        if (trimmedName.length < 5 || trimmedName.length > 50) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+            return toast.error('Code must be between 5 and 50 characters.');
+        }
+
+        if (!imageFile) {
+            return toast.error('Please select an image.');
+        }
+
+        try {
+            const formDataToCreate = new FormData();
+            formDataToCreate.append('name', trimmedName);
+            formDataToCreate.append('modelCode', trimmedCode);
+            formDataToCreate.append('description', formData.description);
+            formDataToCreate.append('imageUrl', imageFile);
+            formDataToCreate.append('scale', modelTransform.scale);
+            formDataToCreate.append('file', modelFile3DToCreate);
+            formDataToCreate.append('modelTypeId', '0e553950-2a32-44cd-bd53-ed680a00f2e5');
+            formDataToCreate.append('companyId', userInfo?.company?.id);
+            formDataToCreate.append('position', modelTransform?.position || [0, 0, 0]);
+            formDataToCreate.append('rotation', modelTransform?.rotation || [0, 0, 0]);
+
+            const response = await ModelAPI.createModel(formDataToCreate);
+            if (response?.result) {
+                toast.success('Model created successfully!', { position: 'top-right' });
+                handleCloseModal();
+                resetFormData();
+            }
+        } catch (error) {
+            console.error('Failed to create model:', error);
+            if (error?.response?.data?.code === 1095) {
+                toast.error('Model already exists with this name. Please choose a different name.', {
+                    position: 'top-right',
+                });
+            } else {
+                toast.error('Failed to create model. Please try again.', { position: 'top-right' });
+            }
+        }
+    };
+
+    useEffect(() => {
+        console.log(formData);
+    }, [formData]);
+
+    const handleCreateInstructionDetail = async () => {
+        const trimmedName = formData.instructionDetailName.trim();
+        const trimmedDescription = formData.instructionDetailDescription.trim();
+
+        if (trimmedName.length < 5 || trimmedName.length > 50) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+
+        try {
+            const formDataToCreateInstructionDetail = new FormData();
+            formDataToCreateInstructionDetail.append('name', trimmedName);
+            formDataToCreateInstructionDetail.append('animationName', formData.animationName);
+            formDataToCreateInstructionDetail.append('description', trimmedDescription);
+            formDataToCreateInstructionDetail.append('instructionId', currentInstructionId);
+            formDataToCreateInstructionDetail.append('meshes', hiddenMeshes);
+
+            const response = await InstructionDetailAPI.create(formDataToCreateInstructionDetail);
+            if (response?.result) {
+                toast.success('Instruction Detail created successfully!', { position: 'top-right' });
+                handleCloseModal();
+                resetFormData();
+            }
+        } catch (error) {
+            console.error('Failed to create instruction detail:', error);
+            toast.error('Failed to create instruction detail. Please try again.', { position: 'top-right' });
+        }
+    };
+    const [instructionDetailById, setInstructionDetailById] = useState({});
+
+    useEffect(() => {
+        if (instructionDetailById && Object.keys(instructionDetailById).length > 0) {
+            const { animationName, meshes } = instructionDetailById;
+
+            if (!Array.isArray(meshes)) return;
+
+            setActiveAnimation(animationName);
+            setFormData((prev) => ({ ...prev, animationName }));
+
+            setMeshVisibility((prev) => {
+                const newVisibility = { ...prev };
+
+                meshes.forEach((meshName) => {
+                    newVisibility[meshName] = false;
+                });
+
+                setHiddenMeshes(Object.keys(newVisibility).filter((mesh) => !newVisibility[mesh]));
+
+                return newVisibility;
+            });
+        }
+    }, [instructionDetailById, meshes]);
+
+    const fetchInstructionDetail = async () => {
+        try {
+            const response = await InstructionDetailAPI.getById(currentInstructionDetailId);
+            const data = response?.result;
+
+            if (data) {
+                setInstructionDetailById(data);
+                // Cập nhật formData
+                setFormData((prev) => ({
+                    ...prev,
+                    instructionDetailName: data.name,
+                    instructionDetailDescription: data.description,
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to fetch model:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchInstructionDetail();
+    }, [currentInstructionDetailId]);
+
+    useEffect(() => {
+        console.log(instructionDetailById);
+    }, [instructionDetailById]);
+
+    const handleUpdateInstructionDetail = async () => {
+        if (!currentInstructionDetailId) {
+            console.error('Instruction Detail ID is required for update.');
+            return;
+        }
+
+        // Trim spaces
+        const trimmedName = formData.instructionDetailName.trim();
+        const trimmedDescription = formData.instructionDetailDescription.trim();
+
+        if (trimmedName.length < 5 || trimmedName.length > 50) {
+            return toast.error('Name must be between 5 and 50 characters.');
+        }
+
+        try {
+            const formDataForUpdateInstructionDetail = new FormData();
+            formDataForUpdateInstructionDetail.append('name', trimmedName);
+            formDataForUpdateInstructionDetail.append('animationName', formData.animationName);
+            formDataForUpdateInstructionDetail.append('description', trimmedDescription);
+            formDataForUpdateInstructionDetail.append('meshes', hiddenMeshes);
+
+            const response = await InstructionDetailAPI.update(
+                currentInstructionDetailId,
+                formDataForUpdateInstructionDetail,
+            );
+            if (response?.result) {
+                toast.success('Instruction Detail updated successfully!', { position: 'top-right' });
+            }
+        } catch (error) {
+            console.error('Failed to update model:', error);
+            toast.error('Failed to update model. Please try again.', { position: 'top-right' });
+        }
+    };
 
     // Create theme based on dark mode
     const theme = {
@@ -547,39 +892,45 @@ export default function SimplifiedModelViewer({ model }) {
             <Box sx={{ flexGrow: 1, position: 'relative' }}>
                 {/* Canvas */}
                 <Box sx={{ flexGrow: 1, height: 'calc(100vh - 64px)' }}>
-                    <Canvas style={{ background: darkMode ? '#121212' : '#f8f9fa' }}>
-                        <ambientLight intensity={0.5} />
-                        <directionalLight position={[5, 10, 7]} intensity={1} castShadow />
-                        <pointLight position={[-3, 2, -3]} intensity={0.5} />
+                    {modelError ? (
+                        <Typography variant="h6" color="error">
+                            File not found on the server
+                        </Typography>
+                    ) : (
+                        <Canvas style={{ background: darkMode ? '#121212' : '#f8f9fa' }}>
+                            <ambientLight intensity={0.5} />
+                            <directionalLight position={[5, 10, 7]} intensity={1} castShadow />
+                            <pointLight position={[-3, 2, -3]} intensity={0.5} />
 
-                        {showGrid && (
-                            <Grid
-                                infiniteGrid
-                                cellSize={0.5}
-                                cellThickness={0.6}
-                                sectionSize={3}
-                                sectionThickness={1.2}
-                                fadeDistance={30}
-                                fadeStrength={1}
-                                cellColor={darkMode ? '#555555' : '#e0e0e0'}
-                                sectionColor={darkMode ? '#888888' : '#a0a0a0'}
-                            />
-                        )}
+                            {showGrid && (
+                                <Grid
+                                    infiniteGrid
+                                    cellSize={0.5}
+                                    cellThickness={0.6}
+                                    sectionSize={3}
+                                    sectionThickness={1.2}
+                                    fadeDistance={30}
+                                    fadeStrength={1}
+                                    cellColor={darkMode ? '#555555' : '#e0e0e0'}
+                                    sectionColor={darkMode ? '#888888' : '#a0a0a0'}
+                                />
+                            )}
 
-                        {showEnvironment && <Environment preset="city" />}
+                            {showEnvironment && <Environment preset="city" />}
 
-                        <Suspense fallback={null}>
-                            <Scene
-                                modelTransform={modelTransform}
-                                viewMode={viewMode}
-                                onMeshesLoaded={setMeshes}
-                                onAnimationsLoaded={setAnimations}
-                                activeAnimation={activeAnimation}
-                                meshVisibility={meshVisibility}
-                                model={model}
-                            />
-                        </Suspense>
-                    </Canvas>
+                            <Suspense fallback={null}>
+                                <Scene
+                                    modelTransform={modelTransform}
+                                    viewMode={viewMode}
+                                    onMeshesLoaded={setMeshes}
+                                    onAnimationsLoaded={setAnimations}
+                                    activeAnimation={activeAnimation}
+                                    meshVisibility={meshVisibility}
+                                    model={modelId ? getImage(modelById?.file) : modelFile3D}
+                                />
+                            </Suspense>
+                        </Canvas>
+                    )}
                 </Box>
 
                 {/* Draggable Control Panel */}
@@ -589,91 +940,514 @@ export default function SimplifiedModelViewer({ model }) {
                     onPositionChange={setPanelPosition}
                     minimized={panelMinimized}
                     onMinimizeToggle={() => setPanelMinimized(!panelMinimized)}
+                    viewerRef={viewerRef}
                 >
-                    {/* Transform Controls */}
                     <CollapsibleCard title="Transform Controls" darkMode={darkMode} defaultExpanded={true}>
-                        {/* Position */}
-                        <Typography
-                            variant="subtitle1"
-                            gutterBottom
-                            sx={{ color: darkMode ? '#ffffff' : 'text.primary' }}
-                        >
-                            Position
-                        </Typography>
                         <Stack spacing={2} sx={{ mb: 3 }}>
-                            {modelTransform.position.map((val, idx) => (
-                                <NumberInputWithButtons
-                                    key={`pos-${idx}`}
-                                    label={axisLabels[idx]}
-                                    value={val}
-                                    onChange={(value) => handleTransformChange('position', idx, value)}
+                            {/* Start Update Model Guideline */}
+                            {(action === 'UpdateModelGuideline' || action === 'CreateModel') &&
+                                action !== 'UpdateInstructionDetail' && (
+                                    <>
+                                        {/* Name */}
+                                        <TextField
+                                            label="Name"
+                                            variant="outlined"
+                                            fullWidth
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            sx={{
+                                                input: { color: darkMode ? '#ffffff' : '#000000' },
+                                                '& .MuiOutlinedInput-root': {
+                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                    '&:hover fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                    '&.Mui-focused fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                },
+                                                label: { color: darkMode ? '#ffffff' : '#000000' },
+                                            }}
+                                        />
+
+                                        {/* Description */}
+                                        <TextField
+                                            label="Description"
+                                            variant="outlined"
+                                            fullWidth
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleInputChange}
+                                            multiline
+                                            rows={3}
+                                            sx={{
+                                                '& .MuiInputBase-input': {
+                                                    color: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                                '& .MuiOutlinedInput-root': {
+                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                    '&:hover fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                    '&.Mui-focused fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                },
+                                                '& .MuiInputLabel-root': {
+                                                    color: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            }}
+                                        />
+
+                                        {/* Code */}
+                                        <TextField
+                                            label="Code"
+                                            variant="outlined"
+                                            name="code"
+                                            value={formData.code}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            sx={{
+                                                input: { color: darkMode ? '#ffffff' : '#000000' },
+                                                '& .MuiOutlinedInput-root': {
+                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                    '&:hover fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                    '&.Mui-focused fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                },
+                                                label: { color: darkMode ? '#ffffff' : '#000000' },
+                                            }}
+                                        />
+
+                                        {/* Hiển thị ảnh */}
+                                        {(imageFile || previewImage) && (
+                                            <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                                <Typography variant="subtitle1">Current Image</Typography>
+                                                <img
+                                                    src={
+                                                        imageFile
+                                                            ? URL.createObjectURL(imageFile)
+                                                            : getImage(previewImage)
+                                                    }
+                                                    alt="Preview"
+                                                    style={{
+                                                        width: '100%',
+                                                        maxWidth: '100%',
+                                                        maxHeight: '300px',
+                                                        objectFit: 'contain',
+                                                        borderRadius: 8,
+                                                        border: '2px solid #ddd',
+                                                    }}
+                                                />
+                                            </Box>
+                                        )}
+
+                                        {/* Upload Image */}
+                                        <Button
+                                            variant="contained"
+                                            component="label"
+                                            fullWidth
+                                            startIcon={<CloudUploadIcon />}
+                                            sx={{ mt: 2 }}
+                                        >
+                                            Upload Image
+                                            <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
+                                        </Button>
+
+                                        {/* Hiển thị tên file ảnh đã chọn */}
+                                        {imageFile && (
+                                            <Typography variant="body2" sx={{ textAlign: 'center' }}>
+                                                File: {imageFile.name}
+                                            </Typography>
+                                        )}
+                                    </>
+                                )}
+
+                            {/* End Update Model Guideline */}
+
+                            {action === 'UpdateModelManagement' && action !== 'UpdateInstructionDetail' && (
+                                <>
+                                    <TextField
+                                        label="Name"
+                                        variant="outlined"
+                                        fullWidth
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        sx={{
+                                            input: { color: darkMode ? '#ffffff' : '#000000' },
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                '&:hover fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            },
+                                            label: { color: darkMode ? '#ffffff' : '#000000' },
+                                        }}
+                                    />
+
+                                    {/* Description */}
+                                    <TextField
+                                        label="Description"
+                                        variant="outlined"
+                                        fullWidth
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        multiline
+                                        rows={3}
+                                        sx={{
+                                            '& .MuiInputBase-input': { color: darkMode ? '#ffffff' : '#000000' },
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                '&:hover fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': { color: darkMode ? '#ffffff' : '#000000' },
+                                        }}
+                                    />
+
+                                    {/* Code */}
+                                    <TextField
+                                        label="Code"
+                                        variant="outlined"
+                                        name="code"
+                                        value={formData.code}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        sx={{
+                                            input: { color: darkMode ? '#ffffff' : '#000000' },
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                '&:hover fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            },
+                                            label: { color: darkMode ? '#ffffff' : '#000000' },
+                                        }}
+                                    />
+
+                                    {/* Hiển thị ảnh */}
+                                    {(imageFile || previewImage) && (
+                                        <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                            <Typography variant="subtitle1">Current Image</Typography>
+                                            <img
+                                                src={
+                                                    imageFile ? URL.createObjectURL(imageFile) : getImage(previewImage)
+                                                }
+                                                alt="Preview"
+                                                style={{
+                                                    width: '100%',
+                                                    maxWidth: '100%',
+                                                    maxHeight: '300px',
+                                                    objectFit: 'contain',
+                                                    borderRadius: 8,
+                                                    border: '2px solid #ddd',
+                                                }}
+                                            />
+                                        </Box>
+                                    )}
+
+                                    {/* Upload Image */}
+                                    <Button
+                                        variant="contained"
+                                        component="label"
+                                        fullWidth
+                                        startIcon={<CloudUploadIcon />}
+                                        sx={{ mt: 2 }}
+                                    >
+                                        Upload Image
+                                        <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
+                                    </Button>
+
+                                    {/* Hiển thị tên file ảnh đã chọn */}
+                                    {imageFile && (
+                                        <Typography variant="body2" sx={{ textAlign: 'center' }}>
+                                            File: {imageFile.name}
+                                        </Typography>
+                                    )}
+                                    {/* Hiển thị Is Used */}
+                                    <Typography variant="body1" sx={{ mt: 2, color: darkMode ? '#ffffff' : '#000000' }}>
+                                        Is Used: {modelById?.isUsed ? 'Yes' : 'No'}
+                                    </Typography>
+
+                                    {/* Hiển thị Course Name */}
+                                    <Typography variant="body1" sx={{ mt: 1, color: darkMode ? '#ffffff' : '#000000' }}>
+                                        Course Name: {modelById?.courseName || 'N/A'}
+                                    </Typography>
+
+                                    {/* Select Status */}
+                                    <FormControl fullWidth sx={{ mt: 2 }}>
+                                        <InputLabel>Status</InputLabel>
+                                        <Select
+                                            value={formData.status || ''}
+                                            onChange={handleInputChange}
+                                            name="status"
+                                            label="Status"
+                                            sx={{
+                                                color: darkMode ? '#ffffff' : '#000000',
+                                                '& .MuiOutlinedInput-root': {
+                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                    '&:hover fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                    '&.Mui-focused fieldset': {
+                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                },
+                                                '& .MuiInputLabel-root': {
+                                                    color: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value="ACTIVE">ACTIVE</MenuItem>
+                                            <MenuItem value="INACTIVE">INACTIVE</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                    <Button
+                                        onClick={handleOpenConfirmDelete}
+                                        variant="contained"
+                                        color="error" // Màu đỏ của Material UI
+                                        fullWidth
+                                        sx={{ mt: 2 }}
+                                    >
+                                        Delete Model
+                                    </Button>
+                                </>
+                            )}
+
+                            {action === 'CreateInstructionDetail' && action !== 'UpdateInstructionDetail' && (
+                                <>
+                                    {/* Name */}
+                                    <TextField
+                                        label="Instruction Detail Name"
+                                        variant="outlined"
+                                        fullWidth
+                                        name="instructionDetailName"
+                                        value={formData.instructionDetailName}
+                                        onChange={handleInputChange}
+                                        sx={{
+                                            input: { color: darkMode ? '#ffffff' : '#000000' },
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                '&:hover fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            },
+                                            label: { color: darkMode ? '#ffffff' : '#000000' },
+                                        }}
+                                    />
+
+                                    {/* Description */}
+                                    <TextField
+                                        label="Instruction Detail Description"
+                                        variant="outlined"
+                                        fullWidth
+                                        name="instructionDetailDescription"
+                                        value={formData.instrucrtionDetailDescription}
+                                        onChange={handleInputChange}
+                                        multiline
+                                        rows={3}
+                                        sx={{
+                                            '& .MuiInputBase-input': { color: darkMode ? '#ffffff' : '#000000' },
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                '&:hover fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: darkMode ? '#ffffff' : '#000000',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': { color: darkMode ? '#ffffff' : '#000000' },
+                                        }}
+                                    />
+
+                                    {/* Create Button */}
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        fullWidth
+                                        sx={{ mt: 2 }}
+                                        onClick={handleCreateInstructionDetail}
+                                    >
+                                        Create
+                                    </Button>
+                                </>
+                            )}
+                        </Stack>
+
+                        {action !== 'CreateInstructionDetail' && action !== 'UpdateInstructionDetail' && (
+                            <>
+                                {/* Position */}
+                                <Typography
+                                    variant="subtitle1"
+                                    gutterBottom
+                                    sx={{ color: darkMode ? '#ffffff' : 'text.primary' }}
+                                >
+                                    Position
+                                </Typography>
+                                <Stack spacing={2} sx={{ mb: 3 }}>
+                                    {modelTransform.position.map((val, idx) => (
+                                        <NumberInputWithButtons
+                                            key={`pos-${idx}`}
+                                            label={axisLabels[idx]}
+                                            value={val}
+                                            onChange={(value) => handleTransformChange('position', idx, value)}
+                                            step={0.1}
+                                            theme={theme}
+                                        />
+                                    ))}
+                                </Stack>
+
+                                {/* Rotation */}
+                                <Typography
+                                    variant="subtitle1"
+                                    gutterBottom
+                                    sx={{ color: darkMode ? '#ffffff' : 'text.primary' }}
+                                >
+                                    Rotation (degrees)
+                                </Typography>
+                                <Stack spacing={2} sx={{ mb: 3 }}>
+                                    {modelTransform.rotation.map((val, idx) => (
+                                        <NumberInputWithButtons
+                                            key={`rot-${idx}`}
+                                            label={axisLabels[idx]}
+                                            value={val}
+                                            onChange={(value) => handleTransformChange('rotation', idx, value)}
+                                            step={5}
+                                            theme={theme}
+                                        />
+                                    ))}
+                                </Stack>
+
+                                {/* Scale */}
+                                <Typography
+                                    variant="subtitle1"
+                                    gutterBottom
+                                    sx={{ color: darkMode ? '#ffffff' : 'text.primary' }}
+                                >
+                                    Scale: {modelTransform.scale}
+                                </Typography>
+                                <Slider
+                                    min={0.1}
+                                    max={5}
                                     step={0.1}
-                                    theme={theme}
+                                    value={modelTransform.scale}
+                                    onChange={handleScaleChange}
+                                    valueLabelDisplay="auto"
+                                    sx={{
+                                        mb: 2,
+                                        '& .MuiSlider-thumb': {
+                                            color: darkMode ? '#90caf9' : undefined,
+                                        },
+                                        '& .MuiSlider-track': {
+                                            color: darkMode ? '#90caf9' : undefined,
+                                        },
+                                        '& .MuiSlider-rail': {
+                                            color: darkMode ? 'rgba(255, 255, 255, 0.3)' : undefined,
+                                        },
+                                    }}
                                 />
-                            ))}
-                        </Stack>
-
-                        {/* Rotation */}
-                        <Typography
-                            variant="subtitle1"
-                            gutterBottom
-                            sx={{ color: darkMode ? '#ffffff' : 'text.primary' }}
-                        >
-                            Rotation (degrees)
-                        </Typography>
-                        <Stack spacing={2} sx={{ mb: 3 }}>
-                            {modelTransform.rotation.map((val, idx) => (
-                                <NumberInputWithButtons
-                                    key={`rot-${idx}`}
-                                    label={axisLabels[idx]}
-                                    value={val}
-                                    onChange={(value) => handleTransformChange('rotation', idx, value)}
-                                    step={5}
-                                    theme={theme}
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ width: '100%' }}
+                                    onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
+                                >
+                                    {action === 'CreateModel' ? 'Create' : 'Save changes'}
+                                </Button>
+                            </>
+                        )}
+                        {action == 'UpdateInstructionDetail' && (
+                            <>
+                                <TextField
+                                    label="Instruction Detail Name"
+                                    variant="outlined"
+                                    fullWidth
+                                    name="instructionDetailName"
+                                    rows={2}
+                                    multiline
+                                    value={formData.instructionDetailName}
+                                    onChange={handleInputChange}
+                                    InputLabelProps={{ shrink: true }} // 👈 Fix label bị đè
+                                    sx={{
+                                        mb: 2,
+                                        '& .MuiInputBase-input': { color: darkMode ? '#ffffff' : '#000000' },
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                            '&:hover fieldset': {
+                                                borderColor: darkMode ? '#ffffff' : '#000000',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: darkMode ? '#ffffff' : '#000000',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': { color: darkMode ? '#ffffff' : '#000000' },
+                                    }}
                                 />
-                            ))}
-                        </Stack>
 
-                        {/* Scale */}
-                        <Typography
-                            variant="subtitle1"
-                            gutterBottom
-                            sx={{ color: darkMode ? '#ffffff' : 'text.primary' }}
-                        >
-                            Scale: {modelTransform.scale}
-                        </Typography>
-                        <Slider
-                            min={0.1}
-                            max={5}
-                            step={0.1}
-                            value={modelTransform.scale}
-                            onChange={handleScaleChange}
-                            valueLabelDisplay="auto"
-                            sx={{
-                                mb: 2,
-                                '& .MuiSlider-thumb': {
-                                    color: darkMode ? '#90caf9' : undefined,
-                                },
-                                '& .MuiSlider-track': {
-                                    color: darkMode ? '#90caf9' : undefined,
-                                },
-                                '& .MuiSlider-rail': {
-                                    color: darkMode ? 'rgba(255, 255, 255, 0.3)' : undefined,
-                                },
-                            }}
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            sx={{ width: '100%' }}
-                            onClick={() =>
-                                alert(
-                                    `Position: ${modelTransform.position}\nRotation: ${modelTransform.rotation}\nScale: ${modelTransform.scale}`,
-                                )
-                            }
-                        >
-                            Save changes
-                        </Button>
+                                {/* Description */}
+                                <TextField
+                                    label="Instruction Detail Description"
+                                    variant="outlined"
+                                    fullWidth
+                                    name="instructionDetailDescription"
+                                    value={formData.instructionDetailDescription}
+                                    onChange={handleInputChange}
+                                    multiline
+                                    rows={3}
+                                    InputLabelProps={{ shrink: true }} // 👈 Fix label bị đè
+                                    sx={{
+                                        mb: 2,
+                                        '& .MuiInputBase-input': { color: darkMode ? '#ffffff' : '#000000' },
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                            '&:hover fieldset': {
+                                                borderColor: darkMode ? '#ffffff' : '#000000',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: darkMode ? '#ffffff' : '#000000',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': { color: darkMode ? '#ffffff' : '#000000' },
+                                    }}
+                                />
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    fullWidth
+                                    onClick={handleUpdateInstructionDetail}
+                                    sx={{
+                                        backgroundColor: darkMode ? '#ffffff' : '#1976d2',
+                                        color: darkMode ? '#000000' : '#ffffff',
+                                        '&:hover': {
+                                            backgroundColor: darkMode ? '#cccccc' : '#1565c0',
+                                        },
+                                        mt: 2,
+                                    }}
+                                >
+                                    Save Changes
+                                </Button>
+                            </>
+                        )}
                     </CollapsibleCard>
 
                     {/* Display Options */}
@@ -724,7 +1498,10 @@ export default function SimplifiedModelViewer({ model }) {
                                     <Button
                                         key={anim.name}
                                         variant={activeAnimation === anim.name ? 'contained' : 'outlined'}
-                                        onClick={() => setActiveAnimation(anim.name)}
+                                        onClick={() => {
+                                            setActiveAnimation(anim.name);
+                                            setFormData((prev) => ({ ...prev, animationName: anim.name }));
+                                        }}
                                         fullWidth
                                         sx={{
                                             color: darkMode && activeAnimation !== anim.name ? '#ffffff' : undefined,
@@ -741,7 +1518,10 @@ export default function SimplifiedModelViewer({ model }) {
                                     <Button
                                         variant="outlined"
                                         color="secondary"
-                                        onClick={() => setActiveAnimation(null)}
+                                        onClick={() => {
+                                            setActiveAnimation(null);
+                                            setFormData((prev) => ({ ...prev, animationName: '' })); // Xóa animationName khỏi formData
+                                        }}
                                         sx={{
                                             color: darkMode ? '#f48fb1' : undefined,
                                             borderColor: darkMode ? '#f48fb1' : undefined,
@@ -762,7 +1542,7 @@ export default function SimplifiedModelViewer({ model }) {
                                         key={mesh.name}
                                         control={
                                             <Switch
-                                                checked={meshVisibility[mesh.name] ?? true}
+                                                checked={meshVisibility[mesh.name] ?? true} // Mặc định true nếu không có trong hiddenMeshes
                                                 onChange={() => handleMeshVisibilityToggle(mesh.name)}
                                                 sx={{
                                                     '& .MuiSwitch-thumb': {
@@ -857,6 +1637,23 @@ export default function SimplifiedModelViewer({ model }) {
                     </Typography>
                 </Paper>
             )}
+
+            <Dialog open={confirmDeleteOpen} onClose={handleCloseConfirmDelete}>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this model? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseConfirmDelete} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDeleteModel} color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

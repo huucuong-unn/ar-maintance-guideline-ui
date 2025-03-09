@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
+import ModelEditor from '~/components/ModelEditor';
 import {
     Box,
     Button,
@@ -124,6 +125,15 @@ export default function ModelsManagement() {
         }
     };
 
+    const [openEditor, setOpenEditor] = useState(false);
+
+    const handleCloseEditor = () => {
+        setOpenEditor(false);
+        setUpdateOpenModal(false);
+        setOpenCreateDialog(false);
+        fetchModels();
+    };
+
     const columns = [
         { field: 'modelCode', headerName: 'Model Code', width: 200 },
         { field: 'name', headerName: 'Name', width: 200 },
@@ -169,7 +179,7 @@ export default function ModelsManagement() {
             const response = await ModelAPI.getById(id);
             const modelData = response?.result;
             setSelectedModel(modelData);
-            setOpenModal(true);
+            // setOpenModal(true);
         } catch (error) {
             console.error('Failed to fetch model details:', error);
         }
@@ -182,6 +192,7 @@ export default function ModelsManagement() {
             const modelData = response?.result;
             setUpdatedModel(modelData);
             setUpdateOpenModal(true);
+            setOpenEditor(true);
         } catch (error) {
             console.error('Failed to fetch model details:', error);
         }
@@ -193,6 +204,7 @@ export default function ModelsManagement() {
         setUpdatedModel({});
         setImageFile(null);
         setModelFile(null);
+        fetchModels();
     };
 
     const handleChange = (e) => {
@@ -347,6 +359,7 @@ export default function ModelsManagement() {
         setFile3D(null);
         setModelTypeId('');
         setOpenCreateDialog(true);
+        setOpenEditor(true);
     };
 
     const handleCloseCreateDialog = () => {
@@ -359,6 +372,7 @@ export default function ModelsManagement() {
         setFile3D(null);
         setModelTypeId('');
         setOpenCreateDialog(false);
+        setOpenEditor(false);
     };
 
     const handleImageSelect = (e) => {
@@ -551,10 +565,10 @@ export default function ModelsManagement() {
                 </Grid>
             </Grid>
             {/* Create Model Dialog */}
-            <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="sm">
+            <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Create New Model</DialogTitle>
-                <DialogContent>
-                    <DialogContentText sx={{ mb: 2 }}>
+                <DialogContent sx={{ minHeight: '80vh' }}>
+                    {/* <DialogContentText sx={{ mb: 2 }}>
                         Please fill out the form below to create a new model.
                     </DialogContentText>
 
@@ -582,9 +596,9 @@ export default function ModelsManagement() {
                         minRows={2}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                    />
+                    /> */}
 
-                    {/* Upload Image */}
+                    {/* Upload Image
                     <Typography variant="body2" sx={{ mt: 2 }}>
                         Select an image (required):
                     </Typography>
@@ -602,8 +616,8 @@ export default function ModelsManagement() {
                                 }}
                             />
                         </Box>
-                    )}
-                    <Button
+                    )} */}
+                    {/* <Button
                         variant="contained"
                         component="label"
                         fullWidth
@@ -612,7 +626,7 @@ export default function ModelsManagement() {
                     >
                         Upload Image
                         <input type="file" accept="image/*" hidden onChange={handleImageSelect} />
-                    </Button>
+                    </Button> */}
 
                     {/* Upload Model File */}
                     <Typography variant="body2" sx={{ mt: 2 }}>
@@ -629,18 +643,28 @@ export default function ModelsManagement() {
                         <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
                     </Button>
                     {file3D && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            File: {file3D.name}
-                        </Typography>
+                        <>
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                File: {file3D.name}
+                            </Typography>
+                            {openEditor && (
+                                <ModelEditor
+                                    action={'CreateModel'}
+                                    modelFile3D={URL.createObjectURL(file3D)}
+                                    modelFile3DToCreate={file3D}
+                                    handleCloseModal={handleCloseEditor}
+                                />
+                            )}
+                        </>
                     )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseCreateDialog} disabled={isCreating}>
                         Cancel
                     </Button>
-                    <Button onClick={handleCreateModel} disabled={isCreating}>
+                    {/* <Button onClick={handleCreateModel} disabled={isCreating}>
                         {isCreating ? <CircularProgress size={24} /> : 'Create'}
-                    </Button>
+                    </Button> */}
                 </DialogActions>
             </Dialog>
 
@@ -651,21 +675,18 @@ export default function ModelsManagement() {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: 500,
-                        maxHeight: '80vh', // Giới hạn chiều cao tối đa
-                        overflowY: 'auto', // Bật cuộn dọc nếu nội dung quá dài
+                        width: '90vw', // Tăng chiều rộng lên 90% màn hình
+                        maxWidth: '3000px', // Đảm bảo không quá lớn trên màn hình rộng
+                        maxHeight: '90vh', // Giữ chiều cao tối đa
+                        overflowY: 'auto', // Bật cuộn nếu nội dung quá dài
                         bgcolor: 'background.paper',
                         borderRadius: '10px',
                         boxShadow: 10,
-                        p: 4,
+                        p: 3,
                         textAlign: 'center',
                     }}
                 >
-                    <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
-                        Update Model
-                    </Typography>
-
-                    <Grid container spacing={2}>
+                    {/* <Grid container spacing={2}>
                         <Grid item xs={6}>
                             <TextField
                                 fullWidth
@@ -696,9 +717,9 @@ export default function ModelsManagement() {
                         margin="normal"
                         multiline
                         rows={3}
-                    />
+                    /> */}
 
-                    <FormControl fullWidth margin="normal">
+                    {/* <FormControl fullWidth margin="normal">
                         <InputLabel>Status</InputLabel>
                         <Select name="status" value={updatedModel?.status || 'ACTIVE'} onChange={handleChange}>
                             <MenuItem value="ACTIVE">ACTIVE</MenuItem>
@@ -721,10 +742,10 @@ export default function ModelsManagement() {
                                 }}
                             />
                         </Box>
-                    )}
+                    )} */}
 
                     {/* Upload Image */}
-                    <Button
+                    {/* <Button
                         variant="contained"
                         component="label"
                         fullWidth
@@ -734,10 +755,10 @@ export default function ModelsManagement() {
                         Upload Image
                         <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
                         {imageFile && <Typography variant="body2">File: {imageFile.name}</Typography>}
-                    </Button>
+                    </Button> */}
 
                     {/* Upload Model File */}
-                    <Button
+                    {/* <Button
                         variant="contained"
                         component="label"
                         fullWidth
@@ -747,10 +768,18 @@ export default function ModelsManagement() {
                         Upload Model File
                         <input type="file" hidden accept=".glb,.gltf" onChange={handleModelFileUpload} />
                         {modelFile && <Typography variant="body2">File: {modelFile.name}</Typography>}
-                    </Button>
+                    </Button> */}
+
+                    {openEditor && (
+                        <ModelEditor
+                            modelId={updatedModel ? updatedModel?.id : updatedModel}
+                            action={'UpdateModelManagement'}
+                            handleCloseModal={handleCloseEditor}
+                        />
+                    )}
 
                     {/* Nút Save */}
-                    <Button
+                    {/* <Button
                         variant="contained"
                         color="success"
                         fullWidth
@@ -759,7 +788,7 @@ export default function ModelsManagement() {
                         disabled={isUpdating}
                     >
                         {isUpdating ? <CircularProgress size={24} /> : 'Save'}
-                    </Button>
+                    </Button> */}
 
                     {/* Nút Close */}
                     <Button onClick={handleCloseUpdateModal} variant="contained" color="error" fullWidth sx={{ mt: 2 }}>
@@ -820,8 +849,6 @@ export default function ModelsManagement() {
                             <Typography variant="subtitle1">
                                 <strong>Course Name:</strong> {selectedModel.courseName || 'N/A'}
                             </Typography>
-
-                            {/* Hiển thị ảnh */}
                             {selectedModel.imageUrl && (
                                 <Box sx={{ mt: 2, textAlign: 'center' }}>
                                     <img

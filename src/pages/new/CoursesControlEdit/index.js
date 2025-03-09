@@ -190,7 +190,11 @@ export default function CoursesControlEdit() {
         try {
             setIsLoadingCourse(true);
             const response = await CourseAPI.getById(courseId);
-            setCourse(response?.result);
+            if (response?.result) {
+                setCourse(response.result);
+            } else {
+                console.warn('Received null course data');
+            }
         } catch (error) {
             console.error('Failed to fetch course:', error);
         } finally {
@@ -610,14 +614,17 @@ export default function CoursesControlEdit() {
     const handleStartCourse = async () => {
         try {
             setIsLoadingStartCourse(true);
-            if (!course) return;
+            if (!courseId) {
+                console.error('courseId is null');
+                return;
+            }
             const updateResponse = await CourseAPI.changeStatus(courseId);
-            fetchCourse();
+            window.location.reload();
         } catch (error) {
             console.error('Failed to update course status:', error);
         } finally {
             setIsLoadingStartCourse(false);
-            setOpenCourseStatusDialog(false); // Close dialog
+            setOpenCourseStatusDialog(false);
         }
     };
 
@@ -663,6 +670,7 @@ export default function CoursesControlEdit() {
         setCurrentSectionId(instructionId);
         setNewLessonData({});
         setOpenAddLessonDialog(true);
+        setOpenEditor(true);
     };
 
     const handleLessonTypeChange = (e) => {
@@ -1243,41 +1251,41 @@ export default function CoursesControlEdit() {
         }
 
         // Validate instructionDetailRequest.name
-        if (instructionDetailRequest.name.trim().length < 5 || instructionDetailRequest.name.trim().length > 50) {
-            return toast.error('Detail name must be between 5 and 50 characters.', { position: 'top-right' });
-        }
+        // if (instructionDetailRequest.name.trim().length < 5 || instructionDetailRequest.name.trim().length > 50) {
+        //     return toast.error('Detail name must be between 5 and 50 characters.', { position: 'top-right' });
+        // }
 
-        // Validate instructionDetailRequest.description
-        if (
-            instructionDetailRequest.description.trim().length < 10 ||
-            instructionDetailRequest.description.trim().length > 200
-        ) {
-            return toast.error('Detail description must be between 10 and 200 characters.', { position: 'top-right' });
-        }
+        // // Validate instructionDetailRequest.description
+        // if (
+        //     instructionDetailRequest.description.trim().length < 10 ||
+        //     instructionDetailRequest.description.trim().length > 200
+        // ) {
+        //     return toast.error('Detail description must be between 10 and 200 characters.', { position: 'top-right' });
+        // }
 
-        // Validate file3D
-        if (!file3D) {
-            return toast.error('Please select a 3D file.', { position: 'top-right' });
-        }
+        // // Validate file3D
+        // if (!file3D) {
+        //     return toast.error('Please select a 3D file.', { position: 'top-right' });
+        // }
 
-        // Validate image
-        if (!image) {
-            return toast.error('Please select an image.', { position: 'top-right' });
-        }
+        // // Validate image
+        // if (!image) {
+        //     return toast.error('Please select an image.', { position: 'top-right' });
+        // }
 
-        // Validate guideViewPosition.translation (Tất cả phải khác 0 và không được để trống)
-        if (guideViewPosition.translation.some((value) => !value || Number(value) === 0)) {
-            return toast.error('Translation values (X, Y, Z) must all be non-zero and non-empty.', {
-                position: 'top-right',
-            });
-        }
+        // // Validate guideViewPosition.translation (Tất cả phải khác 0 và không được để trống)
+        // if (guideViewPosition.translation.some((value) => !value || Number(value) === 0)) {
+        //     return toast.error('Translation values (X, Y, Z) must all be non-zero and non-empty.', {
+        //         position: 'top-right',
+        //     });
+        // }
 
-        // Validate guideViewPosition.rotation (Tất cả phải khác 0 và không được để trống)
-        if (guideViewPosition.rotation.some((value) => !value || Number(value) === 0)) {
-            return toast.error('Rotation values (Pitch, Yaw, Roll) must all be non-zero and non-empty.', {
-                position: 'top-right',
-            });
-        }
+        // // Validate guideViewPosition.rotation (Tất cả phải khác 0 và không được để trống)
+        // if (guideViewPosition.rotation.some((value) => !value || Number(value) === 0)) {
+        //     return toast.error('Rotation values (Pitch, Yaw, Roll) must all be non-zero and non-empty.', {
+        //         position: 'top-right',
+        //     });
+        // }
 
         setIsCreating(true);
 
@@ -1356,6 +1364,7 @@ export default function CoursesControlEdit() {
         setDescriptionForInstructionDetail('');
         setImageOfInstructionDetail(null);
         setImagePreview('');
+        setOpenEditor(false);
     };
 
     const [imageOfInstructionDetail, setImageOfInstructionDetail] = useState(null);
@@ -1413,18 +1422,6 @@ export default function CoursesControlEdit() {
         // Kiểm tra descriptionForInstruction (10 - 200 ký tự)
         if (descriptionForInstruction.trim().length < 10 || descriptionForInstruction.trim().length > 200) {
             toast.error('Instruction description must be between 10 and 200 characters.');
-            return;
-        }
-
-        // Kiểm tra giá trị của translationForInstruction (x, y, z phải khác 0)
-        if (translationForInstruction.some((val) => val === 0 || isNaN(val))) {
-            toast.error('Translation values (X, Y, Z) must be non-zero numbers.');
-            return;
-        }
-
-        // Kiểm tra giá trị của rotationForInstruction (pitch, yaw, roll phải khác 0)
-        if (rotationForInstruction.some((val) => val === 0 || isNaN(val))) {
-            toast.error('Rotation values (Pitch, Yaw, Roll) must be non-zero numbers.');
             return;
         }
 
@@ -1647,6 +1644,14 @@ export default function CoursesControlEdit() {
         }
     };
 
+    const [openEditor, setOpenEditor] = useState(false);
+
+    const handleCloseEditor = () => {
+        setOpenEditor(false);
+        setOpenAddLessonDialog(false);
+        fetchInstructionByCourseId();
+    };
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             <Box
@@ -1772,6 +1777,7 @@ export default function CoursesControlEdit() {
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
                         <Tab label="Model" value="1" />
+                        <Tab label="3D Model Viewer" value="5" />
                         <Tab label="Instruction" value="2" />
                         {/* <Tab label="Assign Employee" value="4" /> */}
                     </TabList>
@@ -1894,13 +1900,19 @@ export default function CoursesControlEdit() {
                                     </Box>
                                 </Box>
                             </Box>
-                            <Box sx={{ mt: 4 }}>
-                                <ModelEditor model={model ? getImage(model?.file) : modelTest} />
-                            </Box>
+                            {/* <Box sx={{ mt: 4 }}>
+                                <ModelEditor modelId={model ? model?.id : modelTest} action={'UpdateModelGuideline'} />
+                            </Box> */}
                         </Box>
                     )}
                 </TabPanel>
-
+                <TabPanel value="5">
+                    <Box>
+                        <Box sx={{ mt: 4 }}>
+                            <ModelEditor modelId={model ? model?.id : modelTest} action={'UpdateModelGuideline'} />
+                        </Box>
+                    </Box>
+                </TabPanel>
                 {/* ================= TabPanel 1: Sections ================= */}
                 <TabPanel value="2">
                     <Box>
@@ -2069,9 +2081,9 @@ export default function CoursesControlEdit() {
                                                                         color: 'blue',
                                                                     },
                                                                 }}
-                                                                onClick={() =>
-                                                                    handleOpenLessonDialog(instructionDetail)
-                                                                }
+                                                                // onClick={() =>
+                                                                //     handleOpenLessonDialog(instructionDetail)
+                                                                // }
                                                             >
                                                                 {instructionDetail.name}
                                                             </Typography>
@@ -2647,7 +2659,7 @@ export default function CoursesControlEdit() {
                         onChange={(e) => setInstructionDescription(e.target.value)}
                     />
 
-                    <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                    {/* <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
                         Translation (X, Y, Z)
                     </Typography>
                     <Box display="flex" gap={2}>
@@ -2726,7 +2738,7 @@ export default function CoursesControlEdit() {
                             <input type="file" accept=".glb,.gltf" onChange={handle3DFileSelect} hidden />
                         </Button>
                         {file3D && <Typography variant="body2">{file3D.name}</Typography>}
-                    </Box>
+                    </Box> */}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddSectionDialog} disabled={isCreatingSection}>
@@ -2761,7 +2773,7 @@ export default function CoursesControlEdit() {
                         margin="dense"
                     />
 
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    {/* <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                         {['X', 'Y', 'Z'].map((axis, index) => (
                             <TextField
                                 key={axis}
@@ -2793,7 +2805,7 @@ export default function CoursesControlEdit() {
                                 margin="dense"
                             />
                         ))}
-                    </div>
+                    </div> */}
                 </DialogContent>
                 <DialogActions>
                     <Button
@@ -2814,86 +2826,19 @@ export default function CoursesControlEdit() {
                 </DialogActions>
             </Dialog>
             {/* ==================== Add Lesson Dialog ==================== */}
-            <Dialog open={openAddLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="sm">
+            <Dialog open={openAddLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Add New Instruction Detail</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ minHeight: '80vh' }}>
                     <DialogContentText sx={{ mb: 2 }}>
                         Please fill out the form below to create a new instruction detail.
                     </DialogContentText>
-
-                    {/* Name Input */}
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        required
-                        label="Name"
-                        value={nameForInstructionDetail}
-                        onChange={(e) => setNameForInstructionDetail(e.target.value)}
-                    />
-                    {/* Description Input */}
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Description"
-                        multiline
-                        minRows={2}
-                        value={descriptionForInstructionDetail}
-                        onChange={(e) => setDescriptionForInstructionDetail(e.target.value)}
-                    />
-
-                    {/* Upload Image */}
-                    <Typography variant="body2" sx={{ mt: 2 }}>
-                        Select an image (required):
-                    </Typography>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        hidden
-                        id="upload-image"
-                        onChange={handleImageSelectForInstructionDetail}
-                    />
-                    <label htmlFor="upload-image">
-                        <Button variant="contained" component="span" fullWidth color="primary" sx={{ mt: 1, mb: 1 }}>
-                            {imageForInstructionDetail ? 'Change Image' : 'Upload Image'}
-                        </Button>
-                    </label>
-
-                    {/* Hiển thị ảnh preview nếu có */}
-                    {imagePreview && (
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <img
-                                src={imagePreview}
-                                alt="Preview"
-                                style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: '8px' }}
-                            />
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                {imageForInstructionDetail?.name}
-                            </Typography>
-                        </Box>
-                    )}
-
-                    {/* Upload 3D File */}
-                    <Typography variant="body2" sx={{ mt: 2 }}>
-                        Select 3D file (required, e.g. .glb):
-                    </Typography>
-                    <input
-                        type="file"
-                        accept=".glb,.gltf"
-                        hidden
-                        id="upload-3d-file"
-                        onChange={handle3DFileSelectForInstructionDetail}
-                    />
-                    <label htmlFor="upload-3d-file">
-                        <Button variant="contained" component="span" fullWidth color="primary" sx={{ mt: 1, mb: 1 }}>
-                            {file3DForInstructionDetail ? 'Change 3D Model' : 'Upload 3D Model'}
-                        </Button>
-                    </label>
-
-                    {/* Hiển thị tên file 3D nếu có */}
-                    {file3DForInstructionDetail && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            File: {file3DForInstructionDetail.name}
-                        </Typography>
+                    {openEditor && (
+                        <ModelEditor
+                            modelId={model ? model?.id : modelTest}
+                            action={'CreateInstructionDetail'}
+                            currentInstructionId={currentSectionId}
+                            handleCloseModal={handleCloseEditor}
+                        />
                     )}
                 </DialogContent>
 
@@ -2901,25 +2846,29 @@ export default function CoursesControlEdit() {
                     <Button onClick={handleCloseAddLessonDialog} disabled={isCreatingLesson}>
                         Cancel
                     </Button>
-                    <Button
+                    {/* <Button
                         onClick={handleCreateInstructionDetail}
                         disabled={isCreatingForInstructionDetail}
                         variant="contained"
                         color="primary"
                     >
                         {isCreatingForInstructionDetail ? <CircularProgress size={24} /> : 'Create'}
-                    </Button>
+                    </Button> */}
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={openUpdateLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="sm">
+            <Dialog open={openUpdateLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Update Instruction Detail</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ minHeight: '80vh' }}>
                     <DialogContentText sx={{ mb: 2 }}>
                         Please fill out the form below to update a new instruction detail.
                     </DialogContentText>
-
-                    <TextField
+                    <ModelEditor
+                        modelId={model ? model?.id : modelTest}
+                        action={'UpdateInstructionDetail'}
+                        currentInstructionDetailId={currentInstructionDetailId}
+                    />
+                    {/* <TextField
                         fullWidth
                         margin="normal"
                         required
@@ -2992,7 +2941,7 @@ export default function CoursesControlEdit() {
                                 {file3DForInstructionDetail ? file3DForInstructionDetail.name : fileOfInstructionDetail}
                             </Typography>
                         )}
-                    </Button>
+                    </Button> */}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseAddLessonDialog} disabled={isUpdatingForInstructionDetail}>
