@@ -27,12 +27,14 @@ export default function PackagesDialog({
     openPackagesDialog,
     handleClosePackagesDialog,
     subscriptions,
+    currentPlan,
 }) {
     // State cho Delete và Update
     const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
     const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
     const [selectedSubscription, setSelectedSubscription] = useState(null);
     const [isCreateLoading, setIsCreateLoading] = useState(false);
+    const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
 
     // State cho Create Subscription
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -184,7 +186,7 @@ export default function PackagesDialog({
                                 <Box
                                     sx={{
                                         backgroundColor: '#051D40',
-                                        height: '350px',
+                                        height: '400px',
                                         borderRadius: '20px',
                                         p: 3,
                                         textAlign: 'center',
@@ -221,7 +223,7 @@ export default function PackagesDialog({
                                         variant="h4"
                                         sx={{ fontWeight: 700, fontSize: 48, color: 'white', mt: 2 }}
                                     >
-                                        {formatNumber(subscription?.monthlyFee)}
+                                        {formatNumber(subscription?.monthlyFee)} {subscription?.currency}
                                     </Typography>
                                     <Typography
                                         component="h1"
@@ -230,6 +232,61 @@ export default function PackagesDialog({
                                     >
                                         monthly
                                     </Typography>
+
+                                    {userInfo.roleName !== 'ADMIN' && (
+                                        <Button
+                                            type="submit"
+                                            fullWidth
+                                            variant="contained"
+                                            onClick={() => {
+                                                if (
+                                                    userInfo.currentPlan === null ||
+                                                    (userInfo?.currentPlan !== subscription?.subscriptionCode &&
+                                                        currentPlan?.monthlyFee <= subscription?.monthlyFee)
+                                                ) {
+                                                    handleGoCheckout(subscription?.subscriptionCode);
+                                                }
+                                            }}
+                                            sx={
+                                                userInfo?.currentPlan !== subscription?.subscriptionCode
+                                                    ? {
+                                                          mt: 2,
+                                                          bgcolor: '#051D40',
+                                                          borderRadius: '24px',
+                                                          padding: '12px 0',
+                                                          fontSize: '16px',
+                                                          ':hover': {
+                                                              bgcolor: '#02F18D',
+                                                              color: '#051D40',
+                                                          },
+                                                          border: '1px solid #02F18D',
+                                                          maxHeight: '54px',
+                                                      }
+                                                    : {
+                                                          mt: 2,
+                                                          borderRadius: '24px',
+                                                          padding: '12px 0',
+                                                          fontSize: '16px',
+                                                          ':hover': {
+                                                              bgcolor: '#02F18D',
+                                                              color: '#051D40',
+                                                          },
+                                                          border: '1px solid #02F18D',
+                                                          maxHeight: '54px',
+                                                          bgcolor: '#02F18D',
+                                                          color: '#051D40',
+                                                      }
+                                            }
+                                        >
+                                            {userInfo?.currentPlan === subscription?.subscriptionCode ? (
+                                                'Current Plan'
+                                            ) : isLoadingCheckout ? (
+                                                <CircularProgress />
+                                            ) : (
+                                                'Subscribe'
+                                            )}
+                                        </Button>
+                                    )}
 
                                     <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
                                         <Box
@@ -257,7 +314,7 @@ export default function PackagesDialog({
                                                 <Check />
                                             </Box>
                                             <Typography sx={{ fontWeight: 500, fontSize: 20, color: '#fff', ml: 1 }}>
-                                                {subscription?.maxStorageUsage} MB storage
+                                                {subscription?.maxStorageUsage} {subscription?.storageUnit} storage
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -297,18 +354,6 @@ export default function PackagesDialog({
                             <TextField
                                 fullWidth
                                 required
-                                label="Subscription Code"
-                                value={selectedSubscription.subscriptionCode || ''}
-                                onChange={(e) =>
-                                    setSelectedSubscription({
-                                        ...selectedSubscription,
-                                        subscriptionCode: e.target.value,
-                                    })
-                                }
-                            />
-                            <TextField
-                                fullWidth
-                                required
                                 label="Max Employees"
                                 type="number"
                                 value={selectedSubscription.maxNumberOfUsers || ''}
@@ -322,7 +367,7 @@ export default function PackagesDialog({
                             <TextField
                                 fullWidth
                                 required
-                                label="Max Models"
+                                label="Max Storage (GB)"
                                 type="number"
                                 value={selectedSubscription.maxStorageUsage || ''}
                                 onChange={(e) =>
@@ -381,7 +426,7 @@ export default function PackagesDialog({
                         <TextField
                             fullWidth
                             required
-                            label="Max Models"
+                            label="Max Storage (GB)"
                             type="number"
                             name="maxStorageUsage"
                             value={newSubscription.maxStorageUsage}

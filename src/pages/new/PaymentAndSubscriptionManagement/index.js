@@ -34,7 +34,17 @@ export default function PaymentAndSubscriptionManagement() {
     const [isLoadingClickPurchase, setIsLoadingClickPurchase] = useState(false);
     const [openPackagesDialog, setOpenPackagesDialog] = useState(false);
     const [subscriptions, setSubScriptions] = useState([]);
+    const [currentPlan, setCurrentPlan] = useState(null);
+    const fetchCurrentPlan = async () => {
+        try {
+            const response = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
+            setCurrentPlan(response?.result || null);
+        } catch (error) {}
+    };
 
+    useEffect(() => {
+        fetchCurrentPlan();
+    }, []);
     const handleOpenPackagesDialog = () => {
         fetchSubscriptions();
         setOpenPackagesDialog(true);
@@ -140,8 +150,8 @@ export default function PaymentAndSubscriptionManagement() {
                 response = await PaymentAPI.getPayments(params);
                 data = response?.result?.objectList || [];
             } else if (userInfo?.roleName === 'COMPANY') {
-                data = response?.result?.objectList || [];
                 response = await PaymentAPI.getPaymentsByCompanyId(userInfo?.company?.id, params);
+                data = response?.result?.objectList || [];
             }
             for (let i = 0; i < data.length; i++) {
                 const company = await CompanyAPI.getByUserId(data[i].userId);
@@ -240,6 +250,7 @@ export default function PaymentAndSubscriptionManagement() {
                                     openPackagesDialog={openPackagesDialog}
                                     handleClosePackagesDialog={handleClosePackagesDialog}
                                     subscriptions={subscriptions}
+                                    currentPlan={currentPlan}
                                 />
 
                                 <Copyright sx={{ mt: 5 }} />

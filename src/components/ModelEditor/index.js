@@ -950,6 +950,7 @@ export default function SimplifiedModelViewer({
                                     <>
                                         {/* Name */}
                                         <TextField
+                                            required
                                             label="Name"
                                             variant="outlined"
                                             fullWidth
@@ -1002,6 +1003,7 @@ export default function SimplifiedModelViewer({
 
                                         {/* Code */}
                                         <TextField
+                                            required
                                             label="Code"
                                             variant="outlined"
                                             name="code"
@@ -1054,7 +1056,7 @@ export default function SimplifiedModelViewer({
                                             startIcon={<CloudUploadIcon />}
                                             sx={{ mt: 2 }}
                                         >
-                                            Upload Image
+                                            Upload Image *
                                             <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
                                         </Button>
 

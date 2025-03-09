@@ -68,6 +68,16 @@ export default function CoursesControlEdit() {
         setExpandedFAQ(isExpanded ? panel : false);
     };
 
+    const handleCheckIsCurrentPlanIsNull = () => {
+        if (userInfo?.currentPlan === null) {
+            navigate('/company/payment-subscription-management');
+        }
+    };
+
+    useEffect(() => {
+        handleCheckIsCurrentPlanIsNull();
+    }, []);
+
     // ==================== Quiz & Questions State ====================
     const [quiz, setQuiz] = useState(null);
     const [questions, setQuestions] = useState([]);

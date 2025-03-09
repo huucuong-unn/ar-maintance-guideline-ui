@@ -24,6 +24,10 @@ const PaymentAPI = {
         const url = `v1/payment/dashboard`;
         return axiosClient.get(url);
     },
+    getCurrentPlanByCompanyId(id) {
+        const url = `/v1/company-subscription/company/${id}`;
+        return axiosClient.get(url);
+    },
 };
 
 export default PaymentAPI;

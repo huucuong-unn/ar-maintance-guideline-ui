@@ -14,6 +14,7 @@ import {
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AccountAPI from '~/API/AccountAPI';
@@ -33,6 +34,8 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function EmployeesManagement() {
+    const navigate = useNavigate();
+
     const [rows, setRows] = useState([]);
     const [searchParams, setSearchParams] = useState({
         username: '',
@@ -268,6 +271,16 @@ export default function EmployeesManagement() {
         return `${month}/${day}/${year}`;
     };
 
+    const handleCheckIsCurrentPlanIsNull = () => {
+        if (userInfo?.currentPlan === null) {
+            navigate('/company/payment-subscription-management');
+        }
+    };
+
+    useEffect(() => {
+        handleCheckIsCurrentPlanIsNull();
+    }, []);
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Container
@@ -359,6 +372,7 @@ export default function EmployeesManagement() {
                                 name="email"
                                 value={newEmployee.email}
                                 onChange={handleInputChange}
+                                type="email"
                             />
 
                             <TextField
@@ -389,6 +403,7 @@ export default function EmployeesManagement() {
                                 name="phone"
                                 value={newEmployee.phone}
                                 onChange={handleInputChange}
+                                type="number"
                             />
 
                             <TextField fullWidth label="Company" name="company" value={newEmployee.company} disabled />

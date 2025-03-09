@@ -195,6 +195,16 @@ export default function CoursesControl() {
         }
     };
 
+    const handleCheckIsCurrentPlanIsNull = () => {
+        if (userInfo?.currentPlan === null) {
+            navigate('/company/payment-subscription-management');
+        }
+    };
+
+    useEffect(() => {
+        handleCheckIsCurrentPlanIsNull();
+    }, []);
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box

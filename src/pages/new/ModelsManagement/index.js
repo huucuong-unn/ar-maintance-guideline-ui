@@ -100,6 +100,16 @@ export default function ModelsManagement() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
+    const handleCheckIsCurrentPlanIsNull = () => {
+        if (userInfo?.currentPlan === null) {
+            navigate('/company/payment-subscription-management');
+        }
+    };
+
+    useEffect(() => {
+        handleCheckIsCurrentPlanIsNull();
+    }, []);
+
     const handleOpenConfirmDelete = () => {
         setConfirmDeleteOpen(true);
     };

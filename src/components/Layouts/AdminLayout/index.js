@@ -1,6 +1,6 @@
 import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
 
-import { Box, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import { Alert, Box, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 
 import Logout from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -12,7 +12,8 @@ import { AlignJustify } from 'lucide-react';
 
 import { MainListItems, SecondaryListItems } from '~/components/listItems';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import storageService from '~/components/StorageService/storageService';
 
 const drawerWidth = 240;
 
@@ -189,10 +190,35 @@ export function Sidebar() {
 
 export default function AdminLayout({ children }) {
     const theme = useTheme();
+    const user = storageService.getItem('userInfo')?.user || null;
+
+    const [showAlertError, setShowAlertError] = useState(false);
+
+    const checkSubscription = async () => {
+        try {
+            if (user?.currentPlan === null) {
+                setShowAlertError(true);
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+            setShowAlertError(true);
+        }
+    };
+    useEffect(() => {
+        checkSubscription();
+    }, []);
+
     return (
         <ThemeProvider theme={defaultTheme}>
+            {showAlertError && (
+                <Alert width="50%" variant="filled" severity="error">
+                    Your subscription has expired or you do not subscribe any. Please view subscription packages and
+                    subscribe one
+                </Alert>
+            )}
             <Box sx={{ display: 'flex' }}>
                 <Sidebar />
+
                 <Box
                     component="main"
                     sx={{

@@ -29,29 +29,16 @@ export default function DashboardManagement() {
     const [totalRevenue, setTotalRevenue] = useState(0);
 
     useEffect(() => {
-        const fetchBlogs = async () => {
-            try {
-                const response = await AccountAPI.getAllAccount();
-                setNumberOfAccounts(response.length);
-            } catch (error) {
-                console.log('Failed to fetch accounts: ', error);
-            }
-        };
         fetchBlogs();
-
-        const fetchPaymentsDashboard = async () => {
-            try {
-                const response = await PaymentAPI.getPaymentsDashboard();
-                setTotalRevenue(response?.totalAllPayment);
-                console.log(response);
-            } catch (error) {
-                console.log('Failed to fetch payments: ', error);
-            }
-        };
-
-        fetchBlogs();
-        fetchPaymentsDashboard();
     }, []);
+    const fetchBlogs = async () => {
+        try {
+            const response = await AccountAPI.getAllAccount();
+            setNumberOfAccounts(response.length);
+        } catch (error) {
+            console.log('Failed to fetch accounts: ', error);
+        }
+    };
 
     return (
         <ThemeProvider theme={defaultTheme}>
