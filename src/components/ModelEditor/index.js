@@ -687,7 +687,9 @@ export default function SimplifiedModelViewer({
 
     const handleCreateInstructionDetail = async () => {
         const trimmedName = formData.instructionDetailName.trim();
-        const trimmedDescription = formData.instructionDetailDescription.trim();
+        const trimmedDescription = formData.instructionDetailDescription
+            ? formData.instructionDetailDescription.trim()
+            : '';
 
         if (trimmedName.length < 5 || trimmedName.length > 50) {
             return toast.error('Name must be between 5 and 50 characters.');
