@@ -619,9 +619,20 @@ export default function CoursesControlEdit() {
                 return;
             }
             const updateResponse = await CourseAPI.changeStatus(courseId);
+            console.log(updateResponse);
             window.location.reload();
         } catch (error) {
-            console.error('Failed to update course status:', error);
+            if (error?.response?.data?.code === 1096) {
+                toast.error('Cannot activate this guideline as its model is inactive.', {
+                    position: 'top-right',
+                });
+            } else if (error?.response?.data?.code === 1098) {
+                toast.error('This guideline requires at least one instruction detail to be activated.', {
+                    position: 'top-right',
+                });
+            } else {
+                console.error('Failed to update guideline status:', error);
+            }
         } finally {
             setIsLoadingStartCourse(false);
             setOpenCourseStatusDialog(false);
