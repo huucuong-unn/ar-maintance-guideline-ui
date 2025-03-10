@@ -5,27 +5,22 @@ import CloseIcon from '@mui/icons-material/Close';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
-import ModelEditor from '~/components/ModelEditor';
 import {
     Box,
     Button,
     Card,
     CardContent,
     Chip,
-    CircularProgress,
+    Container,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
     Divider,
-    FormControl,
     Grid,
-    InputLabel,
-    MenuItem,
     Modal,
     Paper,
-    Select,
     TextField,
     Typography,
 } from '@mui/material';
@@ -37,7 +32,10 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModelAPI from '~/API/ModelAPI';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
+import PaymentAPI from '~/API/PaymentAPI';
+import SubscriptionAPI from '~/API/SubscriptionAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
 import { getImage } from '~/Constant';
 
@@ -56,9 +54,7 @@ const defaultTheme = createTheme();
 export default function ModelsManagement() {
     const navigate = useNavigate();
     // Data states
-    const [models, setModels] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
 
     // Create Model Dialog state
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -105,9 +101,23 @@ export default function ModelsManagement() {
             navigate('/company/payment-subscription-management');
         }
     };
+    const [disableCreateModel, setDisableCreateModel] = useState(false);
+
+    const checkCurrentStorageIsOverCurrentPlan = async () => {
+        try {
+            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(userInfo?.company?.id);
+            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
+            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
+                setDisableCreateModel(true);
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    };
 
     useEffect(() => {
         handleCheckIsCurrentPlanIsNull();
+        checkCurrentStorageIsOverCurrentPlan();
     }, []);
 
     const handleOpenConfirmDelete = () => {
@@ -146,12 +156,12 @@ export default function ModelsManagement() {
 
     const columns = [
         { field: 'modelCode', headerName: 'Model Code', width: 200 },
-        { field: 'name', headerName: 'Name', width: 200 },
-        { field: 'courseName', headerName: 'Course Name', width: 250 },
+        { field: 'name', headerName: 'Name', width: 350 },
+        { field: 'courseName', headerName: 'Guideline Name', width: 350 },
         {
             field: 'isUsed',
             headerName: 'Is Used',
-            width: 80,
+            width: 100,
             renderCell: (params) => (
                 <Chip
                     label={params.value ? 'Yes' : 'No'}
@@ -178,7 +188,7 @@ export default function ModelsManagement() {
                         handleOpenUpdateModal(params.row.id);
                     }}
                 >
-                    Update
+                    Action
                 </Button>
             ),
         },
@@ -466,114 +476,113 @@ export default function ModelsManagement() {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Grid
-                container
-                component="main"
-                item
+            <Container
+                maxWidth="xl"
                 sx={{
-                    backgroundRepeat: 'no-repeat',
-                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
+                    py: 4,
+                    minHeight: '100vh',
+                    background: `url(${adminLoginBackground}) no-repeat center center`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundImage: `url(${adminLoginBackground})`,
-                    height: '100vh',
-                    width: '100%',
                     display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
                     flexDirection: 'column',
                 }}
             >
-                <Typography
-                    component="h1"
-                    variant="h4"
-                    sx={{
-                        fontWeight: '900',
-                        fontSize: '46px',
-                        color: '#051D40',
-                        // zIndex: 1,
-                        position: 'absolute',
-                        top: '3%',
-                        left: '20%',
-                    }}
-                >
-                    Models
-                </Typography>
-
-                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8 }}>
-                    {/* Search by email */}
-                    <TextField
-                        variant="outlined"
-                        label="Search by Name"
-                        sx={{ width: '300px' }}
-                        value={nameSearch}
-                        onChange={(e) => setNameSearch(e.target.value)}
-                    />
-                    <TextField
-                        variant="outlined"
-                        label="Search by Code"
-                        sx={{ width: '300px' }}
-                        value={codeSearch}
-                        onChange={(e) => setCodeSearch(e.target.value)}
-                    />
-                    <TextField
-                        variant="outlined"
-                        label="Search by Type"
-                        sx={{ width: '300px' }}
-                        value={typeSearch}
-                        onChange={(e) => setTypeSearch(e.target.value)}
-                    />
-
-                    {/* Search button */}
-                    <Button
-                        variant="contained"
-                        sx={{ ml: 'auto' }}
-                        onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
-                    >
-                        Search
-                    </Button>
-                    <Button variant="contained" sx={{ ml: 'auto' }} onClick={handleOpenCreateDialog}>
-                        Create
-                    </Button>
-                </Box>
-
-                <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '90%' }}>
-                    <Box
+                <Box sx={{ mb: 4 }}>
+                    <Typography
+                        component="h1"
+                        variant="h4"
                         sx={{
-                            my: 8,
-                            mx: 4,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
+                            fontWeight: '900',
+                            fontSize: '36px',
+                            color: '#051D40',
+                            mb: 4,
                         }}
                     >
-                        <Box sx={{ width: '100%', typography: 'body1' }}>
-                            <Paper sx={{ height: 450, width: '100%' }}>
-                                {' '}
-                                <DataGrid
-                                    rows={rows}
-                                    columns={columns}
-                                    rowCount={total}
-                                    paginationMode="server"
-                                    paginationModel={paginationModel}
-                                    onPaginationModelChange={(newModel) => {
-                                        setPaginationModel((prev) => ({
-                                            ...prev,
-                                            page: newModel.page,
-                                        }));
-                                    }}
-                                    sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                    getRowId={(row) => row.id}
-                                    slots={{ toolbar: GridToolbar }}
-                                    onRowClick={(params) => handleOpenModal(params.row.id)}
-                                />
-                            </Paper>
+                        Models Management
+                    </Typography>
 
-                            <Copyright sx={{ mt: 5 }} />
-                        </Box>
+                    <Box sx={{ mb: 4 }}>
+                        <Button
+                            disabled={disableCreateModel}
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#02F18D',
+                                color: '#051D40',
+                                '&:hover': {
+                                    bgcolor: '#051D40',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleOpenCreateDialog}
+                        >
+                            Create Model
+                        </Button>
                     </Box>
-                </Grid>
-            </Grid>
+
+                    <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8, justifyContent: 'right' }}>
+                        {/* Search by email */}
+                        <TextField
+                            variant="outlined"
+                            label="Search by Name"
+                            sx={{ width: '300px' }}
+                            value={nameSearch}
+                            onChange={(e) => setNameSearch(e.target.value)}
+                        />
+                        <TextField
+                            variant="outlined"
+                            label="Search by Code"
+                            sx={{ width: '300px' }}
+                            value={codeSearch}
+                            onChange={(e) => setCodeSearch(e.target.value)}
+                        />
+                        {/* Search button */}
+                        <Button
+                            variant="contained"
+                            onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
+                        >
+                            Search
+                        </Button>
+                    </Box>
+
+                    <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+                        <Box
+                            sx={{
+                                my: 8,
+                                mx: 4,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Box sx={{ width: '100%', typography: 'body1' }}>
+                                <Paper sx={{ height: 450, width: '100%' }}>
+                                    {' '}
+                                    <DataGrid
+                                        rows={rows}
+                                        columns={columns}
+                                        rowCount={total}
+                                        paginationMode="server"
+                                        paginationModel={paginationModel}
+                                        onPaginationModelChange={(newModel) => {
+                                            setPaginationModel((prev) => ({
+                                                ...prev,
+                                                page: newModel.page,
+                                            }));
+                                        }}
+                                        sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                                        getRowId={(row) => row.id}
+                                        slots={{ toolbar: GridToolbar }}
+                                        onRowClick={(params) => handleOpenModal(params.row.id)}
+                                    />
+                                </Paper>
+
+                                <Copyright sx={{ mt: 5 }} />
+                            </Box>
+                        </Box>
+                    </Grid>
+                </Box>
+            </Container>
             {/* Create Model Dialog */}
             <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Create New Model</DialogTitle>
@@ -801,7 +810,12 @@ export default function ModelsManagement() {
                     </Button> */}
 
                     {/* Nút Close */}
-                    <Button onClick={handleCloseUpdateModal} variant="contained" color="error" fullWidth sx={{ mt: 2 }}>
+                    <Button
+                        onClick={handleCloseUpdateModal}
+                        variant="contained"
+                        color="error"
+                        sx={{ mt: 2, float: 'right' }}
+                    >
                         Close
                     </Button>
                 </Box>

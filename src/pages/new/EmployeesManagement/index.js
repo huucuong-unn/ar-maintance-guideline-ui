@@ -18,6 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AccountAPI from '~/API/AccountAPI';
+import PaymentAPI from '~/API/PaymentAPI';
+import SubscriptionAPI from '~/API/SubscriptionAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
 
@@ -277,8 +279,23 @@ export default function EmployeesManagement() {
         }
     };
 
+    const [disableCreateEmployee, setDisableCreateEmployee] = useState(false);
+
+    const checkCurrentStorageIsOverCurrentPlan = async () => {
+        try {
+            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(userInfo?.company?.id);
+            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
+            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
+                setDisableCreateEmployee(true);
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    };
+
     useEffect(() => {
         handleCheckIsCurrentPlanIsNull();
+        checkCurrentStorageIsOverCurrentPlan();
     }, []);
 
     return (
@@ -311,6 +328,7 @@ export default function EmployeesManagement() {
                     {/* Search and Filter Section */}
                     <Box sx={{ mb: 4 }}>
                         <Button
+                            disabled={disableCreateEmployee}
                             variant="contained"
                             sx={{
                                 bgcolor: '#02F18D',

@@ -25,7 +25,7 @@ const PaymentAPI = {
         return axiosClient.get(url);
     },
     getCurrentPlanByCompanyId(id) {
-        const url = `/v1/company-subscription/company/${id}`;
+        const url = `/v1/subscription/company/${id}`;
         return axiosClient.get(url);
     },
 };

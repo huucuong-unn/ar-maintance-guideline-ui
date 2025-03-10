@@ -14,6 +14,8 @@ import { MainListItems, SecondaryListItems } from '~/components/listItems';
 
 import { useEffect, useState } from 'react';
 import storageService from '~/components/StorageService/storageService';
+import SubscriptionAPI from '~/API/SubscriptionAPI';
+import PaymentAPI from '~/API/PaymentAPI';
 
 const drawerWidth = 240;
 
@@ -193,6 +195,10 @@ export default function AdminLayout({ children }) {
     const user = storageService.getItem('userInfo')?.user || null;
 
     const [showAlertError, setShowAlertError] = useState(false);
+    const [showAlertErrorStorage, setShowAlertErrorStorage] = useState(false);
+    const [showAlertErrorUsers, setShowAlertErrorUsers] = useState(false);
+
+    const [currentStorageAndAccount, setCurrentStorageAndAccount] = useState(null);
 
     const checkSubscription = async () => {
         try {
@@ -204,8 +210,27 @@ export default function AdminLayout({ children }) {
             setShowAlertError(true);
         }
     };
+
+    const checkCurrentStorageIsOverCurrentPlan = async () => {
+        try {
+            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(user?.company?.id);
+            setCurrentStorageAndAccount(response.result);
+            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(user?.company?.id);
+            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
+                setShowAlertErrorStorage(true);
+            }
+
+            if (currentPlan === null || response.result.numberOfUsers > currentPlan.result.maxNumberOfUsers) {
+                setShowAlertErrorUsers(true);
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    };
+
     useEffect(() => {
         checkSubscription();
+        checkCurrentStorageIsOverCurrentPlan();
     }, []);
 
     return (
@@ -216,6 +241,17 @@ export default function AdminLayout({ children }) {
                     subscribe one
                 </Alert>
             )}
+            {(showAlertErrorStorage || showAlertErrorStorage) && (
+                <Alert width="50%" variant="filled" severity="error">
+                    {showAlertErrorStorage
+                        ? '- Over storage of model, please go to action to remove some models or upgrade your subscription'
+                        : ''}{' '}
+                    {showAlertErrorUsers
+                        ? '- Over number of user, please disable some users or upgrade your subscription'
+                        : ''}
+                </Alert>
+            )}
+
             <Box sx={{ display: 'flex' }}>
                 <Sidebar />
 

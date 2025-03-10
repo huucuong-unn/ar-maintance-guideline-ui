@@ -15,6 +15,9 @@ const SubscriptionAPI = {
     updateSubscription(data) {
         return axiosClient.put(`/v1/subscription/${data.id}`, data);
     },
+    getCompanySubscriptionByCompanyId(id) {
+        return axiosClient.get(`/v1/company-subscription/company/${id}`);
+    },
 };
 
 export default SubscriptionAPI;
