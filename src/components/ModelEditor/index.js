@@ -32,6 +32,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    CircularProgress,
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -472,6 +473,11 @@ export default function SimplifiedModelViewer({
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingUpdateModelGuideline, setIsLoadingUpdateModelGuideline] = useState(false);
+    const [isLoadingDeleteModel, setIsLoadingDeleteModel] = useState(false);
+    const [isLoadingCreateInstructionDetail, setIsLoadingCreateInstructionDetail] = useState(false);
+    const [isLoadingUpdateInstructionDetail, setIsLoadingUpdateInstructionDetail] = useState(false);
 
     useEffect(() => {
         if (!modelId) return;
@@ -559,11 +565,15 @@ export default function SimplifiedModelViewer({
 
         // Validate required fields
         if (trimmedName.length < 5 || trimmedName.length > 50) {
+            setLoading(false);
             return toast.error('Name must be between 5 and 50 characters.');
         }
         if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+            setLoading(false);
             return toast.error('Code must be between 5 and 50 characters.');
         }
+
+        setIsLoadingUpdateModelGuideline(true);
 
         try {
             const formDataForUpdate = new FormData();
@@ -587,6 +597,8 @@ export default function SimplifiedModelViewer({
         } catch (error) {
             console.error('Failed to update model:', error);
             toast.error('Failed to update model. Please try again.', { position: 'top-right' });
+        } finally {
+            setIsLoadingUpdateModelGuideline(false);
         }
     };
 
@@ -613,6 +625,7 @@ export default function SimplifiedModelViewer({
 
     const handleDeleteModel = async () => {
         setConfirmDeleteOpen(false);
+        setIsLoadingDeleteModel(true);
         try {
             const response = await ModelAPI.deleteById(modelById.id);
             if (response?.result) {
@@ -623,6 +636,8 @@ export default function SimplifiedModelViewer({
         } catch (error) {
             console.error('Failed to delete model:', error);
             toast.error('Failed to delete model. Please try again.', { position: 'top-right' });
+        } finally {
+            setIsLoadingDeleteModel(false);
         }
     };
 
@@ -638,15 +653,20 @@ export default function SimplifiedModelViewer({
         const trimmedName = formData.name.trim();
         const trimmedCode = formData.code.trim();
 
+        setIsLoading(true);
+
         // Validate required fields
         if (trimmedName.length < 5 || trimmedName.length > 50) {
+            setIsLoading(false);
             return toast.error('Name must be between 5 and 50 characters.');
         }
         if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+            setIsLoading(false);
             return toast.error('Code must be between 5 and 50 characters.');
         }
 
         if (!imageFile) {
+            setIsLoading(false);
             return toast.error('Please select an image.');
         }
 
@@ -678,15 +698,17 @@ export default function SimplifiedModelViewer({
             } else {
                 toast.error('Failed to create model. Please try again.', { position: 'top-right' });
             }
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        console.log(formData);
-    }, [formData]);
+        console.log(loading);
+    }, [loading]);
 
     const handleCreateInstructionDetail = async () => {
-        const trimmedName = formData.instructionDetailName.trim();
+        const trimmedName = formData.instructionDetailName ? formData.instructionDetailName.trim() : '';
         const trimmedDescription = formData.instructionDetailDescription
             ? formData.instructionDetailDescription.trim()
             : '';
@@ -694,6 +716,8 @@ export default function SimplifiedModelViewer({
         if (trimmedName.length < 5 || trimmedName.length > 50) {
             return toast.error('Name must be between 5 and 50 characters.');
         }
+
+        setIsLoadingCreateInstructionDetail(true);
 
         try {
             const formDataToCreateInstructionDetail = new FormData();
@@ -712,6 +736,8 @@ export default function SimplifiedModelViewer({
         } catch (error) {
             console.error('Failed to create instruction detail:', error);
             toast.error('Failed to create instruction detail. Please try again.', { position: 'top-right' });
+        } finally {
+            setIsLoadingCreateInstructionDetail(false);
         }
     };
     const [instructionDetailById, setInstructionDetailById] = useState({});
@@ -780,6 +806,8 @@ export default function SimplifiedModelViewer({
             return toast.error('Name must be between 5 and 50 characters.');
         }
 
+        setIsLoadingUpdateInstructionDetail(true);
+
         try {
             const formDataForUpdateInstructionDetail = new FormData();
             formDataForUpdateInstructionDetail.append('name', trimmedName);
@@ -797,6 +825,8 @@ export default function SimplifiedModelViewer({
         } catch (error) {
             console.error('Failed to update model:', error);
             toast.error('Failed to update model. Please try again.', { position: 'top-right' });
+        } finally {
+            setIsLoadingUpdateInstructionDetail(false);
         }
     };
 
@@ -895,8 +925,8 @@ export default function SimplifiedModelViewer({
                 {/* Canvas */}
                 <Box sx={{ flexGrow: 1, height: 'calc(100vh - 64px)' }}>
                     {modelError ? (
-                        <Typography variant="h6" color="error">
-                            File not found on the server
+                        <Typography variant="h6" color="warning">
+                            File is being uploaded, please wait a moment...
                         </Typography>
                     ) : (
                         <Canvas style={{ background: darkMode ? '#121212' : '#f8f9fa' }}>
@@ -1228,8 +1258,13 @@ export default function SimplifiedModelViewer({
                                         color="error" // Màu đỏ của Material UI
                                         fullWidth
                                         sx={{ mt: 2 }}
+                                        disabled={isLoadingDeleteModel}
                                     >
-                                        Delete Model
+                                        {isLoadingDeleteModel ? (
+                                            <CircularProgress size={24} sx={{ color: 'white' }} />
+                                        ) : (
+                                            'Delete Model'
+                                        )}
                                     </Button>
                                 </>
                             )}
@@ -1291,8 +1326,9 @@ export default function SimplifiedModelViewer({
                                         fullWidth
                                         sx={{ mt: 2 }}
                                         onClick={handleCreateInstructionDetail}
+                                        disabled={isLoadingCreateInstructionDetail}
                                     >
-                                        Create
+                                        {isLoadingCreateInstructionDetail ? <CircularProgress size={24} /> : 'Create'}
                                     </Button>
                                 </>
                             )}
@@ -1375,8 +1411,19 @@ export default function SimplifiedModelViewer({
                                     color="primary"
                                     sx={{ width: '100%' }}
                                     onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
+                                    disabled={isLoading || isLoadingUpdateModelGuideline}
                                 >
-                                    {action === 'CreateModel' ? 'Create' : 'Save changes'}
+                                    {action === 'CreateModel' ? (
+                                        isLoading ? (
+                                            <CircularProgress size={24} sx={{ color: 'white' }} />
+                                        ) : (
+                                            'Create'
+                                        )
+                                    ) : isLoadingUpdateModelGuideline ? (
+                                        <CircularProgress size={24} sx={{ color: 'white' }} />
+                                    ) : (
+                                        'Save changes'
+                                    )}
                                 </Button>
                             </>
                         )}
@@ -1447,8 +1494,13 @@ export default function SimplifiedModelViewer({
                                         },
                                         mt: 2,
                                     }}
+                                    disabled={isLoadingUpdateInstructionDetail}
                                 >
-                                    Save Changes
+                                    {isLoadingUpdateInstructionDetail ? (
+                                        <CircularProgress size={24} sx={{ color: darkMode ? '#000000' : '#ffffff' }} />
+                                    ) : (
+                                        'Save Changes'
+                                    )}
                                 </Button>
                             </>
                         )}

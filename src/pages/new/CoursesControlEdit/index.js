@@ -2968,9 +2968,6 @@ export default function CoursesControlEdit() {
                     <Button onClick={handleCloseAddLessonDialog} disabled={isUpdatingForInstructionDetail}>
                         Cancel
                     </Button>
-                    <Button onClick={handleUpdateInstructionDetail} disabled={isUpdatingForInstructionDetail}>
-                        {isUpdatingForInstructionDetail ? <CircularProgress size={24} /> : 'Update'}
-                    </Button>
                 </DialogActions>
             </Dialog>
 
