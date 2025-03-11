@@ -477,24 +477,29 @@ export default function ModelsManagement() {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Container
-                maxWidth="xl"
+            <Grid
+                container
+                component="main"
+                item
                 sx={{
-                    py: 4,
-                    minHeight: '100vh',
-                    background: `url(${adminLoginBackground}) no-repeat center center`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
                     backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundImage: `url(${adminLoginBackground})`,
+                    height: '100vh',
+                    width: '100%',
                     display: 'flex',
-                    flexDirection: 'column',
+                    justifyContent: 'center',
                 }}
             >
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ my: 4 }}>
                     <Typography
                         component="h1"
                         variant="h4"
                         sx={{
                             fontWeight: '900',
-                            fontSize: '36px',
+                            fontSize: '46px',
                             color: '#051D40',
                             mb: 4,
                         }}
@@ -502,48 +507,60 @@ export default function ModelsManagement() {
                         Models Management
                     </Typography>
 
-                    <Box sx={{ mb: 4 }}>
-                        <Button
-                            disabled={disableCreateModel}
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#02F18D',
-                                color: '#051D40',
-                                '&:hover': {
+                    <Box sx={{ mb: 4 }}></Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 8 }}>
+                        <Box>
+                            <Button
+                                disabled={disableCreateModel}
+                                variant="contained"
+                                sx={{
                                     bgcolor: '#051D40',
                                     color: 'white',
-                                },
-                                p: 2,
+                                    '&:hover': {
+                                        bgcolor: '#02F18D',
+                                        color: '#051D40',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleOpenCreateDialog}
+                            >
+                                Create Model
+                            </Button>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                flexWrap: 'wrap',
+                                justifyContent: 'right',
+                                alignItems: 'center',
                             }}
-                            onClick={handleOpenCreateDialog}
                         >
-                            Create Model
-                        </Button>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8, justifyContent: 'right' }}>
-                        {/* Search by email */}
-                        <TextField
-                            variant="outlined"
-                            label="Search by Name"
-                            sx={{ width: '300px' }}
-                            value={nameSearch}
-                            onChange={(e) => setNameSearch(e.target.value)}
-                        />
-                        <TextField
-                            variant="outlined"
-                            label="Search by Code"
-                            sx={{ width: '300px' }}
-                            value={codeSearch}
-                            onChange={(e) => setCodeSearch(e.target.value)}
-                        />
-                        {/* Search button */}
-                        <Button
-                            variant="contained"
-                            onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
-                        >
-                            Search
-                        </Button>
+                            {/* Search by email */}
+                            <TextField
+                                variant="outlined"
+                                label="Search by Name"
+                                sx={{ width: '300px' }}
+                                value={nameSearch}
+                                onChange={(e) => setNameSearch(e.target.value)}
+                            />
+                            <TextField
+                                variant="outlined"
+                                label="Search by Code"
+                                sx={{ width: '300px' }}
+                                value={codeSearch}
+                                onChange={(e) => setCodeSearch(e.target.value)}
+                            />
+                            {/* Search button */}
+                            <Button
+                                variant="contained"
+                                onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
+                                sx={{ p: 2 }}
+                            >
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
@@ -583,7 +600,7 @@ export default function ModelsManagement() {
                         </Box>
                     </Grid>
                 </Box>
-            </Container>
+            </Grid>
             {/* Create Model Dialog */}
             <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Create New Model</DialogTitle>
