@@ -406,6 +406,15 @@ export default function ModelsManagement() {
         if (e.target.files[0]) {
             setFile3D(e.target.files[0]);
         }
+        setName('');
+        setCode('');
+        setDescription('');
+        setImage(null);
+        setVersion('');
+        setScale('');
+        setModelTypeId('');
+        setOpenCreateDialog(true);
+        setOpenEditor(true);
     };
 
     const handleCreateModel = async () => {
@@ -506,6 +515,7 @@ export default function ModelsManagement() {
                         <Button
                             disabled={disableCreateModel}
                             variant="contained"
+                            component="label"
                             sx={{
                                 bgcolor: '#02F18D',
                                 color: '#051D40',
@@ -515,9 +525,9 @@ export default function ModelsManagement() {
                                 },
                                 p: 2,
                             }}
-                            onClick={handleOpenCreateDialog}
                         >
                             Create Model
+                            <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
                         </Button>
                     </Box>
 
@@ -649,7 +659,7 @@ export default function ModelsManagement() {
                     </Button> */}
 
                     {/* Upload Model File */}
-                    <Typography variant="body2" sx={{ mt: 2 }}>
+                    {/* <Typography variant="body2" sx={{ mt: 2 }}>
                         Select 3D file (required, e.g. .glb):
                     </Typography>
                     <Button
@@ -661,7 +671,7 @@ export default function ModelsManagement() {
                     >
                         Upload Model File
                         <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
-                    </Button>
+                    </Button> */}
                     {file3D && (
                         <>
                             <Typography variant="body2" sx={{ mt: 1 }}>
