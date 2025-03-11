@@ -42,7 +42,7 @@ import { getImage } from '~/Constant';
 function Copyright(props) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright ©Tortee '}
+            {'Copyright ©ARGuideline '}
             {new Date().getFullYear()}
             {'.'}
         </Typography>
@@ -173,6 +173,7 @@ export default function ModelsManagement() {
                 />
             ),
         },
+        { field: 'status', headerName: 'Status', width: 150 },
         {
             field: 'action',
             headerName: 'Action',

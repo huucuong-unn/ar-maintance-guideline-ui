@@ -10,7 +10,7 @@ import storageService from '~/components/StorageService/storageService';
 function Copyright(props) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright ©Tortee '}
+            {'Copyright ©ARGuideline '}
             {new Date().getFullYear()}
             {'.'}
         </Typography>
@@ -168,15 +168,6 @@ export default function CompanyLogin() {
                                     >
                                         Login
                                     </Button>
-                                    <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-                                        Don't have an account?{' '}
-                                        <Link
-                                            to="/company/register"
-                                            style={{ textDecoration: 'none', color: '#051D40', fontWeight: 'bold' }}
-                                        >
-                                            Register
-                                        </Link>
-                                    </Typography>
                                     <Copyright sx={{ mt: 5 }} />
                                 </Box>
                             </Box>

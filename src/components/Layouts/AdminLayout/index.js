@@ -213,16 +213,20 @@ export default function AdminLayout({ children }) {
 
     const checkCurrentStorageIsOverCurrentPlan = async () => {
         try {
+            if (user?.roleName === 'ADMIN') return;
             const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(user?.company?.id);
             setCurrentStorageAndAccount(response.result);
             const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(user?.company?.id);
             if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
                 setShowAlertErrorStorage(true);
             }
-
             if (currentPlan === null || response.result.numberOfUsers > currentPlan.result.maxNumberOfUsers) {
                 setShowAlertErrorUsers(true);
             }
+            console.log(
+                'response.result.storageUsage > currentPlan.result.maxStorageUsage',
+                response.result.storageUsage > currentPlan.result.maxStorageUsage,
+            );
         } catch (error) {
             console.error('Subscription error:', error);
         }

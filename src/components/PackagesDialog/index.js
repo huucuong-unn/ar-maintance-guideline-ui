@@ -28,6 +28,7 @@ export default function PackagesDialog({
     handleClosePackagesDialog,
     subscriptions,
     currentPlan,
+    currentCompanyPlanInfo,
 }) {
     // State cho Delete và Update
     const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
@@ -239,13 +240,12 @@ export default function PackagesDialog({
                                             fullWidth
                                             variant="contained"
                                             onClick={() => {
-                                                if (
-                                                    userInfo.currentPlan === null ||
-                                                    (userInfo?.currentPlan !== subscription?.subscriptionCode &&
-                                                        currentPlan?.monthlyFee <= subscription?.monthlyFee)
-                                                ) {
-                                                    handleGoCheckout(subscription?.subscriptionCode);
-                                                }
+                                                handleGoCheckout(
+                                                    subscription?.subscriptionCode,
+                                                    subscription?.maxStorageUsage,
+                                                    subscription?.maxNumberOfUsers,
+                                                    subscription?.monthlyFee,
+                                                );
                                             }}
                                             sx={
                                                 userInfo?.currentPlan !== subscription?.subscriptionCode

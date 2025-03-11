@@ -492,7 +492,193 @@ export default function DashboardManagement() {
                                 <>
                                     {/* Top Guidelines */}
                                     <Grid item xs={12} md={6}>
-                                        <Card sx={{ height: '100%' }}>
+                                        <Card sx={{ mb: 4 }}>
+                                            <CardHeader
+                                                title="Current Subscription"
+                                                subheader={`Plan expires on ${new Date(
+                                                    dashboardData.companySubscriptionResponse.subscriptionExpireDate,
+                                                ).toLocaleDateString()}`}
+                                            />
+                                            <CardContent>
+                                                <Grid container spacing={3}>
+                                                    {/* Plan Details */}
+                                                    <Grid item xs={12} md={4}>
+                                                        <Box>
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="text.secondary"
+                                                                gutterBottom
+                                                            >
+                                                                Current Plan
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                <Chip
+                                                                    label={dashboardData.companySubscriptionResponse.subscriptionResponse.subscriptionCode.toUpperCase()}
+                                                                    color="primary"
+                                                                    sx={{
+                                                                        textTransform: 'capitalize',
+                                                                        fontWeight: 'bold',
+                                                                        fontSize: '1rem',
+                                                                        height: 32,
+                                                                    }}
+                                                                />
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    color="text.secondary"
+                                                                    sx={{ ml: 2 }}
+                                                                >
+                                                                    {dashboardData.companySubscriptionResponse
+                                                                        .status === 'ACTIVE'
+                                                                        ? 'Active'
+                                                                        : 'Inactive'}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
+                                                                {formatCurrency(
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .monthlyFee,
+                                                                )}
+                                                                <Typography
+                                                                    component="span"
+                                                                    variant="body2"
+                                                                    color="text.secondary"
+                                                                >
+                                                                    /month
+                                                                </Typography>
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+
+                                                    {/* Storage Usage */}
+                                                    <Grid item xs={12} md={4}>
+                                                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                            Storage Usage
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 1 }}>
+                                                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                                                {dashboardData.companySubscriptionResponse.storageUsage.toFixed(
+                                                                    2,
+                                                                )}
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="text.secondary"
+                                                                sx={{ mx: 1 }}
+                                                            >
+                                                                /
+                                                            </Typography>
+                                                            <Typography variant="body1">
+                                                                {
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .subscriptionResponse.maxStorageUsage
+                                                                }{' '}
+                                                                {
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .subscriptionResponse.storageUnit
+                                                                }
+                                                            </Typography>
+                                                        </Box>
+                                                        <LinearProgress
+                                                            variant="determinate"
+                                                            value={Math.min(
+                                                                (dashboardData.companySubscriptionResponse
+                                                                    .storageUsage /
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .subscriptionResponse.maxStorageUsage) *
+                                                                    100,
+                                                                100,
+                                                            )}
+                                                            sx={{ height: 8, borderRadius: 4 }}
+                                                        />
+                                                    </Grid>
+
+                                                    {/* Users */}
+                                                    <Grid item xs={12} md={4}>
+                                                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                            Users
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 1 }}>
+                                                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                                                {
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .numberOfUsers
+                                                                }
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="text.secondary"
+                                                                sx={{ mx: 1 }}
+                                                            >
+                                                                /
+                                                            </Typography>
+                                                            <Typography variant="body1">
+                                                                {
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .subscriptionResponse.maxNumberOfUsers
+                                                                }
+                                                            </Typography>
+                                                        </Box>
+                                                        <LinearProgress
+                                                            variant="determinate"
+                                                            value={Math.min(
+                                                                (dashboardData.companySubscriptionResponse
+                                                                    .numberOfUsers /
+                                                                    dashboardData.companySubscriptionResponse
+                                                                        .subscriptionResponse.maxNumberOfUsers) *
+                                                                    100,
+                                                                100,
+                                                            )}
+                                                            sx={{ height: 8, borderRadius: 4 }}
+                                                            color={
+                                                                dashboardData.companySubscriptionResponse
+                                                                    .numberOfUsers >=
+                                                                dashboardData.companySubscriptionResponse
+                                                                    .subscriptionResponse.maxNumberOfUsers
+                                                                    ? 'error'
+                                                                    : 'primary'
+                                                            }
+                                                        />
+                                                    </Grid>
+
+                                                    {/* Subscription Period */}
+                                                    <Grid item xs={12}>
+                                                        <Box
+                                                            sx={{
+                                                                display: 'flex',
+                                                                mt: 2,
+                                                                justifyContent: 'space-between',
+                                                            }}
+                                                        >
+                                                            <Box>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    Start Date
+                                                                </Typography>
+                                                                <Typography>
+                                                                    {new Date(
+                                                                        dashboardData.companySubscriptionResponse.subscriptionStartDate,
+                                                                    ).toLocaleDateString()}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Box>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    color="text.secondary"
+                                                                    align="right"
+                                                                >
+                                                                    Expiry Date
+                                                                </Typography>
+                                                                <Typography align="right">
+                                                                    {new Date(
+                                                                        dashboardData.companySubscriptionResponse.subscriptionExpireDate,
+                                                                    ).toLocaleDateString()}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    </Grid>
+                                                </Grid>
+                                            </CardContent>
+                                        </Card>
+                                        <Card sx={{ mb: 4 }}>
                                             <CardHeader title="Top Guidelines" subheader="Most used guidelines" />
                                             <CardContent>
                                                 {dashboardData?.top3Guidelines &&

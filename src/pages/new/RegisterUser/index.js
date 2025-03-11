@@ -13,7 +13,7 @@ const clientId = '478388298220-qhn8p4akrr4hsidbvnp999v5tn0u3s93.apps.googleuserc
 function Copyright(props) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright ©Tortee '}
+            {'Copyright ©ARGuideline '}
             {new Date().getFullYear()}
             {'.'}
         </Typography>

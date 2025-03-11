@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import CompanyAPI from '~/API/CompanyAPI';
 import PaymentAPI from '~/API/PaymentAPI';
 import PayosAPI from '~/API/PayosAPI';
+import SubscriptionAPI from '~/API/SubscriptionAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import PackagesDialog from '~/components/PackagesDialog';
 import storageService from '~/components/StorageService/storageService';
@@ -14,7 +15,7 @@ import storageService from '~/components/StorageService/storageService';
 function Copyright(props) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright ©Tortee '}
+            {'Copyright ©ARGuideline '}
             {new Date().getFullYear()}
             {'.'}
         </Typography>
@@ -35,15 +36,25 @@ export default function PaymentAndSubscriptionManagement() {
     const [openPackagesDialog, setOpenPackagesDialog] = useState(false);
     const [subscriptions, setSubScriptions] = useState([]);
     const [currentPlan, setCurrentPlan] = useState(null);
+    const [currentCompanyPlanInfo, setCurrentCompanyPlanInfo] = useState(null);
     const fetchCurrentPlan = async () => {
         try {
             const response = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
             setCurrentPlan(response?.result || null);
         } catch (error) {}
     };
+    const fecthCurrentCompanyPlanInfo = async () => {
+        try {
+            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(userInfo?.company?.id);
+            setCurrentCompanyPlanInfo(response?.result || null);
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    };
 
     useEffect(() => {
         fetchCurrentPlan();
+        fecthCurrentCompanyPlanInfo();
     }, []);
     const handleOpenPackagesDialog = () => {
         fetchSubscriptions();
@@ -64,16 +75,37 @@ export default function PaymentAndSubscriptionManagement() {
         }
     };
 
+    const handleCheckCanPay = (storage, account) => {
+        if (currentCompanyPlanInfo?.storageUsage >= storage || currentCompanyPlanInfo?.numberOfUsers >= account) {
+            return false;
+        }
+
+        return true;
+    };
+
     useEffect(() => {
         fetchSubscriptions();
     }, []);
 
-    const handleGoCheckout = async (productName) => {
+    const handleGoCheckout = async (productName, storage, account, monthlyFee) => {
         try {
             if (userInfo) {
-                // if (userInfo?.planType === 'Golden Tee' || userInfo?.planType === 'Silver Tee') return;
-
+                if (!handleCheckCanPay(storage, account)) {
+                    alert(
+                        'Can not subscribe the lower plan because your storage or account over the plan limit. Please subscribe to higher plan or remove models | disable accounts \n\nYour Storage: ' +
+                            currentCompanyPlanInfo?.storageUsage +
+                            ' GB \nYour Account: ' +
+                            currentCompanyPlanInfo?.numberOfUsers +
+                            ' users',
+                    );
+                    return;
+                }
                 setIsLoadingClickPurchase(true);
+
+                if (currentCompanyPlanInfo.monthlyFee > monthlyFee) {
+                    alert('You can not subscribe the lower plan now. Please choose the higher plan');
+                    return;
+                }
 
                 const response = await PayosAPI.goCheckout({
                     productName: productName,
@@ -251,6 +283,7 @@ export default function PaymentAndSubscriptionManagement() {
                                     handleClosePackagesDialog={handleClosePackagesDialog}
                                     subscriptions={subscriptions}
                                     currentPlan={currentPlan}
+                                    currentCompanyPlanInfo={currentCompanyPlanInfo}
                                 />
 
                                 <Copyright sx={{ mt: 5 }} />

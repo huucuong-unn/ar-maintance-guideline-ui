@@ -1,3 +1,4 @@
+import { yupResolver } from '@hookform/resolvers/yup';
 import {
     Box,
     Button,
@@ -14,25 +15,22 @@ import {
     Select,
     TextField,
     Typography,
-    Modal,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import * as Yup from 'yup';
 import AccountAPI from '~/API/AccountAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as Yup from 'yup';
-import { Link } from 'react-router-dom';
 
 function Copyright(props) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright ©Tortee '}
+            {'Copyright ©ARGuideline '}
             {new Date().getFullYear()}
             {'.'}
         </Typography>
@@ -375,20 +373,29 @@ export default function AccountsManagement() {
                             mb: 4,
                         }}
                     >
-                        Employees Management
+                        Account Management
                     </Typography>
 
+                    <Box sx={{ mb: 4 }}>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#02F18D',
+                                color: '#051D40',
+                                '&:hover': {
+                                    bgcolor: '#051D40',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={() => setOpenCreateAccountDialog(true)}
+                        >
+                            Create Account
+                        </Button>
+                    </Box>
+
                     {/* Search and Filter Section */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            gap: 2,
-                            my: 3,
-                            flexWrap: 'wrap',
-                            width: '100%',
-                            justifyContent: 'flex-end',
-                        }}
-                    >
+                    <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8, justifyContent: 'right' }}>
                         <TextField
                             variant="outlined"
                             label="Search by Email"
@@ -408,10 +415,6 @@ export default function AccountsManagement() {
                         </FormControl>
                         <Button variant="contained" onClick={() => setSearchParams({ email, status })}>
                             Search
-                        </Button>
-                        {/* New Create Account button */}
-                        <Button variant="contained" color="primary" onClick={() => setOpenCreateAccountDialog(true)}>
-                            Create Account
                         </Button>
                     </Box>
 
