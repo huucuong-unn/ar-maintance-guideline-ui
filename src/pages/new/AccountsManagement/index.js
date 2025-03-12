@@ -351,18 +351,23 @@ export default function AccountsManagement() {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Container
-                maxWidth="xl"
+            <Grid
+                container
+                component="main"
+                item
                 sx={{
-                    py: 4,
-                    minHeight: '100vh',
-                    background: `url(${adminLoginBackground}) no-repeat center center`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
                     backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundImage: `url(${adminLoginBackground})`,
+                    height: '100vh',
+                    width: '100%',
                     display: 'flex',
-                    flexDirection: 'column',
+                    justifyContent: 'center',
                 }}
             >
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ my: 4 }}>
                     <Typography
                         component="h1"
                         variant="h4"
@@ -376,15 +381,15 @@ export default function AccountsManagement() {
                         Account Management
                     </Typography>
 
-                    <Box sx={{ mb: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 8 }}>
                         <Button
                             variant="contained"
                             sx={{
-                                bgcolor: '#02F18D',
-                                color: '#051D40',
+                                bgcolor: '#051D40',
+                                color: 'white',
                                 '&:hover': {
-                                    bgcolor: '#051D40',
-                                    color: 'white',
+                                    bgcolor: '#02F18D',
+                                    color: '#051D40',
                                 },
                                 p: 2,
                             }}
@@ -392,30 +397,37 @@ export default function AccountsManagement() {
                         >
                             Create Account
                         </Button>
-                    </Box>
-
-                    {/* Search and Filter Section */}
-                    <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8, justifyContent: 'right' }}>
-                        <TextField
-                            variant="outlined"
-                            label="Search by Email"
-                            sx={{ width: '300px' }}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                        <FormControl sx={{ width: '200px' }}>
-                            <InputLabel>Status</InputLabel>
-                            <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                                <MenuItem value="">All</MenuItem>
-                                <MenuItem value="PENDING">Pending</MenuItem>
-                                <MenuItem value="ACTIVE">Active</MenuItem>
-                                <MenuItem value="INACTIVE">Inactive</MenuItem>
-                                <MenuItem value="REJECT">Reject</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <Button variant="contained" onClick={() => setSearchParams({ email, status })}>
-                            Search
-                        </Button>
+                        {/* Search and Filter Section */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                flexWrap: 'wrap',
+                                justifyContent: 'right',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <TextField
+                                variant="outlined"
+                                label="Search by Email"
+                                sx={{ width: '300px' }}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                            <FormControl sx={{ width: '200px' }}>
+                                <InputLabel>Status</InputLabel>
+                                <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                                    <MenuItem value="">All</MenuItem>
+                                    <MenuItem value="PENDING">Pending</MenuItem>
+                                    <MenuItem value="ACTIVE">Active</MenuItem>
+                                    <MenuItem value="INACTIVE">Inactive</MenuItem>
+                                    <MenuItem value="REJECT">Reject</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <Button variant="contained" onClick={() => setSearchParams({ email, status })}>
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     {/* Data Grid */}
@@ -452,7 +464,7 @@ export default function AccountsManagement() {
                         onSuccess={fetchData}
                     />
                 </Box>
-            </Container>
+            </Grid>
         </ThemeProvider>
     );
 }

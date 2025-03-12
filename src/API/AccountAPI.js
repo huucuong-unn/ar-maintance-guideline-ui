@@ -120,6 +120,9 @@ const AccountAPI = {
     resetPasswordStaff(id, params) {
         return axiosClient.put(`/v1/user/reset/${id}`, params);
     },
+    deleteStaff(id) {
+        return axiosClient.delete(`/v1/user/${id}`);
+    },
 };
 
 export default AccountAPI;

@@ -1,12 +1,14 @@
 import {
     Box,
     Button,
+    CircularProgress,
     Container,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
+    Grid,
     Paper,
     TextField,
     Typography,
@@ -37,7 +39,7 @@ const defaultTheme = createTheme();
 
 export default function EmployeesManagement() {
     const navigate = useNavigate();
-
+    const [isLoadingCreateEmployee, setIsLoadingCreateEmployee] = useState(false);
     const [rows, setRows] = useState([]);
     const [searchParams, setSearchParams] = useState({
         username: '',
@@ -123,6 +125,7 @@ export default function EmployeesManagement() {
             return;
         }
         try {
+            setIsLoadingCreateEmployee(true);
             const response = await AccountAPI.createStaff(newEmployee);
             if (response?.result?.user) {
                 toast.success('Create employee successfully');
@@ -132,6 +135,8 @@ export default function EmployeesManagement() {
         } catch (error) {
             console.error('Failed to create employee:', error);
             toast.error(`Create employee failed. ${error?.response?.data?.message}`);
+        } finally {
+            setIsLoadingCreateEmployee(false);
         }
     };
 
@@ -175,6 +180,13 @@ export default function EmployeesManagement() {
         }
     };
 
+    // --- State for Delete Confirm dialog ---
+    const [openDeleteConfirmDialog, setOpenDeleteConfirmDialog] = useState(false);
+    const handleOpenDeleteConfirm = (id) => {
+        setSelectedEmployeeId(id);
+        setOpenDeleteConfirmDialog(true);
+    };
+
     const columns = [
         { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', width: 200 },
@@ -214,10 +226,9 @@ export default function EmployeesManagement() {
                         {currentStatus === 'ACTIVE' ? (
                             <Button
                                 variant="contained"
-                                color="error"
                                 size="small"
                                 onClick={() => handleOpenStatusConfirm(params.row.id)}
-                                sx={{ width: '100px' }}
+                                sx={{ width: '100px', backgroundColor: 'orange' }}
                             >
                                 Disable
                             </Button>
@@ -235,11 +246,32 @@ export default function EmployeesManagement() {
                         <Button variant="outlined" size="small" onClick={() => handleOpenResetPassword(params.row.id)}>
                             Reset Password
                         </Button>
+                        <Button
+                            color="error"
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleOpenDeleteConfirm(params.row.id)}
+                        >
+                            Delete
+                        </Button>
                     </Box>
                 );
             },
         },
     ];
+
+    const handleDelete = async (id) => {
+        try {
+            const response = await AccountAPI.deleteStaff(id);
+            if (response?.result) {
+                toast.success('Delete employee successfully');
+            }
+            fetchData();
+        } catch (error) {
+            console.error('Failed to delete employee:', error);
+            toast.error('Failed to delete employee. ' + error?.response?.data?.message);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -300,24 +332,29 @@ export default function EmployeesManagement() {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Container
-                maxWidth="xl"
+            <Grid
+                container
+                component="main"
+                item
                 sx={{
-                    py: 4,
-                    minHeight: '100vh',
-                    background: `url(${adminLoginBackground}) no-repeat center center`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
                     backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundImage: `url(${adminLoginBackground})`,
+                    height: '100vh',
+                    width: '100%',
                     display: 'flex',
-                    flexDirection: 'column',
+                    justifyContent: 'center',
                 }}
             >
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ my: 4 }}>
                     <Typography
                         component="h1"
                         variant="h4"
                         sx={{
                             fontWeight: '900',
-                            fontSize: '36px',
+                            fontSize: '46px',
                             color: '#051D40',
                             mb: 4,
                         }}
@@ -326,22 +363,23 @@ export default function EmployeesManagement() {
                     </Typography>
 
                     {/* Search and Filter Section */}
-                    <Box sx={{ mb: 4 }}>
+                    <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
                         <Button
                             disabled={disableCreateEmployee}
                             variant="contained"
                             sx={{
-                                bgcolor: '#02F18D',
-                                color: '#051D40',
+                                bgcolor: '#051D40',
+                                color: 'white',
+
                                 '&:hover': {
-                                    bgcolor: '#051D40',
-                                    color: 'white',
+                                    bgcolor: '#02F18D',
+                                    color: '#051D40',
                                 },
                                 p: 2,
                             }}
                             onClick={handleOpenCreateDialog}
                         >
-                            Create Employee
+                            {isLoadingCreateEmployee ? <CircularProgress /> : ' Create Employee'}
                         </Button>
                     </Box>
 
@@ -506,7 +544,34 @@ export default function EmployeesManagement() {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </Container>
+                {/* Confirm Delete Dialog */}
+                <Dialog
+                    open={openDeleteConfirmDialog}
+                    onClose={() => setOpenDeleteConfirmDialog(false)}
+                    fullWidth
+                    maxWidth="xs"
+                >
+                    <DialogTitle>Confirm Delete</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to delete this employee? This action cannot be undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenDeleteConfirmDialog(false)}>Cancel</Button>
+                        <Button
+                            onClick={() => {
+                                handleDelete(selectedEmployeeId);
+                                setOpenDeleteConfirmDialog(false);
+                            }}
+                            color="error"
+                            variant="contained"
+                        >
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </Grid>
         </ThemeProvider>
     );
 }
