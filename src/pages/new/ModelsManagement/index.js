@@ -406,6 +406,15 @@ export default function ModelsManagement() {
         if (e.target.files[0]) {
             setFile3D(e.target.files[0]);
         }
+        setName('');
+        setCode('');
+        setDescription('');
+        setImage(null);
+        setVersion('');
+        setScale('');
+        setModelTypeId('');
+        setOpenCreateDialog(true);
+        setOpenEditor(true);
     };
 
     const handleCreateModel = async () => {
@@ -506,61 +515,49 @@ export default function ModelsManagement() {
                     >
                         Models Management
                     </Typography>
-
-                    <Box sx={{ mb: 4 }}></Box>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 8 }}>
-                        <Box>
-                            <Button
-                                disabled={disableCreateModel}
-                                variant="contained"
-                                sx={{
-                                    bgcolor: '#051D40',
-                                    color: 'white',
-                                    '&:hover': {
-                                        bgcolor: '#02F18D',
-                                        color: '#051D40',
-                                    },
-                                    p: 2,
-                                }}
-                                onClick={handleOpenCreateDialog}
-                            >
-                                Create Model
-                            </Button>
-                        </Box>
-                        <Box
+                    <Box sx={{ mb: 4 }}>
+                        <Button
+                            disabled={disableCreateModel}
+                            variant="contained"
+                            component="label"
                             sx={{
-                                display: 'flex',
-                                gap: 2,
-                                flexWrap: 'wrap',
-                                justifyContent: 'right',
-                                alignItems: 'center',
+                                bgcolor: '#02F18D',
+                                color: '#051D40',
+                                '&:hover': {
+                                    bgcolor: '#02F18D',
+                                    color: '#051D40',
+                                },
+                                p: 2,
                             }}
                         >
-                            {/* Search by email */}
-                            <TextField
-                                variant="outlined"
-                                label="Search by Name"
-                                sx={{ width: '300px' }}
-                                value={nameSearch}
-                                onChange={(e) => setNameSearch(e.target.value)}
-                            />
-                            <TextField
-                                variant="outlined"
-                                label="Search by Code"
-                                sx={{ width: '300px' }}
-                                value={codeSearch}
-                                onChange={(e) => setCodeSearch(e.target.value)}
-                            />
-                            {/* Search button */}
-                            <Button
-                                variant="contained"
-                                onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
-                                sx={{ p: 2 }}
-                            >
-                                Search
-                            </Button>
-                        </Box>
+                            Create Model
+                            <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8, justifyContent: 'right' }}>
+                        {/* Search by email */}
+                        <TextField
+                            variant="outlined"
+                            label="Search by Name"
+                            sx={{ width: '300px' }}
+                            value={nameSearch}
+                            onChange={(e) => setNameSearch(e.target.value)}
+                        />
+                        <TextField
+                            variant="outlined"
+                            label="Search by Code"
+                            sx={{ width: '300px' }}
+                            value={codeSearch}
+                            onChange={(e) => setCodeSearch(e.target.value)}
+                        />
+                        {/* Search button */}
+                        <Button
+                            variant="contained"
+                            onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
+                        >
+                            Search
+                        </Button>
                     </Box>
 
                     <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
@@ -666,7 +663,7 @@ export default function ModelsManagement() {
                     </Button> */}
 
                     {/* Upload Model File */}
-                    <Typography variant="body2" sx={{ mt: 2 }}>
+                    {/* <Typography variant="body2" sx={{ mt: 2 }}>
                         Select 3D file (required, e.g. .glb):
                     </Typography>
                     <Button
@@ -678,7 +675,7 @@ export default function ModelsManagement() {
                     >
                         Upload Model File
                         <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
-                    </Button>
+                    </Button> */}
                     {file3D && (
                         <>
                             <Typography variant="body2" sx={{ mt: 1 }}>
