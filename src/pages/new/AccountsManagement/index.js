@@ -367,7 +367,7 @@ export default function AccountsManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ my: 4 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 2 }}>
                     <Typography
                         component="h1"
                         variant="h4"
@@ -381,7 +381,7 @@ export default function AccountsManagement() {
                         Account Management
                     </Typography>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 8 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
                         <Button
                             variant="contained"
                             sx={{
@@ -424,7 +424,11 @@ export default function AccountsManagement() {
                                     <MenuItem value="REJECT">Reject</MenuItem>
                                 </Select>
                             </FormControl>
-                            <Button variant="contained" onClick={() => setSearchParams({ email, status })}>
+                            <Button
+                                variant="contained"
+                                sx={{ p: 2 }}
+                                onClick={() => setSearchParams({ email, status })}
+                            >
                                 Search
                             </Button>
                         </Box>

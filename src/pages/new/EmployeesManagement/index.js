@@ -348,7 +348,7 @@ export default function EmployeesManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ my: 4 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 4 }}>
                     <Typography
                         component="h1"
                         variant="h4"

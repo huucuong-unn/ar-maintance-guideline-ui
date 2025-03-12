@@ -502,7 +502,7 @@ export default function ModelsManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ my: 4 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 4 }}>
                     <Typography
                         component="h1"
                         variant="h4"
@@ -515,14 +515,14 @@ export default function ModelsManagement() {
                     >
                         Models Management
                     </Typography>
-                    <Box sx={{ mb: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
                         <Button
                             disabled={disableCreateModel}
                             variant="contained"
                             component="label"
                             sx={{
-                                bgcolor: '#02F18D',
-                                color: '#051D40',
+                                bgcolor: '#051D40',
+                                color: '#02F18D',
                                 '&:hover': {
                                     bgcolor: '#02F18D',
                                     color: '#051D40',
@@ -533,31 +533,39 @@ export default function ModelsManagement() {
                             Create Model
                             <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
                         </Button>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', mt: 8, justifyContent: 'right' }}>
-                        {/* Search by email */}
-                        <TextField
-                            variant="outlined"
-                            label="Search by Name"
-                            sx={{ width: '300px' }}
-                            value={nameSearch}
-                            onChange={(e) => setNameSearch(e.target.value)}
-                        />
-                        <TextField
-                            variant="outlined"
-                            label="Search by Code"
-                            sx={{ width: '300px' }}
-                            value={codeSearch}
-                            onChange={(e) => setCodeSearch(e.target.value)}
-                        />
-                        {/* Search button */}
-                        <Button
-                            variant="contained"
-                            onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                flexWrap: 'wrap',
+                                justifyContent: 'right',
+                                alignItems: 'center',
+                            }}
                         >
-                            Search
-                        </Button>
+                            {/* Search by email */}
+                            <TextField
+                                variant="outlined"
+                                label="Search by Name"
+                                sx={{ width: '300px' }}
+                                value={nameSearch}
+                                onChange={(e) => setNameSearch(e.target.value)}
+                            />
+                            <TextField
+                                variant="outlined"
+                                label="Search by Code"
+                                sx={{ width: '300px' }}
+                                value={codeSearch}
+                                onChange={(e) => setCodeSearch(e.target.value)}
+                            />
+                            {/* Search button */}
+                            <Button
+                                variant="contained"
+                                onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
+                                sx={{ p: 2 }}
+                            >
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
