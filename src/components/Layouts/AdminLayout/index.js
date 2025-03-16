@@ -1,15 +1,14 @@
-import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
-import { Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
-import Logout from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import { Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
-import ListItemIcon from '@mui/material/ListItemIcon';
+import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
 import { AlignJustify } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MainListItems, SecondaryListItems } from '~/components/listItems';
-import { useState } from 'react';
 import WalletAPI from '~/API/WalletAPI';
+import { MainListItems, SecondaryListItems } from '~/components/listItems';
+import storageService from '~/components/StorageService/storageService';
 
 const drawerWidth = 240;
 
@@ -209,67 +208,9 @@ export function Sidebar() {
 
 export default function AdminLayout({ children }) {
     const theme = useTheme();
-    const navigate = useNavigate();
-    const user = storageService.getItem('userInfo')?.user || null;
-
-    const [showAlertError, setShowAlertError] = useState(false);
-    const [showAlertErrorStorage, setShowAlertErrorStorage] = useState(false);
-    const [showAlertErrorUsers, setShowAlertErrorUsers] = useState(false);
-
-    const [currentStorageAndAccount, setCurrentStorageAndAccount] = useState(null);
-
-    const checkSubscription = async () => {
-        try {
-            if (user?.currentPlan === null) {
-                setShowAlertError(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-            setShowAlertError(true);
-        }
-    };
-
-    const checkCurrentStorageIsOverCurrentPlan = async () => {
-        try {
-            if (user?.roleName === 'ADMIN') return;
-            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(user?.company?.id);
-            setCurrentStorageAndAccount(response.result);
-            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(user?.company?.id);
-            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
-                setShowAlertErrorStorage(true);
-            }
-            if (currentPlan === null || response.result.numberOfUsers > currentPlan.result.maxNumberOfUsers) {
-                setShowAlertErrorUsers(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-        }
-    };
-
-    useEffect(() => {
-        checkSubscription();
-        checkCurrentStorageIsOverCurrentPlan();
-    }, []);
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            {showAlertError && (
-                <Alert width="50%" variant="filled" severity="error">
-                    Your subscription has expired or you do not subscribe any. Please view subscription packages and
-                    subscribe one
-                </Alert>
-            )}
-            {(showAlertErrorStorage || showAlertErrorUsers) && (
-                <Alert width="50%" variant="filled" severity="error">
-                    {showAlertErrorStorage
-                        ? '- Over storage of model, please go to action to remove some models or upgrade your subscription'
-                        : ''}{' '}
-                    {showAlertErrorUsers
-                        ? '- Over number of user, please disable some users or upgrade your subscription'
-                        : ''}
-                </Alert>
-            )}
-
             <Box sx={{ display: 'flex' }}>
                 <Sidebar />
 
