@@ -51,6 +51,22 @@ export const MainListItems = () => {
                         <ListItemText primary={route.title} />
                     </ListItemButton>
                 ))}
+
+            {role === 'DESIGNER' &&
+                adminRoutes.map((route, index) => (
+                    <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
+                        <ListItemIcon>{route.icon}</ListItemIcon>
+                        <ListItemText primary={route.title} />
+                    </ListItemButton>
+                ))}
+
+            {role === 'MANAGER' &&
+                adminRoutes.map((route, index) => (
+                    <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
+                        <ListItemIcon>{route.icon}</ListItemIcon>
+                        <ListItemText primary={route.title} />
+                    </ListItemButton>
+                ))}
         </React.Fragment>
     );
 };
@@ -105,6 +121,10 @@ export const SecondaryListItems = () => {
             title: 'Payments',
         },
     ];
+
+    const designerRoutes = [];
+
+    const managerRoutes = [];
 
     return (
         <React.Fragment>

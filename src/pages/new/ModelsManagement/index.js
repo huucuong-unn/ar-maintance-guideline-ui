@@ -92,30 +92,6 @@ export default function ModelsManagement() {
     const [modelFile, setModelFile] = useState(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-    const handleCheckIsCurrentPlanIsNull = () => {
-        if (userInfo?.currentPlan === null) {
-            navigate('/company/payment-subscription-management');
-        }
-    };
-    const [disableCreateModel, setDisableCreateModel] = useState(false);
-
-    const checkCurrentStorageIsOverCurrentPlan = async () => {
-        try {
-            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(userInfo?.company?.id);
-            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
-            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
-                setDisableCreateModel(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-        }
-    };
-
-    useEffect(() => {
-        handleCheckIsCurrentPlanIsNull();
-        checkCurrentStorageIsOverCurrentPlan();
-    }, []);
-
     const handleOpenConfirmDelete = () => {
         setConfirmDeleteOpen(true);
     };
@@ -341,7 +317,6 @@ export default function ModelsManagement() {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
                         <Button
-                            disabled={disableCreateModel}
                             variant="contained"
                             component="label"
                             sx={{
