@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { AppWindowMac, Bot, Building, CreditCard, Users } from 'lucide-react';
+import { AppWindowMac, AppWindowMacIcon, Bot, Building, CreditCard, Users } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import storageService from '../StorageService/storageService';
@@ -103,6 +103,11 @@ export const SecondaryListItems = () => {
             title: 'Payment',
         },
         {
+            route: '/company/company-request-management',
+            icon: <AppWindowMac />,
+            title: 'Company Request',
+        },
+        {
             route: '/wallet-history',
             icon: <AppWindowMac />,
             title: 'Wallet History',
@@ -127,9 +132,21 @@ export const SecondaryListItems = () => {
         },
     ];
 
-    const designerRoutes = [];
+    const designerRoutes = [
+        {
+            route: '/designer/company-request-management',
+            icon: <AppWindowMacIcon />,
+            title: 'Company Request',
+        },
+    ];
 
-    const managerRoutes = [];
+    const managerRoutes = [
+        {
+            route: '/company/company-request-management',
+            icon: <AppWindowMac />,
+            title: 'Company Request',
+        },
+    ];
 
     return (
         <React.Fragment>

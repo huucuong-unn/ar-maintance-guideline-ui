@@ -2,7 +2,6 @@ import {
     Box,
     Button,
     CircularProgress,
-    Container,
     Dialog,
     DialogActions,
     DialogContent,
@@ -10,19 +9,18 @@ import {
     DialogTitle,
     Grid,
     Paper,
+    Skeleton,
     TextField,
     Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AccountAPI from '~/API/AccountAPI';
-import PaymentAPI from '~/API/PaymentAPI';
-import SubscriptionAPI from '~/API/SubscriptionAPI';
+import CompanyRequestAPI from '~/API/CompanyRequestAPI'; // Your API
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import CardMachine from '~/components/CardMachine'; // The updated CardMachine
 import storageService from '~/components/StorageService/storageService';
 
 function Copyright(props) {
@@ -38,281 +36,160 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function CompanyRequestManagement() {
-    const navigate = useNavigate();
-    const [isLoadingCreateEmployee, setIsLoadingCreateEmployee] = useState(false);
-    const [rows, setRows] = useState([]);
-    const [searchParams, setSearchParams] = useState({
-        username: '',
-        email: '',
-        status: '',
-    });
-    const [paginationModel, setPaginationModel] = useState({
-        page: 0,
-        pageSize: 5,
-    });
     const userInfo = storageService.getItem('userInfo')?.user || null;
-    const [total, setTotal] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [rows, setRows] = useState([]);
 
-    // Dialog state for creating employee
+    // --------------------- FIRST DIALOG (Select Machine) ---------------------
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
-    const [newEmployee, setNewEmployee] = useState({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        avatar: '',
-        company: userInfo?.company?.companyName || '',
-        status: 'ACTIVE',
-        expirationDate: '',
-        isPayAdmin: false,
-        roleName: 'STAFF',
-    });
-    const [passwordError, setPasswordError] = useState('');
+    const [machines, setMachines] = useState([]);
 
-    // --- State for confirm status change dialog ---
-    const [openStatusConfirmDialog, setOpenStatusConfirmDialog] = useState(false);
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
-    // --- State for Reset Password dialog ---
-    const [openResetPasswordDialog, setOpenResetPasswordDialog] = useState(false);
-    const [resetEmployeeId, setResetEmployeeId] = useState(null);
-    const [newPassword, setNewPassword] = useState('');
+    // 2) When a user selects a machine card
+    const [selectedMachine, setSelectedMachine] = useState(null);
 
-    const handleOpenCreateDialog = () => {
-        setOpenCreateDialog(true);
-    };
+    // --------------------- SECOND DIALOG (Enter Request Subject/Desc) ---------------------
+    const [openMachineDialog, setOpenMachineDialog] = useState(false);
+    const [requestSubject, setRequestSubject] = useState('');
+    const [requestDescription, setRequestDescription] = useState('');
 
-    const handleCloseCreateDialog = () => {
-        setOpenCreateDialog(false);
-        setNewEmployee({
-            email: '',
-            password: '',
-            confirmPassword: '',
-            phone: '',
-            avatar: '',
-            company: userInfo?.company?.companyName || '',
-            status: 'ACTIVE',
-            expirationDate: '',
-            isPayAdmin: false,
-            roleName: 'STAFF',
-        });
-        setPasswordError('');
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewEmployee({
-            ...newEmployee,
-            [name]: value,
-        });
-
-        // Password validation
-        if (name === 'confirmPassword' || name === 'password') {
-            if (name === 'confirmPassword' && value !== newEmployee.password) {
-                setPasswordError('Passwords do not match');
-            } else if (name === 'password' && newEmployee.confirmPassword && value !== newEmployee.confirmPassword) {
-                setPasswordError('Passwords do not match');
-            } else {
-                setPasswordError('');
-            }
-        }
-    };
-
-    const handleCreateEmployee = async () => {
-        if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword) {
-            return;
-        }
-        if (passwordError) {
-            return;
-        }
-        try {
-            setIsLoadingCreateEmployee(true);
-            const response = await AccountAPI.createStaff(newEmployee);
-            if (response?.result?.user) {
-                toast.success('Create employee successfully');
-            }
-            handleCloseCreateDialog();
-            fetchData();
-        } catch (error) {
-            console.error('Failed to create employee:', error);
-            toast.error(`Create employee failed. ${error?.response?.data?.message}`);
-        } finally {
-            setIsLoadingCreateEmployee(false);
-        }
-    };
-
-    // Open confirm dialog for status change
-    const handleOpenStatusConfirm = (id) => {
-        setSelectedEmployeeId(id);
-        setOpenStatusConfirmDialog(true);
-    };
-
-    const handleChangeStatus = async (id) => {
-        try {
-            const response = await AccountAPI.changeStatusStaff(id);
-            if (response?.result) {
-                toast.success('Update status successfully');
-            }
-            fetchData();
-        } catch (error) {
-            console.error('Failed to update status:', error);
-            toast.error('Failed to update status. ' + error?.response?.data?.message);
-        }
-    };
-
-    // Open Reset Password dialog
-    const handleOpenResetPassword = (id) => {
-        setResetEmployeeId(id);
-        setNewPassword('');
-        setOpenResetPasswordDialog(true);
-    };
-
-    const handleResetPassword = async () => {
-        try {
-            const response = await AccountAPI.resetPasswordStaff(resetEmployeeId, { password: newPassword });
-            if (response?.result) {
-                toast.success('Reset password successfully');
-            }
-            fetchData();
-            setOpenResetPasswordDialog(false);
-        } catch (error) {
-            console.error('Failed to reset password:', error);
-            toast.error('Failed to reset password. ' + error?.response?.data?.message);
-        }
-    };
-
-    // --- State for Delete Confirm dialog ---
-    const [openDeleteConfirmDialog, setOpenDeleteConfirmDialog] = useState(false);
-    const handleOpenDeleteConfirm = (id) => {
-        setSelectedEmployeeId(id);
-        setOpenDeleteConfirmDialog(true);
-    };
-
+    // Table columns
     const columns = [
-        { field: 'email', headerName: 'Email', width: 300 },
-        { field: 'phone', headerName: 'Phone', width: 200 },
+        { field: 'requestSubject', headerName: 'Subject', width: 200 },
+        { field: 'requestDescription', headerName: 'Description', width: 300 },
         {
-            field: 'createdDate',
+            field: 'designer',
+            headerName: 'Designer',
+            width: 200,
+            renderCell: (params) => params.row.designer?.email || '-',
+        },
+        {
+            field: 'machine',
+            headerName: 'Machine',
+            width: 200,
+            renderCell: (params) => params.row.machine?.machineName || '-',
+        },
+        {
+            field: 'createdAt',
             headerName: 'Created Date',
             width: 200,
-            renderCell: (params) => formatDate(params.value),
+            renderCell: (params) => formatDateTime(params.value),
         },
         {
             field: 'status',
             headerName: 'Status',
-            width: 200,
+            width: 150,
             renderCell: (params) => {
                 let color = 'black';
-                switch (params.value) {
-                    case 'ACTIVE':
-                        color = 'green';
-                        break;
-                    case 'INACTIVE':
-                        color = 'orange';
-                        break;
-                    default:
-                        color = 'black';
-                }
-                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value}</Box>;
-            },
-        },
-        {
-            field: 'action',
-            headerName: 'Action',
-            width: 400,
-            renderCell: (params) => {
-                const currentStatus = params.row.status;
-                return (
-                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
-                        {currentStatus === 'ACTIVE' ? (
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleOpenStatusConfirm(params.row.id)}
-                                sx={{ width: '100px', backgroundColor: 'orange' }}
-                            >
-                                Disable
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="contained"
-                                color="success"
-                                size="small"
-                                onClick={() => handleOpenStatusConfirm(params.row.id)}
-                                sx={{ width: '100px' }}
-                            >
-                                Active
-                            </Button>
-                        )}
-                        <Button variant="outlined" size="small" onClick={() => handleOpenResetPassword(params.row.id)}>
-                            Reset Password
-                        </Button>
-                        <Button
-                            color="error"
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleOpenDeleteConfirm(params.row.id)}
-                        >
-                            Delete
-                        </Button>
-                    </Box>
-                );
+                if (params.value === 'ACTIVE') color = 'green';
+                else if (params.value === 'INACTIVE') color = 'orange';
+                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value || '-'}</Box>;
             },
         },
     ];
 
-    const handleDelete = async (id) => {
-        try {
-            const response = await AccountAPI.deleteStaff(id);
-            if (response?.result) {
-                toast.success('Delete employee successfully');
-            }
-            fetchData();
-        } catch (error) {
-            console.error('Failed to delete employee:', error);
-            toast.error('Failed to delete employee. ' + error?.response?.data?.message);
-        }
-    };
-
+    // Fetch existing requests
     const fetchData = async () => {
         try {
-            const pageParam = paginationModel.page + 1;
-            const sizeParam = paginationModel.pageSize;
-            const params = {
-                page: pageParam,
-                size: sizeParam,
-                username: searchParams.username || undefined,
-                email: searchParams.email || undefined,
-                status: searchParams.status || undefined,
-            };
-            const response = await AccountAPI.getStaffByCompanyId(userInfo?.company?.id, params, params);
-            const data = response?.result?.objectList || [];
+            setIsLoading(true);
+            const response = await CompanyRequestAPI.getAllCompanyRequestsByCompanyId(userInfo?.company?.id);
+            const data = response?.result || [];
+            console.log('Fetched data:', data);
             setRows(data);
-            setTotal(response?.result?.totalItems || 0);
         } catch (error) {
-            console.error('Failed to fetch accounts:', error);
+            console.error('Failed to fetch request:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
         fetchData();
-    }, [paginationModel, searchParams]);
+    }, []);
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const day = date.getUTCDate().toString().padStart(2, '0');
-        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        const year = date.getUTCFullYear();
-        return `${month}/${day}/${year}`;
-    };
+    // Open the "Select Machine" dialog
+    const handleOpenCreateDialog = async () => {
+        try {
+            setIsLoading(true);
+            setOpenCreateDialog(true);
 
-    const handleCheckIsCurrentPlanIsNull = () => {
-        if (userInfo?.currentPlan === null) {
-            navigate('/company/payment-subscription-management');
+            // Fetch machine list
+            const params = {
+                page: 1,
+                size: 1000000,
+                companyId: userInfo?.company?.id,
+            };
+            const response = await CompanyRequestAPI.getMachineByCompanyId(params);
+            setMachines(response?.result?.objectList || []);
+        } catch (error) {
+            console.error('Failed to fetch machines:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const [disableCreateEmployee, setDisableCreateEmployee] = useState(false);
+    // Close the "Select Machine" dialog
+    const handleCloseCreateDialog = () => {
+        setOpenCreateDialog(false);
+    };
 
+    // Step 1: When a machine card is clicked
+    const handleSelectMachine = (machine) => {
+        setSelectedMachine(machine); // store the machine
+        setOpenCreateDialog(false); // close first dialog
+        // Then open the second dialog
+        setRequestSubject('');
+        setRequestDescription('');
+        setOpenMachineDialog(true);
+    };
+
+    // Cancel the second dialog
+    const handleCloseMachineDialog = () => {
+        setOpenMachineDialog(false);
+        setSelectedMachine(null);
+    };
+
+    // 2) Confirm create request with subject/desc
+    const handleCreateRequest = async () => {
+        if (!selectedMachine) return; // Safety check
+        if (!requestSubject || !requestDescription) {
+            toast.error('Please enter both request subject and description.');
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const payload = {
+                companyId: userInfo?.company?.id,
+                machineId: selectedMachine.id, // the chosen machine
+                requestSubject,
+                requestDescription,
+            };
+            // Call your API
+            const response = await CompanyRequestAPI.createRequest(payload);
+            if (response?.result) {
+                // Optionally show success
+                toast.success('Request created successfully!');
+                fetchData(); // refresh the table
+            }
+        } catch (error) {
+            console.error('Failed to create request:', error);
+        } finally {
+            setIsLoading(false);
+            handleCloseMachineDialog();
+        }
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
+        const year = date.getFullYear();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+    };
     return (
         <ThemeProvider theme={defaultTheme}>
             <Grid
@@ -342,18 +219,16 @@ export default function CompanyRequestManagement() {
                             mb: 4,
                         }}
                     >
-                        Employees Management
+                        Company Requests Management
                     </Typography>
 
-                    {/* Search and Filter Section */}
+                    {/* Create Request Button */}
                     <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
                         <Button
-                            disabled={disableCreateEmployee}
                             variant="contained"
                             sx={{
                                 bgcolor: '#051D40',
                                 color: 'white',
-
                                 '&:hover': {
                                     bgcolor: '#02F18D',
                                     color: '#051D40',
@@ -362,11 +237,10 @@ export default function CompanyRequestManagement() {
                             }}
                             onClick={handleOpenCreateDialog}
                         >
-                            {isLoadingCreateEmployee ? <CircularProgress /> : ' Create Employee'}
+                            Create Request
                         </Button>
                     </Box>
 
-                    {/* Data Grid */}
                     <Paper
                         sx={{
                             height: 500,
@@ -379,18 +253,10 @@ export default function CompanyRequestManagement() {
                         <DataGrid
                             rows={rows}
                             columns={columns}
-                            rowCount={total}
-                            paginationMode="server"
-                            paginationModel={paginationModel}
-                            onPaginationModelChange={(newModel) =>
-                                setPaginationModel((prev) => ({
-                                    ...prev,
-                                    page: newModel.page,
-                                }))
-                            }
                             sx={{ border: 'none' }}
-                            getRowId={(row) => row.id}
+                            getRowId={(row) => row.requestId}
                             slots={{ toolbar: GridToolbar }}
+                            loading={isLoading}
                         />
                     </Paper>
                 </Box>
@@ -399,170 +265,103 @@ export default function CompanyRequestManagement() {
                     <Copyright />
                 </Box>
 
-                {/* Create Employee Dialog */}
-                <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} maxWidth="sm" fullWidth>
-                    <DialogTitle>Create New Employee</DialogTitle>
+                {/* ---------- FIRST DIALOG: SELECT MACHINE ---------- */}
+                <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="lg">
+                    <DialogTitle>Select a Machine</DialogTitle>
                     <DialogContent>
-                        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <TextField
-                                required
-                                fullWidth
-                                label="Email"
-                                name="email"
-                                value={newEmployee.email}
-                                onChange={handleInputChange}
-                                type="email"
-                            />
+                        <DialogContentText sx={{ mb: 2 }}>Please select a machine for the request.</DialogContentText>
 
-                            <TextField
-                                required
-                                fullWidth
-                                label="Password"
-                                name="password"
-                                type="password"
-                                value={newEmployee.password}
-                                onChange={handleInputChange}
-                            />
-
-                            <TextField
-                                required
-                                fullWidth
-                                label="Confirm Password"
-                                name="confirmPassword"
-                                type="password"
-                                value={newEmployee.confirmPassword}
-                                onChange={handleInputChange}
-                                error={!!passwordError}
-                                helperText={passwordError}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Phone Number"
-                                name="phone"
-                                value={newEmployee.phone}
-                                onChange={handleInputChange}
-                                type="number"
-                            />
-
-                            <TextField fullWidth label="Company" name="company" value={newEmployee.company} disabled />
-
-                            <TextField fullWidth label="Role" name="roleName" value={newEmployee.roleName} disabled />
-
-                            <TextField fullWidth label="Status" name="status" value={newEmployee.status} disabled />
+                        <Box
+                            sx={{
+                                borderRadius: '20px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                py: 4,
+                                px: 2,
+                                minHeight: '50vh',
+                            }}
+                        >
+                            {isLoading ? (
+                                <Grid container spacing={3}>
+                                    {Array.from(new Array(8)).map((_, idx) => (
+                                        <Grid item xs={12} sm={6} md={3} key={idx}>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                sx={{
+                                                    width: '100%',
+                                                    aspectRatio: '16/9',
+                                                    borderRadius: 2,
+                                                    mb: 1,
+                                                }}
+                                            />
+                                            <Skeleton variant="text" height={30} width="80%" sx={{ mb: 1 }} />
+                                            <Skeleton variant="text" height={20} width="60%" />
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            ) : (
+                                <Grid container spacing={3}>
+                                    {machines.map((machine, index) => (
+                                        <Grid item xs={12} sm={12} md={6} lg={3} key={index}>
+                                            <Box onClick={() => handleSelectMachine(machine)}>
+                                                <CardMachine machine={machine} />
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            )}
                         </Box>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleCloseCreateDialog}>Cancel</Button>
-                        <Button
-                            onClick={handleCreateEmployee}
-                            variant="contained"
-                            color="primary"
-                            disabled={
-                                !newEmployee.email ||
-                                !newEmployee.password ||
-                                !newEmployee.confirmPassword ||
-                                !!passwordError
-                            }
-                        >
-                            Create
-                        </Button>
                     </DialogActions>
                 </Dialog>
 
-                {/* Confirm Status Change Dialog */}
-                <Dialog
-                    open={openStatusConfirmDialog}
-                    onClose={() => setOpenStatusConfirmDialog(false)}
-                    fullWidth
-                    maxWidth="xs"
-                >
-                    <DialogTitle>Confirm Action</DialogTitle>
+                {/* ---------- SECOND DIALOG: REQUEST SUBJECT & DESCRIPTION ---------- */}
+                <Dialog open={openMachineDialog} onClose={handleCloseMachineDialog} fullWidth maxWidth="sm">
+                    <DialogTitle>Request Details</DialogTitle>
                     <DialogContent>
-                        <DialogContentText>Are you sure to change status of this employee?</DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenStatusConfirmDialog(false)}>Cancel</Button>
-                        <Button
-                            onClick={() => {
-                                handleChangeStatus(selectedEmployeeId);
-                                setOpenStatusConfirmDialog(false);
-                            }}
-                            autoFocus
-                        >
-                            Confirm
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                        <DialogContentText sx={{ mb: 2 }}>
+                            Enter the request subject and description for machine:
+                            <strong> {selectedMachine?.machineName}</strong>
+                        </DialogContentText>
 
-                {/* Reset Password Dialog */}
-                <Dialog
-                    open={openResetPasswordDialog}
-                    onClose={() => setOpenResetPasswordDialog(false)}
-                    fullWidth
-                    maxWidth="xs"
-                >
-                    <DialogTitle>Reset Password</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText>Enter the new password for this employee.</DialogContentText>
                         <TextField
-                            autoFocus
-                            margin="dense"
-                            label="New Password"
-                            type="password"
+                            required
+                            margin="normal"
+                            label="Request Subject"
                             fullWidth
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
+                            value={requestSubject}
+                            onChange={(e) => setRequestSubject(e.target.value)}
+                        />
+
+                        <TextField
+                            required
+                            margin="normal"
+                            label="Request Description"
+                            fullWidth
+                            multiline
+                            rows={3}
+                            value={requestDescription}
+                            onChange={(e) => setRequestDescription(e.target.value)}
+                        />
+                        <TextField
+                            disabled
+                            margin="normal"
+                            label="Machine"
+                            fullWidth
+                            multiline
+                            rows={3}
+                            value={selectedMachine?.machineName}
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenResetPasswordDialog(false)}>Cancel</Button>
-                        <Button
-                            onClick={() => {
-                                handleResetPassword();
-                                setOpenResetPasswordDialog(false);
-                            }}
-                        >
-                            Confirm
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-                {/* Confirm Delete Dialog */}
-                <Dialog
-                    open={openDeleteConfirmDialog}
-                    onClose={() => setOpenDeleteConfirmDialog(false)}
-                    fullWidth
-                    maxWidth="xs"
-                >
-                    <DialogTitle>Confirm Delete</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText>
-                            Are you sure you want to delete this employee? This action cannot be undone.
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDeleteConfirmDialog(false)}>Cancel</Button>
-                        <Button
-                            onClick={() => {
-                                handleDelete(selectedEmployeeId);
-                                setOpenDeleteConfirmDialog(false);
-                            }}
-                            color="error"
-                            variant="contained"
-                        >
-                            Confirm
+                        <Button onClick={handleCloseMachineDialog}>Cancel</Button>
+                        <Button onClick={handleCreateRequest} disabled={isLoading} variant="contained">
+                            {isLoading ? <CircularProgress /> : 'Create'}
                         </Button>
                     </DialogActions>
                 </Dialog>
             </Grid>
         </ThemeProvider>
     );
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const day = date.getUTCDate().toString().padStart(2, '0');
-    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-    const year = date.getUTCFullYear();
-    return `${month}/${day}/${year}`;
 }

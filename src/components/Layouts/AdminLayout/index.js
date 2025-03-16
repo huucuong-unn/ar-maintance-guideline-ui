@@ -1,17 +1,14 @@
 import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
-import { Alert, Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import { Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 import Logout from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import { useNavigate } from 'react-router-dom';
 import { AlignJustify } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { MainListItems, SecondaryListItems } from '~/components/listItems';
-import { useEffect, useState } from 'react';
-import storageService from '~/components/StorageService/storageService';
-import SubscriptionAPI from '~/API/SubscriptionAPI';
-import PaymentAPI from '~/API/PaymentAPI';
+import { useState } from 'react';
 import WalletAPI from '~/API/WalletAPI';
 
 const drawerWidth = 240;
@@ -63,11 +60,6 @@ const defaultTheme = createTheme();
 export function NavbarAdmin() {
     const [open, setOpen] = useState(true);
     const [anchorElUser, setAnchorElUser] = useState(null);
-
-    const handleOpenUserMenu = (event) => {
-        setAnchorElUser(event.currentTarget);
-    };
-
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
@@ -75,16 +67,6 @@ export function NavbarAdmin() {
     const toggleDrawer = () => {
         setOpen(!open);
     };
-
-    function notificationsLabel(count) {
-        if (count === 0) {
-            return 'no notifications';
-        }
-        if (count > 99) {
-            return 'more than 99 notifications';
-        }
-        return `${count} notifications`;
-    }
 
     return (
         <AppBar position="absolute" open={open}>

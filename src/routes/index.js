@@ -27,6 +27,7 @@ import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
 import ModelEditor from '~/pages/new/TestPage';
 import PointPurchase from '~/pages/new/Wallet/pointPurchase';
+import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
 
 const publicRoutes = [
     //new
@@ -68,8 +69,23 @@ const companyRoutes = [
         component: PaymentAndSubscriptionManagement,
         layout: AdminLayout,
     },
+    {
+        path: '/company/company-request-management',
+        component: CompanyRequestManagement,
+        layout: AdminLayout,
+    },
 ];
+
+const designerRoutes = [
+    {
+        path: '/designer/company-request-management',
+        component: CompanyRequestManagement,
+        layout: AdminLayout,
+    },
+];
+
+const managerRoutes = [];
 
 const privateRoutes = [];
 
-export { adminRoutes, companyRoutes, privateRoutes, publicRoutes };
+export { adminRoutes, companyRoutes, privateRoutes, publicRoutes, designerRoutes, managerRoutes };
