@@ -124,12 +124,11 @@ export default function PaymentAndSubscriptionManagement() {
     };
 
     const columns = [
-        { field: 'itemCode', headerName: 'Item Code', width: 200 },
         { field: 'orderCode', headerName: 'Order Code', width: 200 },
         { field: 'companyName', headerName: 'Company Name', width: 200 },
         { field: 'amount', headerName: 'Amount', width: 200 },
+        { field: 'point', headerName: 'Point', width: 200 },
         { field: 'createdDate', headerName: 'Create At', width: 200 },
-        { field: 'updatedDate', headerName: 'Update At', width: 200 },
         {
             field: 'status',
             headerName: 'Status',
@@ -166,6 +165,10 @@ export default function PaymentAndSubscriptionManagement() {
         },
     ];
 
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    };
+
     const fetchData = async () => {
         try {
             const pageParam = paginationModel.page + 1;
@@ -194,6 +197,7 @@ export default function PaymentAndSubscriptionManagement() {
                 ...item,
                 createdDate: item.createdDate ? format(new Date(item.createdDate), 'MM/dd/yyyy HH:mm:ss') : '',
                 updatedDate: item.updatedDate ? format(new Date(item.updatedDate), 'MM/dd/yyyy HH:mm:ss') : '',
+                amount: formatCurrency(item.amount),
             }));
 
             setRows(formattedData);

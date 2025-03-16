@@ -1,7 +1,5 @@
 import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
-
-import { Alert, Box, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
-
+import { Alert, Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 import Logout from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiAppBar from '@mui/material/AppBar';
@@ -9,13 +7,12 @@ import MuiDrawer from '@mui/material/Drawer';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { useNavigate } from 'react-router-dom';
 import { AlignJustify } from 'lucide-react';
-
 import { MainListItems, SecondaryListItems } from '~/components/listItems';
-
 import { useEffect, useState } from 'react';
 import storageService from '~/components/StorageService/storageService';
 import SubscriptionAPI from '~/API/SubscriptionAPI';
 import PaymentAPI from '~/API/PaymentAPI';
+import WalletAPI from '~/API/WalletAPI';
 
 const drawerWidth = 240;
 
@@ -109,11 +106,6 @@ export function NavbarAdmin() {
                     <MenuIcon />
                 </IconButton>
 
-                {/*<IconButton color="inherit" aria-label={notificationsLabel(100)} onClick={handleOpenUserMenu}>*/}
-                {/*    <Badge badgeContent={100} color="secondary">*/}
-                {/*        <NotificationsIcon />*/}
-                {/*    </Badge>*/}
-                {/*</IconButton>*/}
                 <Menu
                     sx={{ mt: '45px' }}
                     id="menu-appbar"
@@ -143,6 +135,23 @@ export function NavbarAdmin() {
 
 export function Sidebar() {
     const navigate = useNavigate();
+    const user = storageService.getItem('userInfo')?.user || null;
+    const [currentPoints, setCurrentPoints] = useState(0);
+
+    useEffect(() => {
+        const fetchWallet = async () => {
+            try {
+                const response = await WalletAPI.getWalletByUserId(user.id);
+                setCurrentPoints(response.result.balance);
+            } catch (error) {
+                console.error('Failed to fetch wallet:', error);
+            }
+        };
+
+        if (user) {
+            fetchWallet();
+        }
+    }, [user]);
 
     const handleLogout = () => {
         // Remove user information from localStorage
@@ -151,6 +160,12 @@ export function Sidebar() {
         // Redirect to the sign-up page
         navigate('/login');
     };
+
+    const handleBuyPoints = () => {
+        // Navigate to buy points page
+        navigate('/wallet/purchase');
+    };
+
     const [open, setOpen] = useState(true);
     const toggleDrawer = () => {
         setOpen(!open);
@@ -180,18 +195,39 @@ export function Sidebar() {
                 <SecondaryListItems />
                 <Divider sx={{ my: 1 }} />
             </List>
-            <MenuItem onClick={handleLogout}>
-                <ListItemIcon>
-                    <Logout fontSize="small" style={{ marginRight: '36px' }} />
-                </ListItemIcon>
-                Logout
-            </MenuItem>{' '}
+            <Box
+                sx={{
+                    position: 'absolute',
+                    bottom: 40,
+                    left: 0,
+                    right: 0,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    p: 2,
+                }}
+            >
+                <Box sx={{ mb: 1 }}>
+                    <Typography variant="body1">{user?.company.companyName || 'Admin'}</Typography>
+                    <Typography variant="contained" color="primary">
+                        Current Points: {currentPoints}
+                    </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>
+                        Buy Points
+                    </Button>
+                    <Button variant="outlined" color="secondary" size="small" fullWidth onClick={handleLogout}>
+                        Logout
+                    </Button>
+                </Box>
+            </Box>
         </Drawer>
     );
 }
 
 export default function AdminLayout({ children }) {
     const theme = useTheme();
+    const navigate = useNavigate();
     const user = storageService.getItem('userInfo')?.user || null;
 
     const [showAlertError, setShowAlertError] = useState(false);
@@ -223,10 +259,6 @@ export default function AdminLayout({ children }) {
             if (currentPlan === null || response.result.numberOfUsers > currentPlan.result.maxNumberOfUsers) {
                 setShowAlertErrorUsers(true);
             }
-            console.log(
-                'response.result.storageUsage > currentPlan.result.maxStorageUsage',
-                response.result.storageUsage > currentPlan.result.maxStorageUsage,
-            );
         } catch (error) {
             console.error('Subscription error:', error);
         }
@@ -245,7 +277,7 @@ export default function AdminLayout({ children }) {
                     subscribe one
                 </Alert>
             )}
-            {(showAlertErrorStorage || showAlertErrorStorage) && (
+            {(showAlertErrorStorage || showAlertErrorUsers) && (
                 <Alert width="50%" variant="filled" severity="error">
                     {showAlertErrorStorage
                         ? '- Over storage of model, please go to action to remove some models or upgrade your subscription'

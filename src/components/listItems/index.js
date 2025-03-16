@@ -102,6 +102,11 @@ export const SecondaryListItems = () => {
             icon: <CreditCard />,
             title: 'Payment',
         },
+        {
+            route: '/wallet-history',
+            icon: <AppWindowMac />,
+            title: 'Wallet History',
+        },
     ];
 
     const adminRoutes = [
