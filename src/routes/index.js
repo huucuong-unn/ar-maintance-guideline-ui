@@ -26,6 +26,7 @@ import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
 import ModelEditor from '~/pages/new/TestPage';
+import PointPurchase from '~/pages/new/Wallet/pointPurchase';
 
 const publicRoutes = [
     //new
@@ -40,6 +41,7 @@ const publicRoutes = [
     { path: '/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },
     { path: '/company/waiting', component: CompanyWaiting, layout: null },
+    { path: '/wallet/purchase', component: PointPurchase, layout: null },
 ];
 
 const adminRoutes = [
