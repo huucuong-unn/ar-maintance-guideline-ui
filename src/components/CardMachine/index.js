@@ -1,7 +1,7 @@
-import { Card, CardMedia, CardContent, Typography, Button } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography } from '@mui/material';
 import { getImage } from '~/Constant';
 
-export default function CardModel({ model }) {
+export default function CardMachine({ machine }) {
     return (
         <Card
             sx={{
@@ -21,8 +21,8 @@ export default function CardModel({ model }) {
         >
             <CardMedia
                 component="img"
-                image={getImage(model.image)}
-                title={model.name}
+                image={getImage(machine?.image)}
+                title={machine.name}
                 sx={{
                     width: '100%',
                     height: 140,
@@ -33,7 +33,7 @@ export default function CardModel({ model }) {
             />
             <CardContent sx={{ flex: '1 1 auto' }}>
                 <Typography gutterBottom variant="h5" component="div" fontWeight="600" noWrap>
-                    {model.name}
+                    {machine?.machineName}
                 </Typography>
                 <Typography
                     variant="body2"
@@ -46,17 +46,8 @@ export default function CardModel({ model }) {
                         textOverflow: 'ellipsis',
                     }}
                 >
-                    {model.description}
+                    {machine?.machineType}
                 </Typography>
-                <Typography
-                    variant="body2"
-                    sx={{ mt: 1, fontWeight: '700', color: model.status === 'ACTIVE' ? 'green' : 'orange' }}
-                >
-                    {model.status}
-                </Typography>
-                <Button variant="contained" size="small" sx={{ mt: 1 }}>
-                    View Details
-                </Button>
             </CardContent>
         </Card>
     );

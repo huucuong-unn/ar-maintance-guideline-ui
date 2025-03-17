@@ -28,6 +28,8 @@ import UsersManagement from '~/pages/new/UsersManagement';
 import ModelEditor from '~/pages/new/TestPage';
 import MachinesManagement from '~/pages/new/Machine';
 import MachineTypeManagement from '~/pages/new/MachineType';
+import PointPurchase from '~/pages/new/Wallet/pointPurchase';
+import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
 
 const publicRoutes = [
     //new
@@ -42,6 +44,7 @@ const publicRoutes = [
     { path: '/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },
     { path: '/company/waiting', component: CompanyWaiting, layout: null },
+    { path: '/wallet/purchase', component: PointPurchase, layout: null },
 ];
 
 const adminRoutes = [
@@ -70,8 +73,23 @@ const companyRoutes = [
     },
     { path: '/company/machines-management', component: MachinesManagement, layout: AdminLayout },
     { path: '/company/machines-type-management', component: MachineTypeManagement, layout: AdminLayout },
+    {
+        path: '/company/company-request-management',
+        component: CompanyRequestManagement,
+        layout: AdminLayout,
+    },
 ];
+
+const designerRoutes = [
+    {
+        path: '/designer/company-request-management',
+        component: CompanyRequestManagement,
+        layout: AdminLayout,
+    },
+];
+
+const managerRoutes = [];
 
 const privateRoutes = [];
 
-export { adminRoutes, companyRoutes, privateRoutes, publicRoutes };
+export { adminRoutes, companyRoutes, privateRoutes, publicRoutes, designerRoutes, managerRoutes };

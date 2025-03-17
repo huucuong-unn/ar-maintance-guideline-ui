@@ -3,7 +3,6 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import {
     Box,
@@ -11,7 +10,6 @@ import {
     Card,
     CardContent,
     Chip,
-    Container,
     Dialog,
     DialogActions,
     DialogContent,
@@ -78,7 +76,6 @@ export default function ModelsManagement() {
     const [searchParams, setSearchParams] = useState({
         nameSearch: '',
         codeSearch: '',
-        typeSearch: '',
     });
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
@@ -93,32 +90,7 @@ export default function ModelsManagement() {
     const [updatedModel, setUpdatedModel] = useState({});
     const [imageFile, setImageFile] = useState(null);
     const [modelFile, setModelFile] = useState(null);
-    const [isUpdating, setIsUpdating] = useState(false);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-
-    const handleCheckIsCurrentPlanIsNull = () => {
-        if (userInfo?.currentPlan === null) {
-            navigate('/company/payment-subscription-management');
-        }
-    };
-    const [disableCreateModel, setDisableCreateModel] = useState(false);
-
-    const checkCurrentStorageIsOverCurrentPlan = async () => {
-        try {
-            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(userInfo?.company?.id);
-            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
-            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
-                setDisableCreateModel(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-        }
-    };
-
-    useEffect(() => {
-        handleCheckIsCurrentPlanIsNull();
-        checkCurrentStorageIsOverCurrentPlan();
-    }, []);
 
     const handleOpenConfirmDelete = () => {
         setConfirmDeleteOpen(true);
@@ -228,94 +200,9 @@ export default function ModelsManagement() {
         fetchModels();
     };
 
-    const handleChange = (e) => {
-        setUpdatedModel({ ...updatedModel, [e.target.name]: e.target.value });
-    };
-
-    const handleImageUpload = (e) => {
-        setImageFile(e.target.files[0]);
-    };
-
-    const handleModelFileUpload = (e) => {
-        setModelFile(e.target.files[0]);
-    };
-
     const handleCloseModal = () => {
         setOpenModal(false);
         setSelectedModel({});
-    };
-
-    const handleChangeModelType = (selectedId) => {
-        const selectedModelType = modelTypes.find((type) => type.id === selectedId);
-        setUpdatedModel({
-            ...updatedModel,
-            modelTypeId: selectedId,
-            modelTypeName: selectedModelType ? selectedModelType.name : '',
-        });
-    };
-
-    const handleSave = async () => {
-        if (!updatedModel?.id) {
-            console.error('Model ID is required for update.');
-            return;
-        }
-
-        // Trim spaces
-        const trimmedName = updatedModel.name.trim();
-        const trimmedCode = updatedModel.modelCode.trim();
-        const trimmedVersion = updatedModel.version.trim();
-        const trimmedScale = updatedModel.scale.trim();
-
-        // Validate required fields
-        if (trimmedName.length < 5 || trimmedName.length > 50) {
-            return toast.error('Name must be between 5 and 50 characters.');
-        }
-        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
-            return toast.error('Code must be between 5 and 50 characters.');
-        }
-        if (!updatedModel.modelTypeId.trim()) {
-            return toast.error('Please enter model type.');
-        }
-        if (parseFloat(trimmedVersion) === 0 || isNaN(trimmedVersion)) {
-            return toast.error('Version must be greater than 0.');
-        }
-        if (parseFloat(trimmedScale) === 0 || isNaN(trimmedScale)) {
-            return toast.error('Scale must be greater than 0.');
-        }
-
-        setIsUpdating(true);
-        try {
-            const formDataForUpdate = new FormData();
-            formDataForUpdate.append('modelCode', updatedModel.modelCode);
-            formDataForUpdate.append('name', updatedModel.name);
-            formDataForUpdate.append('description', updatedModel.description || '');
-            formDataForUpdate.append('version', updatedModel.version || '');
-            formDataForUpdate.append('scale', updatedModel.scale || '');
-            formDataForUpdate.append('modelTypeId', updatedModel.modelTypeId || '');
-            formDataForUpdate.append('status', updatedModel.status || 'ACTIVE');
-
-            if (imageFile != null && modelFile != null) {
-                formDataForUpdate.append('imageUrl', imageFile);
-                formDataForUpdate.append('file', modelFile);
-            }
-            if (modelFile != null && imageFile == null) {
-                formDataForUpdate.append('file', modelFile);
-            }
-            if (imageFile != null && modelFile == null) {
-                formDataForUpdate.append('imageUrl', imageFile);
-            }
-            const response = await ModelAPI.updateModel(updatedModel.id, formDataForUpdate);
-            if (response?.result) {
-                toast.success('Model updated successfully!', { position: 'top-right' });
-                setUpdateOpenModal(false);
-                fetchModels();
-            }
-        } catch (error) {
-            console.error('Failed to update model:', error);
-            toast.error('Failed to update model. Please try again.', { position: 'top-right' });
-        } finally {
-            setIsUpdating(false);
-        }
     };
 
     useEffect(() => {
@@ -369,20 +256,6 @@ export default function ModelsManagement() {
         fetchModelsType();
     }, []);
 
-    // Dialog handlers
-    const handleOpenCreateDialog = () => {
-        setName('');
-        setCode('');
-        setDescription('');
-        setImage(null);
-        setVersion('');
-        setScale('');
-        setFile3D(null);
-        setModelTypeId('');
-        setOpenCreateDialog(true);
-        setOpenEditor(true);
-    };
-
     const handleCloseCreateDialog = () => {
         setName('');
         setDescription('');
@@ -394,12 +267,6 @@ export default function ModelsManagement() {
         setModelTypeId('');
         setOpenCreateDialog(false);
         setOpenEditor(false);
-    };
-
-    const handleImageSelect = (e) => {
-        if (e.target.files[0]) {
-            setImage(e.target.files[0]);
-        }
     };
 
     const handle3DFileSelect = (e) => {
@@ -415,73 +282,6 @@ export default function ModelsManagement() {
         setModelTypeId('');
         setOpenCreateDialog(true);
         setOpenEditor(true);
-    };
-
-    const handleCreateModel = async () => {
-        // Trim spaces
-        const trimmedName = name.trim();
-        const trimmedCode = code.trim();
-        const trimmedVersion = version.trim();
-        const trimmedScale = scale.trim();
-
-        // Validate required fields
-        if (trimmedName.length < 5 || trimmedName.length > 50) {
-            return toast.error('Name must be between 5 and 50 characters.');
-        }
-        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
-            return toast.error('Code must be between 5 and 50 characters.');
-        }
-        // if (!modelTypeId.trim()) {
-        //     return toast.error('Please enter model type.');
-        // }
-        if (!image) {
-            return toast.error('Please select an image.');
-        }
-        if (parseFloat(trimmedVersion) === 0 || isNaN(trimmedVersion)) {
-            return toast.error('Version must be greater than 0.');
-        }
-        if (parseFloat(trimmedScale) === 0 || isNaN(trimmedScale)) {
-            return toast.error('Scale must be greater than 0.');
-        }
-        if (!file3D) {
-            return toast.error('Please select a 3D file.');
-        }
-
-        setIsCreating(true);
-
-        try {
-            const formData = new FormData();
-            formData.append('name', trimmedName);
-            formData.append('modelCode', trimmedCode);
-            formData.append('description', description);
-            formData.append('imageUrl', image);
-            formData.append('version', trimmedVersion);
-            formData.append('scale', trimmedScale);
-            formData.append('file', file3D);
-            formData.append('modelTypeId', '0e553950-2a32-44cd-bd53-ed680a00f2e5');
-            formData.append('companyId', userInfo?.company?.id);
-
-            const response = await ModelAPI.createModel(formData);
-            if (response?.result) {
-                toast.success('Model created successfully!', { position: 'top-right' });
-                setOpenCreateDialog(false);
-            }
-        } catch (error) {
-            console.error('Failed to create model:', error);
-            if (error?.response?.data?.code === 1095) {
-                toast.error('Model already exists with this name. Please choose a different name.', {
-                    position: 'top-right',
-                });
-            } else {
-                toast.error('Failed to create model. Please try again.', { position: 'top-right' });
-            }
-        } finally {
-            setIsCreating(false);
-        }
-    };
-
-    const handleRedirectToModelView = (modelId) => {
-        navigate(`/company/model-management/view/${modelId}`);
     };
 
     return (
@@ -517,7 +317,6 @@ export default function ModelsManagement() {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
                         <Button
-                            disabled={disableCreateModel}
                             variant="contained"
                             component="label"
                             sx={{
@@ -610,80 +409,6 @@ export default function ModelsManagement() {
             <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Create New Model</DialogTitle>
                 <DialogContent sx={{ minHeight: '80vh' }}>
-                    {/* <DialogContentText sx={{ mb: 2 }}>
-                        Please fill out the form below to create a new model.
-                    </DialogContentText>
-
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        required
-                        label="Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        required
-                        label="Code"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Description (optional)"
-                        multiline
-                        minRows={2}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                    /> */}
-
-                    {/* Upload Image
-                    <Typography variant="body2" sx={{ mt: 2 }}>
-                        Select an image (required):
-                    </Typography>
-                    {image && (
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <img
-                                src={URL.createObjectURL(image)}
-                                alt="Selected Image"
-                                style={{
-                                    width: '100%',
-                                    maxHeight: '300px',
-                                    objectFit: 'contain',
-                                    borderRadius: 8,
-                                    border: '2px solid #ddd',
-                                }}
-                            />
-                        </Box>
-                    )} */}
-                    {/* <Button
-                        variant="contained"
-                        component="label"
-                        fullWidth
-                        startIcon={<CloudUploadIcon />}
-                        sx={{ mt: 2 }}
-                    >
-                        Upload Image
-                        <input type="file" accept="image/*" hidden onChange={handleImageSelect} />
-                    </Button> */}
-
-                    {/* Upload Model File */}
-                    {/* <Typography variant="body2" sx={{ mt: 2 }}>
-                        Select 3D file (required, e.g. .glb):
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        component="label"
-                        fullWidth
-                        startIcon={<CloudUploadIcon />}
-                        sx={{ mt: 2 }}
-                    >
-                        Upload Model File
-                        <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
-                    </Button> */}
                     {file3D && (
                         <>
                             <Typography variant="body2" sx={{ mt: 1 }}>
@@ -728,90 +453,6 @@ export default function ModelsManagement() {
                         textAlign: 'center',
                     }}
                 >
-                    {/* <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                            <TextField
-                                fullWidth
-                                label="Model Code"
-                                name="modelCode"
-                                value={updatedModel?.modelCode || ''}
-                                onChange={handleChange}
-                                margin="normal"
-                            />
-                        </Grid>
-                        <Grid item xs={6}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={updatedModel?.name || ''}
-                                onChange={handleChange}
-                                margin="normal"
-                            />
-                        </Grid>
-                    </Grid>
-                    <TextField
-                        fullWidth
-                        label="Description"
-                        name="description"
-                        value={updatedModel?.description || ''}
-                        onChange={handleChange}
-                        margin="normal"
-                        multiline
-                        rows={3}
-                    /> */}
-
-                    {/* <FormControl fullWidth margin="normal">
-                        <InputLabel>Status</InputLabel>
-                        <Select name="status" value={updatedModel?.status || 'ACTIVE'} onChange={handleChange}>
-                            <MenuItem value="ACTIVE">ACTIVE</MenuItem>
-                            <MenuItem value="INACTIVE">INACTIVE</MenuItem>
-                        </Select>
-                    </FormControl>
-                    {(imageFile || updatedModel?.imageUrl) && (
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Typography variant="subtitle1">Current Image</Typography>
-                            <img
-                                src={imageFile ? URL.createObjectURL(imageFile) : getImage(updatedModel?.imageUrl)}
-                                alt="Model Image"
-                                style={{
-                                    width: '100%', // Đảm bảo ảnh phù hợp với container
-                                    maxWidth: '100%', // Giữ ảnh không bị vỡ
-                                    maxHeight: '300px', // Tăng chiều cao tối đa
-                                    objectFit: 'contain', // Hiển thị toàn bộ ảnh mà không cắt xén
-                                    borderRadius: 8,
-                                    border: '2px solid #ddd',
-                                }}
-                            />
-                        </Box>
-                    )} */}
-
-                    {/* Upload Image */}
-                    {/* <Button
-                        variant="contained"
-                        component="label"
-                        fullWidth
-                        startIcon={<CloudUploadIcon />}
-                        sx={{ mt: 2 }}
-                    >
-                        Upload Image
-                        <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
-                        {imageFile && <Typography variant="body2">File: {imageFile.name}</Typography>}
-                    </Button> */}
-
-                    {/* Upload Model File */}
-                    {/* <Button
-                        variant="contained"
-                        component="label"
-                        fullWidth
-                        startIcon={<CloudUploadIcon />}
-                        sx={{ mt: 2 }}
-                    >
-                        Upload Model File
-                        <input type="file" hidden accept=".glb,.gltf" onChange={handleModelFileUpload} />
-                        {modelFile && <Typography variant="body2">File: {modelFile.name}</Typography>}
-                    </Button> */}
-
                     {openEditor && (
                         <ModelEditor
                             modelId={updatedModel ? updatedModel?.id : updatedModel}
@@ -820,19 +461,6 @@ export default function ModelsManagement() {
                         />
                     )}
 
-                    {/* Nút Save */}
-                    {/* <Button
-                        variant="contained"
-                        color="success"
-                        fullWidth
-                        sx={{ mt: 3 }}
-                        onClick={handleSave}
-                        disabled={isUpdating}
-                    >
-                        {isUpdating ? <CircularProgress size={24} /> : 'Save'}
-                    </Button> */}
-
-                    {/* Nút Close */}
                     <Button
                         onClick={handleCloseUpdateModal}
                         variant="contained"
