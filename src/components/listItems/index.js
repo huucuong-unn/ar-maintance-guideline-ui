@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { AppWindowMac, AppWindowMacIcon, Bot, Building, CreditCard, Users } from 'lucide-react';
+import { AppWindowMac, Bot, Building, CreditCard, Users, Monitor, FileType, AppWindowMacIcon } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import storageService from '../StorageService/storageService';
@@ -86,6 +86,16 @@ export const SecondaryListItems = () => {
             route: '/company/dashboard',
             icon: <DashboardIcon />,
             title: 'Dashboard',
+        },
+        {
+            route: '/company/machines-management',
+            icon: <Monitor />,
+            title: 'Machines',
+        },
+        {
+            route: '/company/machines-type-management',
+            icon: <FileType />,
+            title: 'Machine Types',
         },
         {
             route: '/company/model-management',

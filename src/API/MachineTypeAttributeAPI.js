@@ -1,7 +1,7 @@
-import { host } from '~/Constant';
+import { getActiveElement } from '@testing-library/user-event/dist/utils';
 import axiosClient from './AxiosClient';
 
-const ModelTypeAPI = {
+const MachineTypeAttributeAPI = {
     addAuthorizationHeader(config, includeAuthorization) {
         if (includeAuthorization) {
             const token = JSON.parse(localStorage.getItem('accessToken'));
@@ -12,12 +12,12 @@ const ModelTypeAPI = {
         }
         return config;
     },
-    getAllToSelect() {
-        return axiosClient.get(`/v1/model-types`);
+    getByMachineType(machineTypeId) {
+        return axiosClient.get(`/v1/machine-type-attribute/machine-type/${machineTypeId}`);
     },
-    getByCompanyId(companyId) {
-        return axiosClient.get(`/v1/model-types/company/${companyId}`);
+    delete(id) {
+        return axiosClient.delete(`/v1/machine-type-attribute/${id}`);
     },
 };
 
-export default ModelTypeAPI;
+export default MachineTypeAttributeAPI;

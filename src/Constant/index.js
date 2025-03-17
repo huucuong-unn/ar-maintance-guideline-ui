@@ -7,4 +7,4 @@ export const getImage = (image) => {
 };
 
 const hostImage = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
-export const host = process.env.REACT_APP_BACKEND_APP_HOST_LOCAL;
+export const host = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
