@@ -26,6 +26,8 @@ import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
 import ModelEditor from '~/pages/new/TestPage';
+import MachinesManagement from '~/pages/new/Machine';
+import MachineTypeManagement from '~/pages/new/MachineType';
 
 const publicRoutes = [
     //new
@@ -66,6 +68,8 @@ const companyRoutes = [
         component: PaymentAndSubscriptionManagement,
         layout: AdminLayout,
     },
+    { path: '/company/machines-management', component: MachinesManagement, layout: AdminLayout },
+    { path: '/company/machines-type-management', component: MachineTypeManagement, layout: AdminLayout },
 ];
 
 const privateRoutes = [];
