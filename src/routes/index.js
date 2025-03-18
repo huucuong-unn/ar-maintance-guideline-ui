@@ -30,6 +30,7 @@ import MachinesManagement from '~/pages/new/Machine';
 import MachineTypeManagement from '~/pages/new/MachineType';
 import PointPurchase from '~/pages/new/Wallet/pointPurchase';
 import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
+import CompanyRequestDesigner from '~/pages/new/CompanyRequestDesigner';
 
 const publicRoutes = [
     //new
@@ -83,7 +84,7 @@ const companyRoutes = [
 const designerRoutes = [
     {
         path: '/designer/company-request-management',
-        component: CompanyRequestManagement,
+        component: CompanyRequestDesigner,
         layout: AdminLayout,
     },
 ];

@@ -85,6 +85,42 @@ export default function CompanyRequestManagement() {
                 return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value || '-'}</Box>;
             },
         },
+        {
+            field: 'action',
+            headerName: 'Action',
+            width: 400,
+            renderCell: (params) => {
+                const currentStatus = params.row.status;
+                return (
+                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                        {currentStatus === 'ARCHIVED' ? (
+                            <Button
+                                variant="contained"
+                                size="small"
+                                color="success"
+                                sx={{ width: '100px', bgcolor: 'orange' }}
+
+                                // onClick={() => handleOpenStatusConfirm(params.row.id)}
+                            >
+                                View
+                            </Button>
+                        ) : (
+                            <Button
+                                disabled
+                                variant="contained"
+                                size="small"
+                                color="success"
+                                sx={{ width: '100px', bgcolor: 'orange' }}
+
+                                // onClick={() => handleOpenStatusConfirm(params.row.id)}
+                            >
+                                View
+                            </Button>
+                        )}
+                    </Box>
+                );
+            },
+        },
     ];
 
     // Fetch existing requests

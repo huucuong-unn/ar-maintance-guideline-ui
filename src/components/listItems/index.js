@@ -167,9 +167,15 @@ export const SecondaryListItems = () => {
                         <ListItemText primary={route.title} />
                     </ListItemButton>
                 ))}
-
             {role === 'ADMIN' &&
                 adminRoutes.map((route, index) => (
+                    <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
+                        <ListItemIcon>{route.icon}</ListItemIcon>
+                        <ListItemText primary={route.title} />
+                    </ListItemButton>
+                ))}{' '}
+            {role === 'DESIGNER' &&
+                designerRoutes.map((route, index) => (
                     <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
                         <ListItemIcon>{route.icon}</ListItemIcon>
                         <ListItemText primary={route.title} />

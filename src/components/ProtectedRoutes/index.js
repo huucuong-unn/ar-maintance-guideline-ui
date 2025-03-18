@@ -9,6 +9,10 @@ const ProtectedRoutes = ({ roleName }) => {
                 return user?.role?.roleName === 'ADMIN' ? <Outlet /> : (window.location.href = '/not-authorized');
             case 'COMPANY':
                 return user?.role?.roleName === 'COMPANY' ? <Outlet /> : (window.location.href = '/not-authorized');
+            case 'DESIGNER':
+                return user?.role?.roleName === 'DESIGNER' ? <Outlet /> : (window.location.href = '/not-authorized');
+            case 'MANAGER':
+                return user?.role?.roleName === 'MANAGER' ? <Outlet /> : (window.location.href = '/not-authorized');
         }
     } else {
         window.location.href = '/not-authorized';

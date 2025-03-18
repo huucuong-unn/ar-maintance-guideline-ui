@@ -57,6 +57,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 const defaultTheme = createTheme();
 
 export function NavbarAdmin() {
+    const userInfo = storageService.getItem('userInfo')?.user || null;
     const [open, setOpen] = useState(true);
     const [anchorElUser, setAnchorElUser] = useState(null);
     const handleCloseUserMenu = () => {
@@ -187,16 +188,20 @@ export function Sidebar() {
                     p: 2,
                 }}
             >
-                <Box sx={{ mb: 1 }}>
-                    <Typography variant="body1">{user?.company.companyName || 'Admin'}</Typography>
-                    <Typography variant="contained" color="primary">
-                        Current Points: {currentPoints}
-                    </Typography>
-                </Box>
+                {user?.roleName === 'COMPANY' && (
+                    <Box sx={{ mb: 1 }}>
+                        <Typography variant="body1">{user?.company.companyName || 'Admin'}</Typography>
+                        <Typography variant="contained" color="primary">
+                            Current Points: {currentPoints}
+                        </Typography>
+                    </Box>
+                )}
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>
-                        Buy Points
-                    </Button>
+                    {user?.roleName === 'COMPANY' && (
+                        <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>
+                            Buy Points
+                        </Button>
+                    )}
                     <Button variant="outlined" color="secondary" size="small" fullWidth onClick={handleLogout}>
                         Logout
                     </Button>
