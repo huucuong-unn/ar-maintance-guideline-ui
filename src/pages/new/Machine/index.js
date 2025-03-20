@@ -25,6 +25,8 @@ import storageService from '~/components/StorageService/storageService';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
 import MachineTypeAttributeAPI from '~/API/MachineTypeAttributeAPI';
 import EditIcon from '@mui/icons-material/Edit';
+import { getImage } from '~/Constant';
+import axios from 'axios';
 
 function Copyright(props) {
     return (
@@ -52,6 +54,7 @@ export default function MachinesManagement() {
 
     const columns = [
         { field: 'machineName', headerName: 'Name', width: 200 },
+        { field: 'machineCode', headerName: 'Code', width: 200 },
         { field: 'machineType', headerName: 'Machine Type', width: 200 },
         {
             field: 'action',
@@ -106,6 +109,8 @@ export default function MachinesManagement() {
         modelTypeId: '',
         companyId: userInfo?.company?.id,
         machineTypeValueCreationRequest: [],
+        apiUrl: '',
+        token: '',
     });
 
     useEffect(() => {
@@ -193,6 +198,8 @@ export default function MachinesManagement() {
     const [machineById, setMachineById] = useState({});
     const [updateMachineRequest, setUpdateMachineRequest] = useState({
         machineName: '',
+        apiUrl: '',
+        token: '',
         machineTypeValueModifyRequests: [
             {
                 machineTypeValueId: '',
@@ -209,6 +216,8 @@ export default function MachinesManagement() {
             const data = response?.result;
             setUpdateMachineRequest({
                 machineName: data.machineName,
+                apiUrl: data.apiUrl,
+                token: data.token,
                 machineTypeValueModifyRequests: data.machineTypeValueResponses.map((attr) => ({
                     machineTypeValueId: attr.id,
                     machineTypeAttributeId: attr.machineTypeAttributeId,
@@ -255,6 +264,27 @@ export default function MachinesManagement() {
             setIsLoadingUpdateMachine(false);
         }
     };
+
+    async function handleDownloadQrCode(qrCodeUrl, fileName) {
+        if (!qrCodeUrl) return;
+        try {
+            const response = await axios.get(getImage(qrCodeUrl), { responseType: 'blob' });
+            const blob = new Blob([response.data], { type: response.headers['content-type'] });
+            const downloadUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error downloading QR code:', error);
+            alert('Failed to download QR code. Please try again.');
+        }
+    }
 
     useEffect(() => {
         console.log(updateMachineRequest);
@@ -361,6 +391,34 @@ export default function MachinesManagement() {
                                     }));
                                 }}
                             />
+
+                            <TextField
+                                label="API URL"
+                                name="apiUrl"
+                                fullWidth
+                                variant="outlined"
+                                onChange={(event) => {
+                                    setCreateMachineRequest((prev) => ({
+                                        ...prev,
+                                        apiUrl: event.target.value,
+                                    }));
+                                }}
+                            />
+
+                            <TextField
+                                label="Token"
+                                name="token"
+                                fullWidth
+                                variant="outlined"
+                                type="password"
+                                onChange={(event) => {
+                                    setCreateMachineRequest((prev) => ({
+                                        ...prev,
+                                        token: event.target.value,
+                                    }));
+                                }}
+                            />
+
                             <Autocomplete
                                 disablePortal
                                 options={machineTypes}
@@ -436,6 +494,30 @@ export default function MachinesManagement() {
                     <DialogTitle>Machine Detail</DialogTitle>
                     <DialogContent sx={{ minHeight: '80vh' }}>
                         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                            {/* QR Code */}
+                            {machineById.qrCode && (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 3 }}>
+                                    <img
+                                        src={getImage(machineById.qrCode)}
+                                        alt="QR Code"
+                                        style={{ width: 200, height: 200, display: 'block' }}
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ mt: 2 }}
+                                        onClick={() =>
+                                            handleDownloadQrCode(
+                                                machineById?.qrCode,
+                                                `${machineById?.machineName}_QRCode.png`,
+                                            )
+                                        }
+                                    >
+                                        Download QR Code
+                                    </Button>
+                                </Box>
+                            )}
+
                             {/* Machine Name */}
                             <TextField
                                 label="Machine Name"
@@ -450,6 +532,34 @@ export default function MachinesManagement() {
                                 }
                             />
 
+                            {/* API URL */}
+                            <TextField
+                                label="API URL"
+                                fullWidth
+                                variant="outlined"
+                                value={updateMachineRequest.apiUrl || ''}
+                                onChange={(event) =>
+                                    setUpdateMachineRequest((prev) => ({
+                                        ...prev,
+                                        apiUrl: event.target.value,
+                                    }))
+                                }
+                            />
+
+                            {/* Token */}
+                            <TextField
+                                label="Token"
+                                fullWidth
+                                variant="outlined"
+                                value={updateMachineRequest.token || ''}
+                                onChange={(event) =>
+                                    setUpdateMachineRequest((prev) => ({
+                                        ...prev,
+                                        token: event.target.value,
+                                    }))
+                                }
+                            />
+
                             {/* Machine Attributes */}
                             {updateMachineRequest.machineTypeValueModifyRequests?.map((attr, index) => (
                                 <TextField
@@ -459,6 +569,7 @@ export default function MachinesManagement() {
                                         'Attribute'
                                     }
                                     fullWidth
+                                    InputProps={{ readOnly: true }}
                                     variant="outlined"
                                     value={attr.valueAttribute || ''}
                                     onChange={(event) => {

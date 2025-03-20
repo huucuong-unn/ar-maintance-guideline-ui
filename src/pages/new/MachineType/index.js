@@ -125,7 +125,7 @@ export default function MachineTypeManagement() {
             ...prev,
             machineTypeAttributeCreationRequestList: [
                 ...prev.machineTypeAttributeCreationRequestList,
-                { attributeName: '' },
+                { attributeName: '', attributeValue: '' },
             ],
         }));
     };
@@ -141,10 +141,10 @@ export default function MachineTypeManagement() {
     };
 
     // Cập nhật giá trị nhập vào attribute
-    const handleChangeAttribute = (index, value) => {
+    const handleChangeAttribute = (index, field, value) => {
         setCreateMachineTypeRequest((prev) => {
             const updatedAttributes = [...prev.machineTypeAttributeCreationRequestList];
-            updatedAttributes[index] = { ...updatedAttributes[index], attributeName: value };
+            updatedAttributes[index] = { ...updatedAttributes[index], [field]: value };
             return { ...prev, machineTypeAttributeCreationRequestList: updatedAttributes };
         });
     };
@@ -165,6 +165,14 @@ export default function MachineTypeManagement() {
             if (createMachineTypeRequest.machineTypeAttributeCreationRequestList.length === 0) {
                 toast.error('At least one attribute is required.');
                 return;
+            }
+
+            // Validate each attribute name length (2-100 characters)
+            for (const attr of createMachineTypeRequest.machineTypeAttributeCreationRequestList) {
+                if (!attr.attributeName || attr.attributeName.length < 2 || attr.attributeName.length > 100) {
+                    toast.error('Each attribute name must be between 2 and 100 characters.');
+                    return;
+                }
             }
 
             setIsLoadingCreateMachineType(true);
@@ -192,6 +200,7 @@ export default function MachineTypeManagement() {
             {
                 machineTypeAttributeId: '',
                 attributeName: '',
+                attributeValue: '',
             },
         ],
     });
@@ -212,6 +221,7 @@ export default function MachineTypeManagement() {
                     machineTypeAttributeCreationRequestList: data.machineTypeAttributeResponses.map((attr) => ({
                         machineTypeAttributeId: attr.id,
                         attributeName: attr.attributeName,
+                        attributeValue: attr.valueAttribute,
                     })),
                 });
             }
@@ -314,8 +324,8 @@ export default function MachineTypeManagement() {
     };
 
     useEffect(() => {
-        console.log(currentMachineTypeAttributeIdToDelete);
-    }, [currentMachineTypeAttributeIdToDelete]);
+        console.log(updateMachineTypeRequest);
+    }, [updateMachineTypeRequest]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -424,14 +434,24 @@ export default function MachineTypeManagement() {
                             />
                             {/* Attributes List */}
                             {createMachineTypeRequest.machineTypeAttributeCreationRequestList.map((attr, index) => (
-                                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                                    {/* Attribute Name */}
                                     <TextField
                                         label={`Attribute ${index + 1}`}
                                         fullWidth
                                         variant="outlined"
                                         value={attr.attributeName}
-                                        onChange={(e) => handleChangeAttribute(index, e.target.value)}
+                                        onChange={(e) => handleChangeAttribute(index, 'attributeName', e.target.value)}
                                     />
+                                    :{/* Attribute Value */}
+                                    <TextField
+                                        label={`Value ${index + 1}`}
+                                        fullWidth
+                                        variant="outlined"
+                                        value={attr.attributeValue}
+                                        onChange={(e) => handleChangeAttribute(index, 'attributeValue', e.target.value)}
+                                    />
+                                    {/* Delete Button */}
                                     <IconButton color="error" onClick={() => handleRemoveAttribute(index)}>
                                         <Delete />
                                     </IconButton>
@@ -461,7 +481,7 @@ export default function MachineTypeManagement() {
                 <Dialog
                     open={openUpdateMachineTypeDialog}
                     onClose={handleCloseUpdateMachineTypeDialog}
-                    maxWidth="sm"
+                    maxWidth="md"
                     fullWidth
                 >
                     <DialogTitle>Machine Type Detail</DialogTitle>
@@ -484,8 +504,9 @@ export default function MachineTypeManagement() {
                             {/* Machine Type Attributes */}
                             {updateMachineTypeRequest.machineTypeAttributeCreationRequestList.map((attr, index) => (
                                 <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                                    {/* Attribute Name */}
                                     <TextField
-                                        label={`Attribute ${index + 1}`}
+                                        label={`Attribute ${index + 1} Name`}
                                         fullWidth
                                         variant="outlined"
                                         value={attr.attributeName}
@@ -503,6 +524,29 @@ export default function MachineTypeManagement() {
                                             }));
                                         }}
                                     />
+
+                                    {/* Attribute Value */}
+                                    <TextField
+                                        label={`Attribute ${index + 1} Value`}
+                                        fullWidth
+                                        variant="outlined"
+                                        value={attr.attributeValue}
+                                        onChange={(e) => {
+                                            const newAttributes = [
+                                                ...updateMachineTypeRequest.machineTypeAttributeCreationRequestList,
+                                            ];
+                                            newAttributes[index] = {
+                                                ...newAttributes[index],
+                                                attributeValue: e.target.value,
+                                            };
+                                            setUpdateMachineTypeRequest((prev) => ({
+                                                ...prev,
+                                                machineTypeAttributeCreationRequestList: newAttributes,
+                                            }));
+                                        }}
+                                    />
+
+                                    {/* Delete / Remove Button */}
                                     {attr.machineTypeAttributeId !== '' ? (
                                         <Button
                                             variant="contained"
