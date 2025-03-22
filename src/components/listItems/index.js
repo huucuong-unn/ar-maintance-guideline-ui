@@ -61,22 +61,6 @@ export const MainListItems = () => {
                         <ListItemText primary={route.title} />
                     </ListItemButton>
                 ))}
-
-            {role === 'DESIGNER' &&
-                adminRoutes.map((route, index) => (
-                    <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
-                        <ListItemIcon>{route.icon}</ListItemIcon>
-                        <ListItemText primary={route.title} />
-                    </ListItemButton>
-                ))}
-
-            {role === 'MANAGER' &&
-                adminRoutes.map((route, index) => (
-                    <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
-                        <ListItemIcon>{route.icon}</ListItemIcon>
-                        <ListItemText primary={route.title} />
-                    </ListItemButton>
-                ))}
         </React.Fragment>
     );
 };
@@ -161,14 +145,6 @@ export const SecondaryListItems = () => {
         {
             route: '/designer/company-request-management',
             icon: <Mail />,
-            title: 'Company Request',
-        },
-    ];
-
-    const managerRoutes = [
-        {
-            route: '/company/company-request-management',
-            icon: <AppWindowMac />,
             title: 'Company Request',
         },
     ];
