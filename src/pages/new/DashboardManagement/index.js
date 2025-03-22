@@ -493,12 +493,7 @@ export default function DashboardManagement() {
                                     {/* Top Guidelines */}
                                     <Grid item xs={12} md={6}>
                                         <Card sx={{ mb: 4 }}>
-                                            <CardHeader
-                                                title="Current Subscription"
-                                                subheader={`Plan expires on ${new Date(
-                                                    dashboardData.companySubscriptionResponse.subscriptionExpireDate,
-                                                ).toLocaleDateString()}`}
-                                            />
+                                            <CardHeader title="Current Subscription" />
                                             <CardContent>
                                                 <Grid container spacing={3}>
                                                     {/* Plan Details */}
@@ -513,7 +508,7 @@ export default function DashboardManagement() {
                                                             </Typography>
                                                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                                 <Chip
-                                                                    label={dashboardData.companySubscriptionResponse.subscriptionResponse.subscriptionCode.toUpperCase()}
+                                                                    label={dashboardData?.companySubscriptionResponse?.subscriptionResponse?.subscriptionCode?.toUpperCase()}
                                                                     color="primary"
                                                                     sx={{
                                                                         textTransform: 'capitalize',
@@ -527,16 +522,16 @@ export default function DashboardManagement() {
                                                                     color="text.secondary"
                                                                     sx={{ ml: 2 }}
                                                                 >
-                                                                    {dashboardData.companySubscriptionResponse
-                                                                        .status === 'ACTIVE'
+                                                                    {dashboardData?.companySubscriptionResponse
+                                                                        ?.status === 'ACTIVE'
                                                                         ? 'Active'
                                                                         : 'Inactive'}
                                                                 </Typography>
                                                             </Box>
                                                             <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
                                                                 {formatCurrency(
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .monthlyFee,
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.monthlyFee,
                                                                 )}
                                                                 <Typography
                                                                     component="span"
@@ -556,7 +551,7 @@ export default function DashboardManagement() {
                                                         </Typography>
                                                         <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 1 }}>
                                                             <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                                                                {dashboardData.companySubscriptionResponse.storageUsage.toFixed(
+                                                                {dashboardData?.companySubscriptionResponse?.storageUsage.toFixed(
                                                                     2,
                                                                 )}
                                                             </Typography>
@@ -569,22 +564,22 @@ export default function DashboardManagement() {
                                                             </Typography>
                                                             <Typography variant="body1">
                                                                 {
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .subscriptionResponse.maxStorageUsage
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.subscriptionResponse?.maxStorageUsage
                                                                 }{' '}
                                                                 {
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .subscriptionResponse.storageUnit
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.subscriptionResponse?.storageUnit
                                                                 }
                                                             </Typography>
                                                         </Box>
                                                         <LinearProgress
                                                             variant="determinate"
                                                             value={Math.min(
-                                                                (dashboardData.companySubscriptionResponse
-                                                                    .storageUsage /
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .subscriptionResponse.maxStorageUsage) *
+                                                                (dashboardData?.companySubscriptionResponse
+                                                                    ?.storageUsage /
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.subscriptionResponse?.maxStorageUsage) *
                                                                     100,
                                                                 100,
                                                             )}
@@ -600,8 +595,8 @@ export default function DashboardManagement() {
                                                         <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 1 }}>
                                                             <Typography variant="h5" sx={{ fontWeight: 600 }}>
                                                                 {
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .numberOfUsers
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.numberOfUsers
                                                                 }
                                                             </Typography>
                                                             <Typography
@@ -613,27 +608,27 @@ export default function DashboardManagement() {
                                                             </Typography>
                                                             <Typography variant="body1">
                                                                 {
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .subscriptionResponse.maxNumberOfUsers
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.subscriptionResponse?.maxNumberOfUsers
                                                                 }
                                                             </Typography>
                                                         </Box>
                                                         <LinearProgress
                                                             variant="determinate"
                                                             value={Math.min(
-                                                                (dashboardData.companySubscriptionResponse
-                                                                    .numberOfUsers /
-                                                                    dashboardData.companySubscriptionResponse
-                                                                        .subscriptionResponse.maxNumberOfUsers) *
+                                                                (dashboardData?.companySubscriptionResponse
+                                                                    ?.numberOfUsers /
+                                                                    dashboardData?.companySubscriptionResponse
+                                                                        ?.subscriptionResponse?.maxNumberOfUsers) *
                                                                     100,
                                                                 100,
                                                             )}
                                                             sx={{ height: 8, borderRadius: 4 }}
                                                             color={
-                                                                dashboardData.companySubscriptionResponse
-                                                                    .numberOfUsers >=
-                                                                dashboardData.companySubscriptionResponse
-                                                                    .subscriptionResponse.maxNumberOfUsers
+                                                                dashboardData?.companySubscriptionResponse
+                                                                    ?.numberOfUsers >=
+                                                                dashboardData?.companySubscriptionResponse
+                                                                    ?.subscriptionResponse?.maxNumberOfUsers
                                                                     ? 'error'
                                                                     : 'primary'
                                                             }
@@ -655,7 +650,7 @@ export default function DashboardManagement() {
                                                                 </Typography>
                                                                 <Typography>
                                                                     {new Date(
-                                                                        dashboardData.companySubscriptionResponse.subscriptionStartDate,
+                                                                        dashboardData?.companySubscriptionResponse?.subscriptionStartDate,
                                                                     ).toLocaleDateString()}
                                                                 </Typography>
                                                             </Box>
@@ -669,7 +664,7 @@ export default function DashboardManagement() {
                                                                 </Typography>
                                                                 <Typography align="right">
                                                                     {new Date(
-                                                                        dashboardData.companySubscriptionResponse.subscriptionExpireDate,
+                                                                        dashboardData?.companySubscriptionResponse?.subscriptionExpireDate,
                                                                     ).toLocaleDateString()}
                                                                 </Typography>
                                                             </Box>

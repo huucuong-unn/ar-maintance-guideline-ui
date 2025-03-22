@@ -572,16 +572,11 @@ export default function SimplifiedModelViewer({
             setLoading(false);
             return toast.error('Name must be between 5 and 50 characters.');
         }
-        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
-            setLoading(false);
-            return toast.error('Code must be between 5 and 50 characters.');
-        }
 
         setIsLoadingUpdateModelGuideline(true);
 
         try {
             const formDataForUpdate = new FormData();
-            formDataForUpdate.append('modelCode', formData?.code);
             formDataForUpdate.append('name', formData?.name);
             formDataForUpdate.append('description', formData.description || '');
             formDataForUpdate.append('modelTypeId', formData?.modelTypeId || '0e553950-2a32-44cd-bd53-ed680a00f2e5');
@@ -655,7 +650,6 @@ export default function SimplifiedModelViewer({
     const handleCreateModel = async () => {
         // Trim spaces
         const trimmedName = formData.name.trim();
-        const trimmedCode = formData.code.trim();
 
         setIsLoading(true);
 
@@ -663,10 +657,6 @@ export default function SimplifiedModelViewer({
         if (trimmedName.length < 1 || trimmedName.length > 50) {
             setIsLoading(false);
             return toast.error('Name must be between 1 and 50 characters.');
-        }
-        if (trimmedCode.length < 1 || trimmedCode.length > 50) {
-            setIsLoading(false);
-            return toast.error('Code must be between 1 and 50 characters.');
         }
 
         if (!imageFile) {
@@ -677,7 +667,6 @@ export default function SimplifiedModelViewer({
         try {
             const formDataToCreate = new FormData();
             formDataToCreate.append('name', trimmedName);
-            formDataToCreate.append('modelCode', trimmedCode);
             formDataToCreate.append('description', formData.description);
             formDataToCreate.append('imageUrl', imageFile);
             formDataToCreate.append('scale', modelTransform.scale);
@@ -1044,30 +1033,6 @@ export default function SimplifiedModelViewer({
                                                 '& .MuiInputLabel-root': {
                                                     color: darkMode ? '#ffffff' : '#000000',
                                                 },
-                                            }}
-                                        />
-
-                                        {/* Code */}
-                                        <TextField
-                                            required
-                                            label="Code"
-                                            variant="outlined"
-                                            name="code"
-                                            value={formData.code}
-                                            onChange={handleInputChange}
-                                            fullWidth
-                                            sx={{
-                                                input: { color: darkMode ? '#ffffff' : '#000000' },
-                                                '& .MuiOutlinedInput-root': {
-                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
-                                                    '&:hover fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
-                                                    },
-                                                    '&.Mui-focused fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
-                                                    },
-                                                },
-                                                label: { color: darkMode ? '#ffffff' : '#000000' },
                                             }}
                                         />
 

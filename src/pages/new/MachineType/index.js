@@ -54,12 +54,12 @@ export default function MachineTypeManagement() {
     const [total, setTotal] = useState(0);
 
     const columns = [
-        { field: 'machineTypeName', headerName: 'Name', width: 200 },
-        { field: 'numOfAttribute', headerName: 'Number of Attribute', width: 200 },
+        { field: 'machineTypeName', headerName: 'Name', width: 300 },
+        { field: 'numOfAttribute', headerName: 'Number of Attribute', width: 300 },
         {
             field: 'action',
             headerName: 'Action',
-            width: 150,
+            width: 250,
             renderCell: (params) => (
                 <Button
                     variant="contained"

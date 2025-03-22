@@ -95,9 +95,9 @@ export default function EmployeesManagement() {
             avatar: '',
             company: userInfo?.company?.companyName || '',
             status: 'ACTIVE',
+            roleName: 'STAFF',
             expirationDate: '',
             isPayAdmin: false,
-            roleName: '',
         });
         setPasswordError('');
     };
@@ -443,19 +443,8 @@ export default function EmployeesManagement() {
 
                             <TextField fullWidth label="Company" name="company" value={newEmployee.company} disabled />
 
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel id="role-select-label">Role</InputLabel>
-                                <Select
-                                    labelId="role-select-label"
-                                    label="Role"
-                                    name="roleName"
-                                    value={newEmployee.roleName}
-                                    onChange={handleInputChange}
-                                >
-                                    <MenuItem value="STAFF">STAFF</MenuItem>
-                                    <MenuItem value="MANAGER">MANAGER</MenuItem>
-                                </Select>
-                            </FormControl>
+                            <TextField fullWidth label="Role" name="roleName" value={newEmployee.roleName} disabled />
+
                             <TextField fullWidth label="Status" name="status" value={newEmployee.status} disabled />
                         </Box>
                     </DialogContent>

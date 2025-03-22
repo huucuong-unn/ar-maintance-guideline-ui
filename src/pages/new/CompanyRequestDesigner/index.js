@@ -52,6 +52,11 @@ export default function CompanyRequestDesigner() {
     // Table columns
     const columns = [
         {
+            field: 'requestNumber',
+            headerName: 'Request Number',
+            width: 150,
+        },
+        {
             field: 'status',
             headerName: 'Status',
             width: 150,

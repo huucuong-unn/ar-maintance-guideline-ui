@@ -59,6 +59,11 @@ export default function CompanyRequestManagement() {
     // Table columns
     const columns = [
         {
+            field: 'requestNumber',
+            headerName: 'Request Number',
+            width: 150,
+        },
+        {
             field: 'status',
             headerName: 'Status',
             width: 150,
@@ -129,7 +134,7 @@ export default function CompanyRequestManagement() {
             },
         },
         { field: 'requestSubject', headerName: 'Subject', width: 200 },
-        { field: 'requestDescription', headerName: 'Description', width: 300 },
+        { field: 'requestDescription', headerName: 'Description', width: 250 },
         {
             field: 'designer',
             headerName: 'Designer',

@@ -127,7 +127,6 @@ export default function ModelsManagement() {
     };
 
     const columns = [
-        { field: 'modelCode', headerName: 'Model Code', width: 200 },
         { field: 'name', headerName: 'Name', width: 350 },
         { field: 'courseName', headerName: 'Guideline Name', width: 350 },
         {
@@ -316,7 +315,7 @@ export default function ModelsManagement() {
                         Models Management
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
-                        <Button
+                        {/* <Button
                             variant="contained"
                             component="label"
                             sx={{
@@ -331,7 +330,7 @@ export default function ModelsManagement() {
                         >
                             Create Model
                             <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
-                        </Button>
+                        </Button> */}
                         <Box
                             sx={{
                                 display: 'flex',
