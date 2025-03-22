@@ -12,7 +12,7 @@ const WalletAPI = {
 
     getWalletHistoryByUserId: async (userId) => {
         try {
-            const response = await axiosClient.get(`/v1/wallets-history/${userId}`);
+            const response = await axiosClient.get(`/v1/wallets/history/user/${userId}`);
             return response;
         } catch (error) {
             throw error;

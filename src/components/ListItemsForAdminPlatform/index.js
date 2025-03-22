@@ -90,7 +90,7 @@ export const SecondaryListItemsForAdminPlatForm = () => {
             title: 'Employees',
         },
         {
-            route: '/company/payment-subscription-management',
+            route: '/company/payment/history',
             icon: <CreditCard />,
             title: 'Payment',
         },

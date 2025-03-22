@@ -51,7 +51,7 @@ export default function PaymentFailed() {
                             mt: 2,
                         }}
                         onClick={() => {
-                            navigate('/company/payment-subscription-management');
+                            navigate('/company/payment/history');
                         }}
                     >
                         Back to Home

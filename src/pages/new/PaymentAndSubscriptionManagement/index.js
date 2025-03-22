@@ -125,7 +125,7 @@ export default function PaymentAndSubscriptionManagement() {
 
     const columns = [
         { field: 'orderCode', headerName: 'Order Code', width: 200 },
-        { field: 'companyName', headerName: 'Company Name', width: 200 },
+        { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'amount', headerName: 'Amount', width: 200 },
         { field: 'point', headerName: 'Point', width: 200 },
         { field: 'createdDate', headerName: 'Create At', width: 200 },
@@ -255,9 +255,6 @@ export default function PaymentAndSubscriptionManagement() {
                             }}
                         >
                             <Box sx={{ width: '100%', typography: 'body1' }}>
-                                <Button variant="outlined" onClick={handleOpenPackagesDialog} sx={{ mb: 4 }}>
-                                    View Subscription Packages
-                                </Button>
                                 <Paper sx={{ height: 400, width: '100%' }}>
                                     <DataGrid
                                         rows={rows}
@@ -276,19 +273,8 @@ export default function PaymentAndSubscriptionManagement() {
                                             backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                         }}
                                         getRowId={(row) => row.id}
-                                        slots={{ toolbar: GridToolbar }}
                                     />
                                 </Paper>
-
-                                <PackagesDialog
-                                    userInfo={userInfo}
-                                    handleGoCheckout={handleGoCheckout}
-                                    openPackagesDialog={openPackagesDialog}
-                                    handleClosePackagesDialog={handleClosePackagesDialog}
-                                    subscriptions={subscriptions}
-                                    currentPlan={currentPlan}
-                                    currentCompanyPlanInfo={currentCompanyPlanInfo}
-                                />
 
                                 <Copyright sx={{ mt: 5 }} />
                             </Box>

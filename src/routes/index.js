@@ -32,6 +32,7 @@ import PointPurchase from '~/pages/new/Wallet/pointPurchase';
 import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
 import CompanyRequestDesigner from '~/pages/new/CompanyRequestDesigner';
 import ServicePriceManagement from '~/pages/new/ServicePrice/indesx';
+import WalletHistory from '~/pages/new/Wallet/walletHistory';
 
 const publicRoutes = [
     //new
@@ -46,7 +47,6 @@ const publicRoutes = [
     { path: '/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },
     { path: '/company/waiting', component: CompanyWaiting, layout: null },
-    { path: '/wallet/purchase', component: PointPurchase, layout: null },
 ];
 
 const adminRoutes = [
@@ -70,7 +70,7 @@ const companyRoutes = [
     { path: '/company/model-management/view/:id', component: ModelDetail, layout: AdminLayout },
     { path: '/company/model-request-management', component: ModelRequestManagement, layout: AdminLayout },
     {
-        path: '/company/payment-subscription-management',
+        path: '/company/payment/history',
         component: PaymentAndSubscriptionManagement,
         layout: AdminLayout,
     },
@@ -81,6 +81,8 @@ const companyRoutes = [
         component: CompanyRequestManagement,
         layout: AdminLayout,
     },
+    { path: '/wallet/purchase', component: PointPurchase, layout: AdminLayout },
+    { path: '/wallet/history', component: WalletHistory, layout: AdminLayout },
 ];
 
 const designerRoutes = [

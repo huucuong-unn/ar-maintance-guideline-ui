@@ -108,7 +108,7 @@ export const SecondaryListItems = () => {
             title: 'Employees',
         },
         {
-            route: '/company/payment-subscription-management',
+            route: '/company/payment/history',
             icon: <CreditCard />,
             title: 'Payment',
         },
@@ -118,7 +118,7 @@ export const SecondaryListItems = () => {
             title: 'Company Request',
         },
         {
-            route: '/wallet-history',
+            route: '/wallet/history',
             icon: <AppWindowMac />,
             title: 'Wallet History',
         },
