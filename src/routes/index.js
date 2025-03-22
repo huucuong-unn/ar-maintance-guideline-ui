@@ -26,7 +26,11 @@ import CoursesControlEdit from '~/pages/new/CoursesControlEdit';
 import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
 import ModelEditor from '~/pages/new/TestPage';
+import MachinesManagement from '~/pages/new/Machine';
+import MachineTypeManagement from '~/pages/new/MachineType';
 import PointPurchase from '~/pages/new/Wallet/pointPurchase';
+import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
+import CompanyRequestDesigner from '~/pages/new/CompanyRequestDesigner';
 import ServicePriceManagement from '~/pages/new/ServicePrice/indesx';
 
 const publicRoutes = [
@@ -70,8 +74,25 @@ const companyRoutes = [
         component: PaymentAndSubscriptionManagement,
         layout: AdminLayout,
     },
+    { path: '/company/machines-management', component: MachinesManagement, layout: AdminLayout },
+    { path: '/company/machines-type-management', component: MachineTypeManagement, layout: AdminLayout },
+    {
+        path: '/company/company-request-management',
+        component: CompanyRequestManagement,
+        layout: AdminLayout,
+    },
 ];
+
+const designerRoutes = [
+    {
+        path: '/designer/company-request-management',
+        component: CompanyRequestDesigner,
+        layout: AdminLayout,
+    },
+];
+
+const managerRoutes = [];
 
 const privateRoutes = [];
 
-export { adminRoutes, companyRoutes, privateRoutes, publicRoutes };
+export { adminRoutes, companyRoutes, privateRoutes, publicRoutes, designerRoutes, managerRoutes };

@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { AppWindowMac, Bot, Building, CreditCard, Users } from 'lucide-react';
+import { AppWindowMac, Bot, Building, CreditCard, Users, Monitor, FileType, AppWindowMacIcon } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import storageService from '../StorageService/storageService';
@@ -88,6 +88,16 @@ export const SecondaryListItems = () => {
             title: 'Dashboard',
         },
         {
+            route: '/company/machines-management',
+            icon: <Monitor />,
+            title: 'Machines',
+        },
+        {
+            route: '/company/machines-type-management',
+            icon: <FileType />,
+            title: 'Machine Types',
+        },
+        {
             route: '/company/model-management',
             icon: <Bot />,
             title: '3D Models',
@@ -101,6 +111,11 @@ export const SecondaryListItems = () => {
             route: '/company/payment-subscription-management',
             icon: <CreditCard />,
             title: 'Payment',
+        },
+        {
+            route: '/company/company-request-management',
+            icon: <AppWindowMac />,
+            title: 'Company Request',
         },
         {
             route: '/wallet-history',
@@ -132,9 +147,21 @@ export const SecondaryListItems = () => {
         },
     ];
 
-    const designerRoutes = [];
+    const designerRoutes = [
+        {
+            route: '/designer/company-request-management',
+            icon: <AppWindowMacIcon />,
+            title: 'Company Request',
+        },
+    ];
 
-    const managerRoutes = [];
+    const managerRoutes = [
+        {
+            route: '/company/company-request-management',
+            icon: <AppWindowMac />,
+            title: 'Company Request',
+        },
+    ];
 
     return (
         <React.Fragment>
@@ -145,9 +172,15 @@ export const SecondaryListItems = () => {
                         <ListItemText primary={route.title} />
                     </ListItemButton>
                 ))}
-
             {role === 'ADMIN' &&
                 adminRoutes.map((route, index) => (
+                    <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
+                        <ListItemIcon>{route.icon}</ListItemIcon>
+                        <ListItemText primary={route.title} />
+                    </ListItemButton>
+                ))}{' '}
+            {role === 'DESIGNER' &&
+                designerRoutes.map((route, index) => (
                     <ListItemButton key={index} onClick={() => handleNavigate(route.route)}>
                         <ListItemIcon>{route.icon}</ListItemIcon>
                         <ListItemText primary={route.title} />

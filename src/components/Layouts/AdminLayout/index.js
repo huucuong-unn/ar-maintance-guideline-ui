@@ -1,18 +1,14 @@
-import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
-import { Alert, Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
-import Logout from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import { Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import { useNavigate } from 'react-router-dom';
+import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
 import { AlignJustify } from 'lucide-react';
-import { MainListItems, SecondaryListItems } from '~/components/listItems';
 import { useEffect, useState } from 'react';
-import storageService from '~/components/StorageService/storageService';
-import SubscriptionAPI from '~/API/SubscriptionAPI';
-import PaymentAPI from '~/API/PaymentAPI';
+import { useNavigate } from 'react-router-dom';
 import WalletAPI from '~/API/WalletAPI';
+import { MainListItems, SecondaryListItems } from '~/components/listItems';
+import storageService from '~/components/StorageService/storageService';
 
 const drawerWidth = 240;
 
@@ -61,13 +57,9 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 const defaultTheme = createTheme();
 
 export function NavbarAdmin() {
+    const userInfo = storageService.getItem('userInfo')?.user || null;
     const [open, setOpen] = useState(true);
     const [anchorElUser, setAnchorElUser] = useState(null);
-
-    const handleOpenUserMenu = (event) => {
-        setAnchorElUser(event.currentTarget);
-    };
-
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
@@ -75,16 +67,6 @@ export function NavbarAdmin() {
     const toggleDrawer = () => {
         setOpen(!open);
     };
-
-    function notificationsLabel(count) {
-        if (count === 0) {
-            return 'no notifications';
-        }
-        if (count > 99) {
-            return 'more than 99 notifications';
-        }
-        return `${count} notifications`;
-    }
 
     return (
         <AppBar position="absolute" open={open}>
@@ -206,16 +188,20 @@ export function Sidebar() {
                     p: 2,
                 }}
             >
-                <Box sx={{ mb: 1 }}>
-                    <Typography variant="body1">{user?.company.companyName || 'Admin'}</Typography>
-                    <Typography variant="contained" color="primary">
-                        Current Points: {currentPoints}
-                    </Typography>
-                </Box>
+                {user?.roleName === 'COMPANY' && (
+                    <Box sx={{ mb: 1 }}>
+                        <Typography variant="body1">{user?.company.companyName || 'Admin'}</Typography>
+                        <Typography variant="contained" color="primary">
+                            Current Points: {currentPoints}
+                        </Typography>
+                    </Box>
+                )}
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>
-                        Buy Points
-                    </Button>
+                    {user?.roleName === 'COMPANY' && (
+                        <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>
+                            Buy Points
+                        </Button>
+                    )}
                     <Button variant="outlined" color="secondary" size="small" fullWidth onClick={handleLogout}>
                         Logout
                     </Button>
@@ -227,67 +213,9 @@ export function Sidebar() {
 
 export default function AdminLayout({ children }) {
     const theme = useTheme();
-    const navigate = useNavigate();
-    const user = storageService.getItem('userInfo')?.user || null;
-
-    const [showAlertError, setShowAlertError] = useState(false);
-    const [showAlertErrorStorage, setShowAlertErrorStorage] = useState(false);
-    const [showAlertErrorUsers, setShowAlertErrorUsers] = useState(false);
-
-    const [currentStorageAndAccount, setCurrentStorageAndAccount] = useState(null);
-
-    const checkSubscription = async () => {
-        try {
-            if (user?.currentPlan === null) {
-                setShowAlertError(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-            setShowAlertError(true);
-        }
-    };
-
-    const checkCurrentStorageIsOverCurrentPlan = async () => {
-        try {
-            if (user?.roleName === 'ADMIN') return;
-            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(user?.company?.id);
-            setCurrentStorageAndAccount(response.result);
-            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(user?.company?.id);
-            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
-                setShowAlertErrorStorage(true);
-            }
-            if (currentPlan === null || response.result.numberOfUsers > currentPlan.result.maxNumberOfUsers) {
-                setShowAlertErrorUsers(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-        }
-    };
-
-    useEffect(() => {
-        checkSubscription();
-        checkCurrentStorageIsOverCurrentPlan();
-    }, []);
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            {showAlertError && (
-                <Alert width="50%" variant="filled" severity="error">
-                    Your subscription has expired or you do not subscribe any. Please view subscription packages and
-                    subscribe one
-                </Alert>
-            )}
-            {(showAlertErrorStorage || showAlertErrorUsers) && (
-                <Alert width="50%" variant="filled" severity="error">
-                    {showAlertErrorStorage
-                        ? '- Over storage of model, please go to action to remove some models or upgrade your subscription'
-                        : ''}{' '}
-                    {showAlertErrorUsers
-                        ? '- Over number of user, please disable some users or upgrade your subscription'
-                        : ''}
-                </Alert>
-            )}
-
             <Box sx={{ display: 'flex' }}>
                 <Sidebar />
 

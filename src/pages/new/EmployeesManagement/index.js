@@ -8,8 +8,12 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    FormControl,
     Grid,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     TextField,
     Typography,
 } from '@mui/material';
@@ -93,7 +97,7 @@ export default function EmployeesManagement() {
             status: 'ACTIVE',
             expirationDate: '',
             isPayAdmin: false,
-            roleName: 'STAFF',
+            roleName: '',
         });
         setPasswordError('');
     };
@@ -190,6 +194,7 @@ export default function EmployeesManagement() {
     const columns = [
         { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', width: 200 },
+        { field: 'roleName', headerName: 'Role', width: 200 },
         {
             field: 'createdDate',
             headerName: 'Created Date',
@@ -305,31 +310,6 @@ export default function EmployeesManagement() {
         return `${month}/${day}/${year}`;
     };
 
-    const handleCheckIsCurrentPlanIsNull = () => {
-        if (userInfo?.currentPlan === null) {
-            navigate('/company/payment-subscription-management');
-        }
-    };
-
-    const [disableCreateEmployee, setDisableCreateEmployee] = useState(false);
-
-    const checkCurrentStorageIsOverCurrentPlan = async () => {
-        try {
-            const response = await SubscriptionAPI.getCompanySubscriptionByCompanyId(userInfo?.company?.id);
-            const currentPlan = await PaymentAPI.getCurrentPlanByCompanyId(userInfo?.company?.id);
-            if (currentPlan === null || response.result.storageUsage > currentPlan.result.maxStorageUsage) {
-                setDisableCreateEmployee(true);
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-        }
-    };
-
-    useEffect(() => {
-        handleCheckIsCurrentPlanIsNull();
-        checkCurrentStorageIsOverCurrentPlan();
-    }, []);
-
     return (
         <ThemeProvider theme={defaultTheme}>
             <Grid
@@ -365,7 +345,6 @@ export default function EmployeesManagement() {
                     {/* Search and Filter Section */}
                     <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
                         <Button
-                            disabled={disableCreateEmployee}
                             variant="contained"
                             sx={{
                                 bgcolor: '#051D40',
@@ -464,8 +443,20 @@ export default function EmployeesManagement() {
 
                             <TextField fullWidth label="Company" name="company" value={newEmployee.company} disabled />
 
-                            <TextField fullWidth label="Role" name="roleName" value={newEmployee.roleName} disabled />
-
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel id="role-select-label">Role</InputLabel>
+                                <Select
+                                    labelId="role-select-label"
+                                    label="Role"
+                                    name="roleName"
+                                    value={newEmployee.roleName}
+                                    onChange={handleInputChange}
+                                >
+                                    <MenuItem value="STAFF">STAFF</MenuItem>
+                                    <MenuItem value="MANAGER">MANAGER</MenuItem>
+                                    <MenuItem value="DESIGNER">DESIGNER</MenuItem>
+                                </Select>
+                            </FormControl>
                             <TextField fullWidth label="Status" name="status" value={newEmployee.status} disabled />
                         </Box>
                     </DialogContent>

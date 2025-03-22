@@ -21,6 +21,8 @@ const defaultTheme = createTheme();
 export default function CompanyLogin() {
     const adminRole = 'ADMIN';
     const companyRole = 'COMPANY';
+    const designerRole = 'DESIGNER';
+    const managerRole = 'MANAGER';
     const [showAlertError, setShowAlertError] = useState(false);
     const [loginLoading, setLoginLoading] = useState(false);
 
@@ -46,6 +48,10 @@ export default function CompanyLogin() {
 
                 if (userInfo?.result?.user?.role?.roleName === companyRole) {
                     navigate('/company/course'); // Navigate
+                }
+
+                if (userInfo?.result?.user?.role?.roleName === designerRole) {
+                    navigate('/designer/company-request-management');
                 }
             } else {
                 // If login fails (non-200 status)
