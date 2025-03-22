@@ -28,6 +28,9 @@ const CourseAPI = {
     changeStatus(id) {
         return axiosClient.put(`/v1/course/status/${id}`);
     },
+    publishFirstTime(id, userId) {
+        return axiosClient.put(`/v1/course/publication/${id}?userId=${userId}`);
+    },
     getSections(courseId, includeAuthorization = false) {
         return axiosClient.get('/v1/lesson/course/' + courseId);
     },

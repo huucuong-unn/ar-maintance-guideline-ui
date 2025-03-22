@@ -112,8 +112,13 @@ export default function CoursesControlEdit() {
 
     const handleStartCourse = async () => {
         try {
-            setIsLoadingStartCourse(true);
-            await CourseAPI.changeStatus(courseId);
+            if (course.status !== 'DRAFTED') {
+                setIsLoadingStartCourse(true);
+                await CourseAPI.changeStatus(courseId);
+            } else {
+                setIsLoadingStartCourse(true);
+                await CourseAPI.publishFirstTime(courseId, userInfo.id);
+            }
             // After toggling, refresh or navigate
             window.location.reload();
         } catch (error) {
@@ -122,7 +127,7 @@ export default function CoursesControlEdit() {
             } else if (error?.response?.data?.code === 1098) {
                 toast.error('This guideline requires at least one instruction detail to be activated.');
             } else {
-                console.error('Failed to update guideline status:', error);
+                toast.error('Failed to update guideline status:', error.response?.data?.message || 'Unknown error');
             }
         } finally {
             setIsLoadingStartCourse(false);
@@ -576,17 +581,21 @@ export default function CoursesControlEdit() {
                             variant="contained"
                             sx={{
                                 padding: '12px 20px',
-                                backgroundColor: course?.status === 'INACTIVE' ? 'green' : 'red',
+                                backgroundColor:
+                                    course?.status === 'INACTIVE' || course?.status === 'DRAFTED' ? 'green' : 'red',
                                 ':hover': {
                                     opacity: 0.9,
-                                    backgroundColor: course?.status === 'INACTIVE' ? 'darkgreen' : 'darkred',
+                                    backgroundColor:
+                                        course?.status === 'INACTIVE' || course?.status === 'DRAFTED'
+                                            ? 'darkgreen'
+                                            : 'darkred',
                                 },
                             }}
                             onClick={handleClickToggleCourseStatus}
                         >
                             {isLoadingStartCourse ? (
                                 <CircularProgress size={24} />
-                            ) : course?.status === 'INACTIVE' ? (
+                            ) : course?.status === 'DRAFTED' ? (
                                 'Start this guideline'
                             ) : (
                                 'Stop this guideline'
@@ -989,11 +998,13 @@ export default function CoursesControlEdit() {
                 aria-labelledby="start-stop-dialog-title"
             >
                 <DialogTitle id="start-stop-dialog-title">
-                    {course?.status === 'INACTIVE' ? 'Start guideline' : 'Stop guideline'}
+                    {course?.status === 'DRAFTED' || course?.status === 'INACTIVE'
+                        ? 'Start guideline'
+                        : 'Stop guideline'}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        {course?.status === 'INACTIVE'
+                        {course?.status === 'DRAFTED' || course?.status === 'INACTIVE'
                             ? 'Are you sure you want to start this guideline?'
                             : 'Are you sure you want to stop this guideline?'}
                     </DialogContentText>
@@ -1266,11 +1277,13 @@ export default function CoursesControlEdit() {
                 aria-labelledby="start-stop-dialog-title"
             >
                 <DialogTitle id="start-stop-dialog-title">
-                    {course?.status === 'INACTIVE' ? 'Start guideline' : 'Stop guideline'}
+                    {course?.status === 'DRAFTED' || course?.status === 'INACTIVE'
+                        ? 'Start guideline'
+                        : 'Stop guideline'}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        {course?.status === 'INACTIVE'
+                        {course?.status === 'DRAFTED' || course?.status === 'INACTIVE'
                             ? 'Are you sure you want to start this guideline?'
                             : 'Are you sure you want to stop this guideline?'}
                     </DialogContentText>
@@ -1284,7 +1297,7 @@ export default function CoursesControlEdit() {
                     >
                         {isLoadingStartCourse ? (
                             <CircularProgress size={24} />
-                        ) : course?.status === 'INACTIVE' ? (
+                        ) : course?.status === 'DRAFTED' || course?.status === 'INACTIVE' ? (
                             'Start'
                         ) : (
                             'Stop'
