@@ -1,6 +1,7 @@
 import {
     Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -50,32 +51,6 @@ export default function CompanyRequestDesigner() {
 
     // Table columns
     const columns = [
-        { field: 'requestSubject', headerName: 'Subject', width: 200 },
-        { field: 'requestDescription', headerName: 'Description', width: 300 },
-        {
-            field: 'designer',
-            headerName: 'Designer',
-            width: 200,
-            renderCell: (params) => params.row.designer?.email || '-',
-        },
-        {
-            field: 'company',
-            headerName: 'Company',
-            width: 200,
-            renderCell: (params) => params.row.company.companyName || '-',
-        },
-        {
-            field: 'machine',
-            headerName: 'Machine',
-            width: 200,
-            renderCell: (params) => params.row.machine?.machineName || '-',
-        },
-        {
-            field: 'createdAt',
-            headerName: 'Created Date',
-            width: 200,
-            renderCell: (params) => formatDateTime(params.value),
-        },
         {
             field: 'status',
             headerName: 'Status',
@@ -90,7 +65,7 @@ export default function CompanyRequestDesigner() {
         {
             field: 'action',
             headerName: 'Action',
-            width: 400,
+            width: 250,
             renderCell: (params) => {
                 const currentStatus = params.row.status;
                 return (
@@ -115,16 +90,79 @@ export default function CompanyRequestDesigner() {
                                     sx={{ width: '100px', bgcolor: 'orange' }}
                                 >
                                     Upload
-                                    <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept=".glb,.gltf"
+                                        onChange={(e) =>
+                                            handle3DFileSelect(
+                                                e,
+                                                params.row.requestId,
+                                                params.row.machineType?.machineTypeId,
+                                            )
+                                        }
+                                    />
                                 </Button>
-                                <Button variant="contained" component="label" sx={{ width: '100px', bgcolor: 'red' }}>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    sx={{ width: '100px', bgcolor: 'red' }}
+                                    onClick={(e) => handleOpenCancelConfirm(params.row.requestId)}
+                                >
                                     Cancel
+                                </Button>
+                            </>
+                        )}
+
+                        {currentStatus === 'DRAFTED' && (
+                            <>
+                                <Button variant="contained" component="label" disabled>
+                                    Waiting for approval
+                                </Button>
+                            </>
+                        )}
+
+                        {currentStatus === 'APPROVED' && (
+                            <>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    disabled
+                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                >
+                                    Done
                                 </Button>
                             </>
                         )}
                     </Box>
                 );
             },
+        },
+        { field: 'requestSubject', headerName: 'Subject', width: 200 },
+        { field: 'requestDescription', headerName: 'Description', width: 300 },
+        {
+            field: 'designer',
+            headerName: 'Designer',
+            width: 200,
+            renderCell: (params) => params.row.designer?.email || '-',
+        },
+        {
+            field: 'company',
+            headerName: 'Company',
+            width: 200,
+            renderCell: (params) => params.row.company.companyName || '-',
+        },
+        {
+            field: 'machineType',
+            headerName: 'Machine Type',
+            width: 200,
+            renderCell: (params) => params.row.machineType?.machineTypeName || '-',
+        },
+        {
+            field: 'createdAt',
+            headerName: 'Created Date',
+            width: 200,
+            renderCell: (params) => formatDateTime(params.value),
         },
     ];
 
@@ -158,6 +196,7 @@ export default function CompanyRequestDesigner() {
 
     const handleConfirmApprove = async () => {
         try {
+            setIsLoading(true);
             const payload = { status: 'PROCESSING', designerId: userInfo.id };
             const response = await CompanyRequestAPI.updateRequestStatus(selectedRequestId, payload);
             if (response?.result) {
@@ -169,6 +208,7 @@ export default function CompanyRequestDesigner() {
             toast.error('Failed to approve request. Please try again.');
         } finally {
             handleCloseApproveDialog();
+            setIsLoading(false);
         }
     };
 
@@ -184,10 +224,13 @@ export default function CompanyRequestDesigner() {
         return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
     };
     const [file3D, setFile3D] = useState(null);
-
-    const handle3DFileSelect = (e) => {
+    const [requestId, setRequestId] = useState(null);
+    const [machineTypeId, setMachineTypeId] = useState(null);
+    const handle3DFileSelect = (e, requestId, idMachineType) => {
         if (e.target.files[0]) {
             setFile3D(e.target.files[0]);
+            setRequestId(requestId);
+            setMachineTypeId(idMachineType);
             setOpenCreateDialog(true);
             setOpenEditor(true);
         }
@@ -195,6 +238,38 @@ export default function CompanyRequestDesigner() {
     const handleCloseEditor = () => {
         setOpenEditor(false);
         setOpenCreateDialog(false);
+        setFile3D(null);
+        setRequestId(null);
+        setMachineTypeId(null);
+        fetchData();
+    };
+
+    const [openCancelConfirmDialog, setOpenCancelConfirmDialog] = useState(false);
+    const handleOpenCancelConfirm = (requestId) => {
+        setOpenCancelConfirmDialog(true);
+        setSelectedRequestId(requestId);
+    };
+    const handleCloseCancelConfirm = () => {
+        setOpenCancelConfirmDialog(false);
+        setSelectedRequestId(null);
+    };
+    const handleConfirmCancel = async () => {
+        try {
+            setIsLoading(true);
+            const payload = { status: 'DESIGNER_CANCELLED' };
+            const response = await CompanyRequestAPI.updateRequestStatus(selectedRequestId, payload);
+            console.log('response', response);
+            if (response?.result) {
+                toast.success('Request cancelled successfully!');
+                fetchData();
+            }
+        } catch (error) {
+            console.error('Failed to cancel request:', error);
+            toast.error('Failed to cancel request. Please try again.');
+        } finally {
+            handleCloseCancelConfirm();
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -263,6 +338,20 @@ export default function CompanyRequestDesigner() {
                     </DialogActions>
                 </Dialog>
 
+                {/* Cancel Request */}
+                <Dialog open={openApproveDialog} onClose={handleCloseApproveDialog} fullWidth maxWidth="xs">
+                    <DialogTitle>Confirm Approval</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>Are you sure you want to approve this request?</DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseApproveDialog}>Cancel</Button>
+                        <Button onClick={handleConfirmApprove} variant="contained" color="success">
+                            {isLoading ? <CircularProgress /> : 'Approve'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
                 <Box sx={{ mt: 'auto' }}>
                     <Copyright />
                 </Box>
@@ -283,6 +372,9 @@ export default function CompanyRequestDesigner() {
                                     modelFile3D={URL.createObjectURL(file3D)}
                                     modelFile3DToCreate={file3D}
                                     handleCloseModal={handleCloseEditor}
+                                    requestId={requestId}
+                                    machineTypeId={machineTypeId}
+                                    isDesigner={true}
                                 />
                             )}
                         </>
@@ -295,6 +387,21 @@ export default function CompanyRequestDesigner() {
                     {/* <Button onClick={handleCreateModel} disabled={isCreating}>
                                     {isCreating ? <CircularProgress size={24} /> : 'Create'}
                                 </Button> */}
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={openCancelConfirmDialog} onClose={handleCloseCancelConfirm} fullWidth maxWidth="xs">
+                <DialogTitle>Confirm Cancellation</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to cancel this request? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseCancelConfirm}>No</Button>
+                    <Button onClick={handleConfirmCancel} variant="contained" color="error">
+                        {isLoading ? <CircularProgress /> : 'Yes, Cancel'}
+                    </Button>
                 </DialogActions>
             </Dialog>
         </ThemeProvider>

@@ -21,6 +21,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import CompanyRequestAPI from '~/API/CompanyRequestAPI'; // Your API
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CardMachine from '~/components/CardMachine'; // The updated CardMachine
+import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
 
 function Copyright(props) {
@@ -51,29 +52,12 @@ export default function CompanyRequestManagement() {
     const [openMachineDialog, setOpenMachineDialog] = useState(false);
     const [requestSubject, setRequestSubject] = useState('');
     const [requestDescription, setRequestDescription] = useState('');
+    const [openEditor, setOpenEditor] = useState(false);
+    const [openModelId, setOpenModelId] = useState(null);
+    const [requestId, setRequestId] = useState(null);
 
     // Table columns
     const columns = [
-        { field: 'requestSubject', headerName: 'Subject', width: 200 },
-        { field: 'requestDescription', headerName: 'Description', width: 300 },
-        {
-            field: 'designer',
-            headerName: 'Designer',
-            width: 200,
-            renderCell: (params) => params.row.designer?.email || '-',
-        },
-        {
-            field: 'machine',
-            headerName: 'Machine',
-            width: 200,
-            renderCell: (params) => params.row.machine?.machineName || '-',
-        },
-        {
-            field: 'createdAt',
-            headerName: 'Created Date',
-            width: 200,
-            renderCell: (params) => formatDateTime(params.value),
-        },
         {
             field: 'status',
             headerName: 'Status',
@@ -88,38 +72,81 @@ export default function CompanyRequestManagement() {
         {
             field: 'action',
             headerName: 'Action',
-            width: 400,
+            width: 250,
             renderCell: (params) => {
                 const currentStatus = params.row.status;
                 return (
                     <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
-                        {currentStatus === 'ARCHIVED' ? (
+                        {currentStatus === 'PROCESSING' && (
                             <Button
                                 variant="contained"
                                 size="small"
-                                color="success"
+                                color="error"
                                 sx={{ width: '100px', bgcolor: 'orange' }}
-
-                                // onClick={() => handleOpenStatusConfirm(params.row.id)}
+                                onClick={() => handleOpenCancelConfirm(params.row.requestId)}
                             >
-                                View
+                                Cancel
                             </Button>
-                        ) : (
-                            <Button
-                                disabled
-                                variant="contained"
-                                size="small"
-                                color="success"
-                                sx={{ width: '100px', bgcolor: 'orange' }}
-
-                                // onClick={() => handleOpenStatusConfirm(params.row.id)}
-                            >
-                                View
-                            </Button>
+                        )}
+                        {currentStatus === 'DRAFTED' && (
+                            <>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                    onClick={() => handleOpenEditor(params.row.assetModel?.id, params.row.requestId)}
+                                >
+                                    Review
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    color="error"
+                                    sx={{ width: '100px' }}
+                                    onClick={() => handleOpenCancelConfirm(params.row.requestId)}
+                                >
+                                    Cancel
+                                </Button>
+                            </>
+                        )}
+                        {currentStatus === 'APPROVED' && (
+                            <>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    disabled
+                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                >
+                                    Done
+                                </Button>
+                                <Typography variant="body2" sx={{ color: 'green', fontWeight: 'bold' }}>
+                                    {formatDateTime(params.row.completedAt)}
+                                </Typography>
+                            </>
                         )}
                     </Box>
                 );
             },
+        },
+        { field: 'requestSubject', headerName: 'Subject', width: 200 },
+        { field: 'requestDescription', headerName: 'Description', width: 300 },
+        {
+            field: 'designer',
+            headerName: 'Designer',
+            width: 200,
+            renderCell: (params) => params.row.designer?.email || '-',
+        },
+        {
+            field: 'machineType',
+            headerName: 'Machine Type',
+            width: 200,
+            renderCell: (params) => params.row.machineType?.machineTypeName || '-',
+        },
+        {
+            field: 'createdAt',
+            headerName: 'Created Date',
+            width: 200,
+            renderCell: (params) => formatDateTime(params.value),
         },
     ];
 
@@ -154,7 +181,7 @@ export default function CompanyRequestManagement() {
                 size: 1000000,
                 companyId: userInfo?.company?.id,
             };
-            const response = await CompanyRequestAPI.getMachineByCompanyId(params);
+            const response = await CompanyRequestAPI.getModelTypeByCompanyId(params);
             setMachines(response?.result?.objectList || []);
         } catch (error) {
             console.error('Failed to fetch machines:', error);
@@ -196,9 +223,10 @@ export default function CompanyRequestManagement() {
             setIsLoading(true);
             const payload = {
                 companyId: userInfo?.company?.id,
-                machineId: selectedMachine.id, // the chosen machine
+                machineTypeId: selectedMachine?.machineTypeId, // the chosen machine
                 requestSubject,
                 requestDescription,
+                requesterId: userInfo?.id,
             };
             // Call your API
             const response = await CompanyRequestAPI.createRequest(payload);
@@ -226,6 +254,64 @@ export default function CompanyRequestManagement() {
         const seconds = date.getSeconds().toString().padStart(2, '0');
         return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
     };
+
+    const handleCloseEditor = () => {
+        setOpenEditor(false);
+    };
+
+    const handleOpenEditor = (modelId, requestId) => {
+        setOpenModelId(modelId);
+        setRequestId(requestId);
+        setOpenEditor(true);
+    };
+
+    const handleApprove = async () => {
+        try {
+            setIsLoading(true);
+            const payload = {
+                status: 'APPROVED',
+            };
+            const response = await CompanyRequestAPI.updateRequestStatus(requestId, payload);
+            if (response?.result) {
+                toast.success('Request approved successfully!');
+                fetchData();
+            }
+        } catch (error) {
+            console.error('Failed to approve request:', error);
+        } finally {
+            setIsLoading(false);
+            handleCloseEditor();
+        }
+    };
+
+    const [openCancelConfirmDialog, setOpenCancelConfirmDialog] = useState(false);
+    const handleOpenCancelConfirm = (requestId) => {
+        setOpenCancelConfirmDialog(true);
+        setRequestId(requestId);
+    };
+    const handleCloseCancelConfirm = () => {
+        setOpenCancelConfirmDialog(false);
+        setRequestId(null);
+    };
+    const handleConfirmCancel = async () => {
+        try {
+            setIsLoading(true);
+            const payload = { status: 'COMPANY_CANCELLED' };
+            const response = await CompanyRequestAPI.updateRequestStatus(requestId, payload);
+            console.log('response', response);
+            if (response?.result) {
+                toast.success('Request cancelled successfully!');
+                fetchData();
+            }
+        } catch (error) {
+            console.error('Failed to cancel request:', error);
+            toast.error('Failed to cancel request. Please try again.');
+        } finally {
+            handleCloseCancelConfirm();
+            setIsLoading(false);
+        }
+    };
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Grid
@@ -303,9 +389,11 @@ export default function CompanyRequestManagement() {
 
                 {/* ---------- FIRST DIALOG: SELECT MACHINE ---------- */}
                 <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="lg">
-                    <DialogTitle>Select a Machine</DialogTitle>
+                    <DialogTitle>Select a Machine Type</DialogTitle>
                     <DialogContent>
-                        <DialogContentText sx={{ mb: 2 }}>Please select a machine for the request.</DialogContentText>
+                        <DialogContentText sx={{ mb: 2 }}>
+                            Please select a machine type for the request.
+                        </DialogContentText>
 
                         <Box
                             sx={{
@@ -383,17 +471,54 @@ export default function CompanyRequestManagement() {
                         <TextField
                             disabled
                             margin="normal"
-                            label="Machine"
+                            label="Machine Type"
                             fullWidth
                             multiline
                             rows={3}
-                            value={selectedMachine?.machineName}
+                            value={selectedMachine?.machineTypeName}
                         />
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleCloseMachineDialog}>Cancel</Button>
                         <Button onClick={handleCreateRequest} disabled={isLoading} variant="contained">
                             {isLoading ? <CircularProgress /> : 'Create'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                {/* Create Model Dialog */}
+                <Dialog open={openEditor} onClose={handleCloseEditor} fullWidth maxWidth="xl">
+                    <DialogTitle>Model Review</DialogTitle>
+                    <DialogContent sx={{ minHeight: '80vh' }}>
+                        <>
+                            {openEditor && (
+                                <ModelEditor
+                                    action={'UpdateModelGuideline'}
+                                    modelId={openModelId}
+                                    handleCloseModal={handleCloseEditor}
+                                    requestId={requestId}
+                                />
+                            )}
+                        </>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseEditor}>Cancel</Button>
+                        <Button onClick={handleApprove} disabled={isLoading}>
+                            {isLoading ? <CircularProgress size={24} /> : 'Approve'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog open={openCancelConfirmDialog} onClose={handleCloseCancelConfirm} fullWidth maxWidth="xs">
+                    <DialogTitle>Confirm Cancellation</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to cancel this request? This action cannot be undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseCancelConfirm}>No</Button>
+                        <Button onClick={handleConfirmCancel} variant="contained" color="error">
+                            {isLoading ? <CircularProgress /> : 'Yes, Cancel'}
                         </Button>
                     </DialogActions>
                 </Dialog>

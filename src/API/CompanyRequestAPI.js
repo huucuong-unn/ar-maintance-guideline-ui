@@ -17,6 +17,11 @@ const CompanyRequestAPI = {
             page=${params.page}&size=${params.size}`);
     },
 
+    getModelTypeByCompanyId(params) {
+        return axiosClient.get(`/v1/machine-type/company/${params.companyId}?
+            page=${params.page}&size=${params.size}`);
+    },
+
     updateRequestStatus(requestId, payload) {
         return axiosClient.put(`/v1/company-request/${requestId}`, payload);
     },

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardMedia, Typography } from '@mui/material';
-import { getImage } from '~/Constant';
+import { Settings } from 'lucide-react';
 
 export default function CardMachine({ machine }) {
     return (
@@ -19,21 +19,9 @@ export default function CardMachine({ machine }) {
                 border: '1px solid #02F18D',
             }}
         >
-            <CardMedia
-                component="img"
-                image={getImage(machine?.image)}
-                title={machine.name}
-                sx={{
-                    width: '100%',
-                    height: 140,
-                    objectFit: 'cover',
-                    borderRadius: '8px',
-                    padding: '8px',
-                }}
-            />
             <CardContent sx={{ flex: '1 1 auto' }}>
                 <Typography gutterBottom variant="h5" component="div" fontWeight="600" noWrap>
-                    {machine?.machineName}
+                    {machine?.machineTypeName} <Settings />
                 </Typography>
                 <Typography
                     variant="body2"
@@ -46,7 +34,20 @@ export default function CardMachine({ machine }) {
                         textOverflow: 'ellipsis',
                     }}
                 >
-                    {machine?.machineType}
+                    {machine?.description}
+                </Typography>{' '}
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: 3,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}
+                >
+                    {machine?.numOfAttribute} attribute(s)
                 </Typography>
             </CardContent>
         </Card>

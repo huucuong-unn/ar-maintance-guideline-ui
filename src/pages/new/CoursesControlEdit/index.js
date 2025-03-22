@@ -58,13 +58,6 @@ export default function CoursesControlEdit() {
         setExpandedFAQ(isExpanded ? panel : false);
     };
 
-    // -------------------- Check Subscription (optional) --------------------
-    useEffect(() => {
-        if (userInfo?.currentPlan === null) {
-            navigate('/company/payment-subscription-management');
-        }
-    }, [userInfo, navigate]);
-
     // -------------------- Course Data --------------------
     const [course, setCourse] = useState(null);
     const [isLoadingCourse, setIsLoadingCourse] = useState(true);

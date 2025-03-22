@@ -49,6 +49,7 @@ import ModelAPI from '~/API/ModelAPI';
 import { getImage } from '~/Constant';
 import storageService from '~/components/StorageService/storageService';
 import InstructionDetailAPI from '~/API/InstructionDetailAPI';
+import CompanyRequestAPI from '~/API/CompanyRequestAPI';
 
 // Helper function to round values to 2 decimal places
 const roundValue = (val) => Math.round(val * 100) / 100;
@@ -401,6 +402,9 @@ export default function SimplifiedModelViewer({
     modelFile3DToCreate,
     currentInstructionId,
     currentInstructionDetailId,
+    requestId,
+    machineTypeId,
+    isDesigner = false,
 }) {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     // State for model transform
@@ -656,13 +660,13 @@ export default function SimplifiedModelViewer({
         setIsLoading(true);
 
         // Validate required fields
-        if (trimmedName.length < 5 || trimmedName.length > 50) {
+        if (trimmedName.length < 1 || trimmedName.length > 50) {
             setIsLoading(false);
-            return toast.error('Name must be between 5 and 50 characters.');
+            return toast.error('Name must be between 1 and 50 characters.');
         }
-        if (trimmedCode.length < 5 || trimmedCode.length > 50) {
+        if (trimmedCode.length < 1 || trimmedCode.length > 50) {
             setIsLoading(false);
-            return toast.error('Code must be between 5 and 50 characters.');
+            return toast.error('Code must be between 1 and 50 characters.');
         }
 
         if (!imageFile) {
@@ -678,13 +682,23 @@ export default function SimplifiedModelViewer({
             formDataToCreate.append('imageUrl', imageFile);
             formDataToCreate.append('scale', modelTransform.scale);
             formDataToCreate.append('file', modelFile3DToCreate);
-            formDataToCreate.append('modelTypeId', '0e553950-2a32-44cd-bd53-ed680a00f2e5');
+            formDataToCreate.append('modelTypeId', machineTypeId);
             formDataToCreate.append('companyId', userInfo?.company?.id);
             formDataToCreate.append('position', modelTransform?.position || [0, 0, 0]);
             formDataToCreate.append('rotation', modelTransform?.rotation || [0, 0, 0]);
 
+            console.log('machineTypeId', machineTypeId);
             const response = await ModelAPI.createModel(formDataToCreate);
             if (response?.result) {
+                const modelId = response?.result?.id;
+                if (requestId) {
+                    const payload = {
+                        requestId: requestId,
+                        assetModelId: modelId,
+                        status: 'DRAFTED',
+                    };
+                    const responseUpdateRequest = await CompanyRequestAPI.updateRequestStatus(requestId, payload);
+                }
                 toast.success('Model created successfully!', { position: 'top-right' });
                 handleCloseModal();
                 resetFormData();
@@ -1082,6 +1096,7 @@ export default function SimplifiedModelViewer({
 
                                         {/* Upload Image */}
                                         <Button
+                                            disabled={!isDesigner}
                                             variant="contained"
                                             component="label"
                                             fullWidth
@@ -1411,7 +1426,7 @@ export default function SimplifiedModelViewer({
                                     color="primary"
                                     sx={{ width: '100%' }}
                                     onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
-                                    disabled={isLoading || isLoadingUpdateModelGuideline}
+                                    disabled={isLoading || isLoadingUpdateModelGuideline || !isDesigner}
                                 >
                                     {action === 'CreateModel' ? (
                                         isLoading ? (
