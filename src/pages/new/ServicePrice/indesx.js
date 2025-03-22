@@ -95,7 +95,7 @@ export default function ServicePriceManagement() {
 
     const columns = [
         { field: 'name', headerName: 'Name', width: 300 },
-        { field: 'price', headerName: 'Price', width: 200, valueFormatter: (params) => formatCurrency(params.value) },
+        { field: 'price', headerName: 'Point', width: 200 },
         {
             field: 'createdDate',
             headerName: 'Created Date',
@@ -166,10 +166,6 @@ export default function ServicePriceManagement() {
         return `${month}/${day}/${year}`;
     };
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) + 'đ';
-    };
-
     // --- State for Edit Dialog ---
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [editServicePrice, setEditServicePrice] = useState({
@@ -235,7 +231,7 @@ export default function ServicePriceManagement() {
             fetchData();
         } catch (error) {
             console.error('Failed to delete service price:', error);
-            toast.error('Failed to delete service price. ' + error?.response?.data?.message);
+            toast.error('Service Price currently in use');
         }
     };
 
@@ -315,7 +311,6 @@ export default function ServicePriceManagement() {
                             }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.id}
-                            slots={{ toolbar: GridToolbar }}
                         />
                     </Paper>
                 </Box>
