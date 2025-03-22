@@ -111,7 +111,11 @@ export default function MachinesManagement() {
         machineTypeValueCreationRequest: [],
         apiUrl: '',
         token: '',
+        headerRequests: [],
     });
+    const [tempApiUrl, setTempApiUrl] = useState('');
+    const [tempHeaders, setTempHeaders] = useState([]);
+    const [responseMessage, setResponseMessage] = useState('');
 
     useEffect(() => {
         fetchMachineTypes();
@@ -209,6 +213,7 @@ export default function MachinesManagement() {
         ],
     });
     const [isLoadingUpdateMachine, setIsLoadingUpdateMachine] = useState(false);
+    const [showQrCodes, setShowQrCodes] = useState(false);
 
     const handleOpenUpdateMachineModal = async (id) => {
         try {
@@ -245,6 +250,7 @@ export default function MachinesManagement() {
                 },
             ],
         });
+        setShowQrCodes(false);
     };
 
     const handleUpdateMachine = async () => {
@@ -287,8 +293,8 @@ export default function MachinesManagement() {
     }
 
     useEffect(() => {
-        console.log(updateMachineRequest);
-    }, [updateMachineRequest]);
+        console.log(createMachineRequest);
+    }, [createMachineRequest]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -375,7 +381,7 @@ export default function MachinesManagement() {
                 </Box>
 
                 {/* Create Machine Dialog */}
-                <Dialog open={openCreateMachineDialog} onClose={handleCloseCreateMachineDialog} maxWidth="sm" fullWidth>
+                <Dialog open={openCreateMachineDialog} onClose={handleCloseCreateMachineDialog} maxWidth="md" fullWidth>
                     <DialogTitle>Create New Machine</DialogTitle>
                     <DialogContent sx={{ minHeight: '80vh' }}>
                         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
@@ -392,7 +398,7 @@ export default function MachinesManagement() {
                                 }}
                             />
 
-                            <TextField
+                            {/* <TextField
                                 label="API URL"
                                 name="apiUrl"
                                 fullWidth
@@ -403,21 +409,126 @@ export default function MachinesManagement() {
                                         apiUrl: event.target.value,
                                     }));
                                 }}
-                            />
+                            /> */}
+                            <Box sx={{ mt: 2, p: 2, border: '1px solid #ddd', borderRadius: 2, width: '100%' }}>
+                                <Typography variant="h6">API Configuration</Typography>
 
-                            <TextField
-                                label="Token"
-                                name="token"
-                                fullWidth
-                                variant="outlined"
-                                type="password"
-                                onChange={(event) => {
-                                    setCreateMachineRequest((prev) => ({
-                                        ...prev,
-                                        token: event.target.value,
-                                    }));
-                                }}
-                            />
+                                {/* API URL */}
+                                <TextField
+                                    label="API URL"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={tempApiUrl}
+                                    onChange={(event) => setTempApiUrl(event.target.value)}
+                                    sx={{ mt: 2 }}
+                                />
+
+                                {/* Add Header Button */}
+                                {tempApiUrl && (
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        sx={{ mt: 2 }}
+                                        onClick={() =>
+                                            setTempHeaders([...tempHeaders, { keyHeader: '', valueOfHeader: '' }])
+                                        }
+                                    >
+                                        Add Header
+                                    </Button>
+                                )}
+
+                                {/* Header Inputs */}
+                                {tempHeaders.map((header, index) => (
+                                    <Box key={index} sx={{ display: 'flex', gap: 2, mt: 2, width: '100%' }}>
+                                        <TextField
+                                            label="Header Key"
+                                            fullWidth
+                                            variant="outlined"
+                                            value={header.keyHeader}
+                                            onChange={(e) => {
+                                                const updatedHeaders = [...tempHeaders];
+                                                updatedHeaders[index].keyHeader = e.target.value;
+                                                setTempHeaders(updatedHeaders);
+                                            }}
+                                        />
+                                        <TextField
+                                            label="Header Value"
+                                            fullWidth
+                                            variant="outlined"
+                                            value={header.valueOfHeader}
+                                            onChange={(e) => {
+                                                const updatedHeaders = [...tempHeaders];
+                                                updatedHeaders[index].valueOfHeader = e.target.value;
+                                                setTempHeaders(updatedHeaders);
+                                            }}
+                                        />
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            onClick={() => {
+                                                setTempHeaders(tempHeaders.filter((_, i) => i !== index));
+                                            }}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Box>
+                                ))}
+
+                                {/* Save & Test Buttons */}
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={() => {
+                                            setCreateMachineRequest((prev) => ({
+                                                ...prev,
+                                                apiUrl: tempApiUrl,
+                                                headerRequests: tempHeaders,
+                                            }));
+                                            toast.success('API URL & Headers saved');
+                                        }}
+                                    >
+                                        Save
+                                    </Button>
+
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={async () => {
+                                            try {
+                                                const response = await fetch(tempApiUrl, {
+                                                    method: 'GET',
+                                                    headers: Object.fromEntries(
+                                                        tempHeaders.map((h) => [h.keyHeader, h.valueOfHeader]),
+                                                    ),
+                                                });
+                                                const data = await response.json();
+                                                setResponseMessage(JSON.stringify(data, null, 2));
+                                            } catch (error) {
+                                                setResponseMessage('Failed to fetch API');
+                                            }
+                                        }}
+                                    >
+                                        Test
+                                    </Button>
+                                </Box>
+
+                                {/* Response Display */}
+                                {responseMessage && (
+                                    <Box
+                                        sx={{
+                                            mt: 2,
+                                            p: 2,
+                                            border: '1px solid #ddd',
+                                            borderRadius: 2,
+                                            bgcolor: '#f5f5f5',
+                                        }}
+                                    >
+                                        <Typography variant="subtitle1">Response:</Typography>
+                                        <pre style={{ whiteSpace: 'pre-wrap' }}>{responseMessage}</pre>
+                                    </Box>
+                                )}
+                            </Box>
 
                             <Autocomplete
                                 disablePortal
@@ -490,34 +601,10 @@ export default function MachinesManagement() {
                 </Dialog>
 
                 {/* Update Machine Dialog */}
-                <Dialog open={openUpdateMachineDialog} onClose={handleCloseUpdateMachineDialog} maxWidth="sm" fullWidth>
+                <Dialog open={openUpdateMachineDialog} onClose={handleCloseUpdateMachineDialog} maxWidth="md" fullWidth>
                     <DialogTitle>Machine Detail</DialogTitle>
                     <DialogContent sx={{ minHeight: '80vh' }}>
                         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-                            {/* QR Code */}
-                            {machineById.qrCode && (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 3 }}>
-                                    <img
-                                        src={getImage(machineById.qrCode)}
-                                        alt="QR Code"
-                                        style={{ width: 200, height: 200, display: 'block' }}
-                                    />
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{ mt: 2 }}
-                                        onClick={() =>
-                                            handleDownloadQrCode(
-                                                machineById?.qrCode,
-                                                `${machineById?.machineName}_QRCode.png`,
-                                            )
-                                        }
-                                    >
-                                        Download QR Code
-                                    </Button>
-                                </Box>
-                            )}
-
                             {/* Machine Name */}
                             <TextField
                                 label="Machine Name"
@@ -587,6 +674,74 @@ export default function MachinesManagement() {
                                     }}
                                 />
                             ))}
+
+                            {/* Toggle QR Code Button */}
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                sx={{ mb: 2 }}
+                                onClick={() => setShowQrCodes((prev) => !prev)}
+                            >
+                                {showQrCodes ? 'Hide QR Codes' : 'Show QR Codes'}
+                            </Button>
+
+                            {/* QR Codes List */}
+                            {showQrCodes && machineById.machineQrsResponses?.length > 0 && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        mt: 3,
+                                        width: '100%',
+                                    }}
+                                >
+                                    <Typography variant="h6" gutterBottom>
+                                        QR Codes
+                                    </Typography>
+                                    <Grid container spacing={0} rowSpacing={4} justifyContent="center">
+                                        {machineById.machineQrsResponses.map((qr) => (
+                                            <Grid item xs={6} sm={4} key={qr.machineQrId}>
+                                                <Box
+                                                    sx={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={getImage(qr.qrUrl)}
+                                                        alt="QR Code"
+                                                        style={{
+                                                            width: 150,
+                                                            height: 150,
+                                                            display: 'block',
+                                                            border: '1px solid #ddd',
+                                                            borderRadius: 8,
+                                                        }}
+                                                    />
+                                                    <Typography variant="body2" sx={{ mt: 1, fontWeight: 'bold' }}>
+                                                        {qr.guidelineName}
+                                                    </Typography>
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        sx={{ mt: 1, fontSize: '0.8rem', padding: '5px 10px' }}
+                                                        onClick={() =>
+                                                            handleDownloadQrCode(
+                                                                qr.qrUrl,
+                                                                `${qr.guidelineName}_QRCode.png`,
+                                                            )
+                                                        }
+                                                    >
+                                                        Download
+                                                    </Button>
+                                                </Box>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Box>
+                            )}
                         </Box>
                     </DialogContent>
                     <DialogActions>
