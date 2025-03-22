@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CourseAPI from '~/API/CourseAPI';
+import MachineTypeAPI from '~/API/MachineTypeAPI';
 import ModelAPI from '~/API/ModelAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CardCourse from '~/components/CardCourse';
@@ -115,6 +116,29 @@ export default function CoursesControl() {
     // ===========================
     // Create Course Dialog Logic
     // ===========================
+    const [machineTypeByCompanyId, setMachineTypeByCompanyId] = useState([]);
+    const [machineTypeIdToCreate, setMachineTypeIdToCreate] = useState('');
+    useEffect(() => {
+        const fetchMachineTypeByCompanyId = async () => {
+            try {
+                const params = {
+                    page: 1,
+                    size: 1000,
+                };
+                const response = await MachineTypeAPI.getByCompany(userInfo?.company?.id, params);
+                const data = response?.result?.objectList || [];
+                setMachineTypeByCompanyId(data);
+            } catch (error) {
+                console.error('Failed to fetch machine type:', error);
+            }
+        };
+        fetchMachineTypeByCompanyId();
+    }, []);
+
+    useEffect(() => {
+        console.log(machineTypeByCompanyId);
+    }, [machineTypeByCompanyId]);
+
     const handleOpenCreateDialog = () => {
         setNewTitle('');
         setNewDescription('');
@@ -168,6 +192,11 @@ export default function CoursesControl() {
             return;
         }
 
+        if (!machineTypeIdToCreate) {
+            toast.error('Please select a machine type.', { position: 'top-right' });
+            return;
+        }
+
         const formData = new FormData();
         formData.append('title', newTitle.trim());
         formData.append('description', newDescription.trim());
@@ -177,6 +206,7 @@ export default function CoursesControl() {
         formData.append('companyId', userInfo?.company?.id);
         formData.append('imageUrl', selectedImage);
         formData.append('modelId', model);
+        formData.append('machineTypeId', machineTypeIdToCreate);
 
         try {
             setIsCreating(true);
@@ -332,6 +362,20 @@ export default function CoursesControl() {
                             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
                                 {unusedModel.map((data, index) => (
                                     <MenuItem value={data.id}>{data.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        {/* Machine Type */}
+                        <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
+                            <InputLabel>Machine Type*</InputLabel>
+                            <Select
+                                value={machineTypeIdToCreate}
+                                label="Machine Type"
+                                onChange={(e) => setMachineTypeIdToCreate(e.target.value)}
+                            >
+                                {machineTypeByCompanyId.map((data, index) => (
+                                    <MenuItem value={data.machineTypeId}>{data.machineTypeName}</MenuItem>
                                 ))}
                             </Select>
                         </FormControl>

@@ -140,6 +140,11 @@ export const SecondaryListItems = () => {
             icon: <CreditCard />,
             title: 'Payments',
         },
+        {
+            route: '/admin/service-price-management',
+            icon: <CreditCard />,
+            title: 'Service Price',
+        },
     ];
 
     const designerRoutes = [

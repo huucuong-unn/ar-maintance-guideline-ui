@@ -31,6 +31,7 @@ import MachineTypeManagement from '~/pages/new/MachineType';
 import PointPurchase from '~/pages/new/Wallet/pointPurchase';
 import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
 import CompanyRequestDesigner from '~/pages/new/CompanyRequestDesigner';
+import ServicePriceManagement from '~/pages/new/ServicePrice/indesx';
 
 const publicRoutes = [
     //new
@@ -54,6 +55,7 @@ const adminRoutes = [
     { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
     { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
     { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
+    { path: '/admin/service-price-management', component: ServicePriceManagement, layout: AdminLayout },
 ];
 
 const companyRoutes = [
