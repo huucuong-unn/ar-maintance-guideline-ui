@@ -501,6 +501,7 @@ export default function CompanyRequestManagement() {
                                     modelId={openModelId}
                                     handleCloseModal={handleCloseEditor}
                                     requestId={requestId}
+                                    isDisable={true}
                                 />
                             )}
                         </>

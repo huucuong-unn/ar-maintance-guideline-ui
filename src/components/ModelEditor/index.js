@@ -404,7 +404,7 @@ export default function SimplifiedModelViewer({
     currentInstructionDetailId,
     requestId,
     machineTypeId,
-    isDesigner = false,
+    isDisable = false,
 }) {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     // State for model transform
@@ -1061,7 +1061,7 @@ export default function SimplifiedModelViewer({
 
                                         {/* Upload Image */}
                                         <Button
-                                            disabled={!isDesigner}
+                                            disabled={isDisable}
                                             variant="contained"
                                             component="label"
                                             fullWidth
@@ -1391,7 +1391,7 @@ export default function SimplifiedModelViewer({
                                     color="primary"
                                     sx={{ width: '100%' }}
                                     onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
-                                    disabled={isLoading || isLoadingUpdateModelGuideline || !isDesigner}
+                                    disabled={isLoading || isLoadingUpdateModelGuideline || isDisable}
                                 >
                                     {action === 'CreateModel' ? (
                                         isLoading ? (

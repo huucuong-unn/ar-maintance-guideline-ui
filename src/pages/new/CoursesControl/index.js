@@ -191,12 +191,6 @@ export default function CoursesControl() {
             toast.error('Please select a model.', { position: 'top-right' });
             return;
         }
-
-        if (!machineTypeIdToCreate) {
-            toast.error('Please select a machine type.', { position: 'top-right' });
-            return;
-        }
-
         const formData = new FormData();
         formData.append('title', newTitle.trim());
         formData.append('description', newDescription.trim());
@@ -206,7 +200,6 @@ export default function CoursesControl() {
         formData.append('companyId', userInfo?.company?.id);
         formData.append('imageUrl', selectedImage);
         formData.append('modelId', model);
-        formData.append('machineTypeId', machineTypeIdToCreate);
 
         try {
             setIsCreating(true);
@@ -357,25 +350,11 @@ export default function CoursesControl() {
                         />
 
                         {/* Model Field */}
-                        <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
+                        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
                             <InputLabel>Model*</InputLabel>
                             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
                                 {unusedModel.map((data, index) => (
                                     <MenuItem value={data.id}>{data.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        {/* Machine Type */}
-                        <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
-                            <InputLabel>Machine Type*</InputLabel>
-                            <Select
-                                value={machineTypeIdToCreate}
-                                label="Machine Type"
-                                onChange={(e) => setMachineTypeIdToCreate(e.target.value)}
-                            >
-                                {machineTypeByCompanyId.map((data, index) => (
-                                    <MenuItem value={data.machineTypeId}>{data.machineTypeName}</MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
@@ -417,7 +396,7 @@ export default function CoursesControl() {
                         {/* Description Field */}
                         <TextField
                             margin="normal"
-                            label="Description"
+                            label="Short Content"
                             fullWidth
                             required
                             multiline

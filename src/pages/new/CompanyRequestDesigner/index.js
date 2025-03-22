@@ -379,7 +379,6 @@ export default function CompanyRequestDesigner() {
                                     handleCloseModal={handleCloseEditor}
                                     requestId={requestId}
                                     machineTypeId={machineTypeId}
-                                    isDesigner={true}
                                 />
                             )}
                         </>

@@ -672,7 +672,7 @@ export default function CoursesControlEdit() {
                         <Tab label="Model" value="1" />
                         <Tab label="3D Model Viewer" value="2" />
                         <Tab label="Instruction" value="3" />
-                        <Tab label="Assign" value="4" />
+                        {/* <Tab label="Assign" value="4" /> */}
                     </TabList>
                 </Box>
 
@@ -717,7 +717,7 @@ export default function CoursesControlEdit() {
                                     <Button
                                         variant="contained"
                                         onClick={() =>
-                                            handleDownloadQrCode(course?.qrCode, `${model?.name}_QRCode.png`)
+                                            handleDownloadQrCode(course?.qrCode, `${course?.title}_QRCode.png`)
                                         }
                                     >
                                         Download QR Code
