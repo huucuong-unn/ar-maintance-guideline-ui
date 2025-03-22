@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import * as Yup from 'yup';
+import * as yup from 'yup';
 import AccountAPI from '~/API/AccountAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
@@ -39,30 +39,38 @@ function Copyright(props) {
 
 const defaultTheme = createTheme();
 
-// Validation schema for the registration form
-const validationSchema = Yup.object().shape({
-    companyName: Yup.string().required('Company Name is required'),
-    phone: Yup.string()
-        .required('Phone is required')
-        .matches(/^[0-9]+$/, 'Phone must be only digits')
-        .max(11, 'Phone cannot exceed 11 digits'),
-    email: Yup.string().required('Email is required').email('Email is invalid'),
-    password: Yup.string().required('Password is required'),
-    confirmPassword: Yup.string()
-        .required('Confirm Password is required')
-        .oneOf([Yup.ref('password')], 'Passwords must match'),
+const validationSchema = yup.object().shape({
+    role: yup.string().required('Role is required'),
+    companyName: yup.string().when('role', {
+        is: 'COMPANY',
+        then: () => yup.string().required('Company Name is required'),
+        otherwise: () => yup.string(),
+    }),
+    phone: yup.string().required('Phone is required'),
+    email: yup.string().email('Invalid email').required('Email is required'),
+    password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),
+    confirmPassword: yup
+        .string()
+        .oneOf([yup.ref('password'), null], 'Passwords must match')
+        .required('Confirm Password is required'),
 });
 
-// Registration form rendered inside a Dialog component
 function CreateAccountDialog({ open, onClose, onSuccess }) {
     const {
         control,
         handleSubmit,
+        watch,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(validationSchema),
         mode: 'onChange',
+        defaultValues: {
+            role: 'COMPANY', // Default role is Company
+        },
     });
+
+    // Watch the role field to conditionally render company name
+    const role = watch('role');
 
     const onSubmit = async (data) => {
         console.log('Form data:', data);
@@ -71,12 +79,17 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
             password: data.password,
             phone: data.phone,
             avatar: 'http://example.com/avatar.jpg', // replace with actual image URL or file upload logic
-            company: data.companyName,
-            roleName: 'COMPANY',
+            company: data.role === 'COMPANY' ? data.companyName : null,
+            roleName: data.role,
         };
 
         try {
-            const response = await AccountAPI.createAccount(requestBody);
+            const response = null;
+            if (requestBody.roleName === 'COMPANY') {
+                response = await AccountAPI.createAccount(requestBody);
+            } else {
+                response = await AccountAPI.createStaff(requestBody);
+            }
             console.log('Registration successful:', response.data);
             toast.success('Registration successful!');
             onSuccess && onSuccess();
@@ -86,38 +99,61 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
             if (error.response && error.response.data) {
                 const { code, message } = error.response.data;
                 if (code === 2711 && message === 'Create Company failed') {
-                    alert('Company Name is already taken!');
+                    toast.error('Company Name is already taken!');
                 } else {
-                    alert('Registration failed! Please try again.');
+                    toast.error('Registration failed! Please try again.');
                 }
             } else {
-                alert('An error occurred. Please check your network connection.');
+                toast.error('An error occurred. Please check your network connection.');
             }
-            console.error('Registration failed:', error);
         }
     };
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Create New Company Account</DialogTitle>
+            <DialogTitle>Create New Account</DialogTitle>
             <DialogContent>
                 <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1, px: 2 }}>
+                    {/* Role Dropdown */}
                     <Controller
-                        name="companyName"
+                        name="role"
                         control={control}
-                        defaultValue=""
                         render={({ field }) => (
                             <TextField
                                 {...field}
+                                select
                                 margin="normal"
                                 required
                                 fullWidth
-                                label="Company Name"
-                                error={!!errors.companyName}
-                                helperText={errors.companyName?.message}
-                            />
+                                label="Role"
+                                error={!!errors.role}
+                                helperText={errors.role?.message}
+                            >
+                                <MenuItem value="COMPANY">Company</MenuItem>
+                                <MenuItem value="DESIGNER">Designer</MenuItem>
+                            </TextField>
                         )}
                     />
+
+                    {/* Company Name - Only show when role is COMPANY */}
+                    {role === 'COMPANY' && (
+                        <Controller
+                            name="companyName"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    label="Company Name"
+                                    error={!!errors.companyName}
+                                    helperText={errors.companyName?.message}
+                                />
+                            )}
+                        />
+                    )}
 
                     <Controller
                         name="phone"

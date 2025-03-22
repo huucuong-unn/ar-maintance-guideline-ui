@@ -528,7 +528,7 @@ export default function CoursesControlEdit() {
     // -------------- Menu anchor states for MoreVertical icons --------------
     const [anchorElMap, setAnchorElMap] = useState({});
     const ITEM_HEIGHT = 48;
-
+    const [numberOfInstructionDetails, setNumberOfInstructionDetails] = useState(0);
     const handleClickMenuInstruction = (event, id) => {
         event.stopPropagation();
         setAnchorElMap((prev) => ({ ...prev, [id]: event.currentTarget }));
@@ -538,6 +538,13 @@ export default function CoursesControlEdit() {
         setAnchorElMap((prev) => ({ ...prev, [id]: null }));
     };
 
+    useEffect(() => {
+        let count = 0;
+        course?.instructions?.forEach((instruction) => {
+            count += instruction?.instructionDetailResponse?.length;
+        });
+        setNumberOfInstructionDetails(count);
+    }, [course, instructions]);
     // ----------------------------------------------------------------------
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
@@ -595,7 +602,7 @@ export default function CoursesControlEdit() {
                         >
                             {isLoadingStartCourse ? (
                                 <CircularProgress size={24} />
-                            ) : course?.status === 'DRAFTED' ? (
+                            ) : course?.status === 'DRAFTED' || course?.status === 'INACTIVE' ? (
                                 'Start this guideline'
                             ) : (
                                 'Stop this guideline'
@@ -1283,8 +1290,12 @@ export default function CoursesControlEdit() {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        {course?.status === 'DRAFTED' || course?.status === 'INACTIVE'
-                            ? 'Are you sure you want to start this guideline?'
+                        {course?.status === 'DRAFTED'
+                            ? `its will cost ${
+                                  numberOfInstructionDetails * 3
+                              } points, Are you sure you want to start this guideline ? `
+                            : course?.status === 'INACTIVE'
+                            ? 'Are you sure you want to start this guideline ?'
                             : 'Are you sure you want to stop this guideline?'}
                     </DialogContentText>
                 </DialogContent>

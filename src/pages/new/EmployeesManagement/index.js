@@ -454,7 +454,6 @@ export default function EmployeesManagement() {
                                 >
                                     <MenuItem value="STAFF">STAFF</MenuItem>
                                     <MenuItem value="MANAGER">MANAGER</MenuItem>
-                                    <MenuItem value="DESIGNER">DESIGNER</MenuItem>
                                 </Select>
                             </FormControl>
                             <TextField fullWidth label="Status" name="status" value={newEmployee.status} disabled />
