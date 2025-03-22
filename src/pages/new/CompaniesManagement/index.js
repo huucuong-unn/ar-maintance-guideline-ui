@@ -4,6 +4,7 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid } from '@mui/x-data-grid';
+import { render } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import CompanyAPI from '~/API/CompanyAPI';
 
@@ -20,7 +21,15 @@ function Copyright(props) {
 }
 
 const defaultTheme = createTheme();
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
+    const year = date.getFullYear();
 
+    return `${month}/${day}/${year}`;
+};
 export default function CompaniesManagement() {
     useEffect(() => {
         const fetchBlogs = async () => {
@@ -36,8 +45,15 @@ export default function CompaniesManagement() {
         fetchBlogs();
     }, []);
     const columns = [
-        { field: 'id', headerName: 'Id', width: 400 },
-        { field: 'companyName', headerName: 'Company Name', width: 400 },
+        { field: 'companyName', headerName: 'Company Name', width: 300 },
+        { field: 'numberOfAccount', headerName: 'Number of Account', width: 250 },
+        { field: 'numberOfGuideline', headerName: 'Number of Guideline', width: 250 },
+        {
+            field: 'createdDate',
+            headerName: 'Created Date',
+            width: 250,
+            renderCell: (params) => formatDate(params.value),
+        },
     ];
 
     const [rows, setRows] = useState([]);
