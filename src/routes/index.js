@@ -27,6 +27,7 @@ import ModelDetail from '~/pages/new/ModelDetail';
 import UsersManagement from '~/pages/new/UsersManagement';
 import ModelEditor from '~/pages/new/TestPage';
 import PointPurchase from '~/pages/new/Wallet/pointPurchase';
+import ServicePriceManagement from '~/pages/new/ServicePrice/indesx';
 
 const publicRoutes = [
     //new
@@ -50,6 +51,7 @@ const adminRoutes = [
     { path: '/admin/user-management', component: UsersManagement, layout: AdminPlatformLayout },
     { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
     { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
+    { path: '/admin/service-price-management', component: ServicePriceManagement, layout: AdminLayout },
 ];
 
 const companyRoutes = [
