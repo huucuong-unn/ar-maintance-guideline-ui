@@ -24,7 +24,7 @@ import {
     Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { File, MoreVerticalIcon } from 'lucide-react';
+import { CirclePlus, File, MoreVerticalIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -617,18 +617,6 @@ export default function CoursesControlEdit() {
                             Delete this guideline
                         </Button>
                     </Box>
-
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            color: 'white',
-                            mt: 2,
-                            fontStyle: 'italic',
-                            fontSize: '16px',
-                        }}
-                    >
-                        You can create an Instruction before starting the guideline.
-                    </Typography>
                 </Box>
             </Box>
 
@@ -964,7 +952,10 @@ export default function CoursesControlEdit() {
                                             },
                                         }}
                                     >
-                                        + Add an Instruction Detail
+                                        <span style={{ marginRight: '6px' }}>
+                                            <CirclePlus />{' '}
+                                        </span>
+                                        Add Instruction Detail
                                     </Button>
                                 </Accordion>
                             ))
@@ -987,7 +978,10 @@ export default function CoursesControlEdit() {
                                 },
                             }}
                         >
-                            + Add Instruction
+                            <span style={{ marginRight: '6px' }}>
+                                <CirclePlus />{' '}
+                            </span>{' '}
+                            Add Instruction
                         </Button>
                     </Box>
                 </TabPanel>

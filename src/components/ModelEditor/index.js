@@ -1253,6 +1253,7 @@ export default function SimplifiedModelViewer({
                                 <>
                                     {/* Name */}
                                     <TextField
+                                        required
                                         label="Instruction Detail Name"
                                         variant="outlined"
                                         fullWidth
