@@ -13,6 +13,10 @@ import {
     TextField,
     Typography,
     Autocomplete,
+    IconButton,
+    Card,
+    CardContent,
+    Divider,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { toast } from 'react-toastify';
@@ -25,6 +29,8 @@ import storageService from '~/components/StorageService/storageService';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
 import MachineTypeAttributeAPI from '~/API/MachineTypeAttributeAPI';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { getImage } from '~/Constant';
 import axios from 'axios';
 
@@ -110,6 +116,7 @@ export default function MachinesManagement() {
         companyId: userInfo?.company?.id,
         machineTypeValueCreationRequest: [],
         apiUrl: '',
+        machineCode: '',
         token: '',
         headerRequests: [],
     });
@@ -144,7 +151,13 @@ export default function MachinesManagement() {
             modelTypeId: '',
             companyId: userInfo?.company?.id,
             machineTypeValueCreationRequest: [],
+            apiUrl: '',
+            token: '',
+            headerRequests: [],
         });
+        setTempApiUrl('');
+        setTempHeaders([]);
+        setResponseMessage('');
     };
 
     const fetchMachineTypesAttribute = async () => {
@@ -180,10 +193,40 @@ export default function MachinesManagement() {
             return;
         }
 
+        // Kiểm tra nếu API URL không hợp lệ
+        if (tempApiUrl) {
+            try {
+                new URL(tempApiUrl); // Kiểm tra URL hợp lệ bằng URL constructor
+            } catch (error) {
+                toast.error('Invalid API URL format.');
+                return;
+            }
+
+            // Kiểm tra URL có bắt đầu bằng http:// hoặc https:// không
+            const urlPattern = /^(https?:\/\/)/;
+            if (!urlPattern.test(tempApiUrl)) {
+                toast.error('API URL must start with http:// or https://');
+                return;
+            }
+
+            // Kiểm tra nếu có API URL nhưng không có header nào
+            if (tempHeaders.length === 0) {
+                toast.error('At least one header is required when API URL is provided.');
+                return;
+            }
+        }
+
         setIsLoadingCreateMachine(true);
 
         try {
-            const response = await MachineAPI.create(createMachineRequest);
+            // Cập nhật apiUrl và headerRequests trước khi gửi API
+            const updatedRequest = {
+                ...createMachineRequest,
+                apiUrl: tempApiUrl,
+                headerRequests: tempHeaders,
+            };
+
+            const response = await MachineAPI.create(updatedRequest);
             if (response?.result) {
                 toast.success('Create machine successfully');
             }
@@ -211,9 +254,16 @@ export default function MachinesManagement() {
                 valueAttribute: '',
             },
         ],
+        headerRequests: [
+            {
+                keyHeader: '',
+                valueOfKey: '',
+            },
+        ],
     });
     const [isLoadingUpdateMachine, setIsLoadingUpdateMachine] = useState(false);
     const [showQrCodes, setShowQrCodes] = useState(false);
+    const [testResponse, setTestResponse] = useState('');
 
     const handleOpenUpdateMachineModal = async (id) => {
         try {
@@ -227,6 +277,10 @@ export default function MachinesManagement() {
                     machineTypeValueId: attr.id,
                     machineTypeAttributeId: attr.machineTypeAttributeId,
                     valueAttribute: attr.valueAttribute,
+                })),
+                headerRequests: data.headerResponses.map((header) => ({
+                    keyHeader: header.keyHeader,
+                    valueOfKey: header.valueOfKey,
                 })),
             });
 
@@ -242,6 +296,8 @@ export default function MachinesManagement() {
         setMachineById({});
         setUpdateMachineRequest({
             machineName: '',
+            apiUrl: '',
+            token: '',
             machineTypeValueModifyRequests: [
                 {
                     machineTypeValueId: '',
@@ -249,11 +305,60 @@ export default function MachinesManagement() {
                     valueAttribute: '',
                 },
             ],
+            headerRequests: [
+                {
+                    keyHeader: '',
+                    valueOfKey: '',
+                },
+            ],
         });
         setShowQrCodes(false);
+        setTestResponse('');
     };
 
     const handleUpdateMachine = async () => {
+        if (updateMachineRequest.machineName.length < 5 || updateMachineRequest.machineName.length > 100) {
+            toast.error('Machine name must be between 5 and 100 characters.');
+            return;
+        }
+
+        // Kiểm tra nếu có ít nhất một header nhưng API URL trống
+        if (updateMachineRequest.headerRequests.length > 0 && !updateMachineRequest.apiUrl.trim()) {
+            toast.error('API URL is required when headers are provided.');
+            return;
+        }
+
+        // Kiểm tra nếu API URL không hợp lệ
+        if (updateMachineRequest.apiUrl) {
+            try {
+                new URL(updateMachineRequest.apiUrl); // Kiểm tra URL hợp lệ bằng URL constructor
+            } catch (error) {
+                toast.error('Invalid API URL format.');
+                return;
+            }
+
+            // Kiểm tra URL có bắt đầu bằng http:// hoặc https:// không
+            const urlPattern = /^(https?:\/\/)/;
+            if (!urlPattern.test(updateMachineRequest.apiUrl)) {
+                toast.error('API URL must start with http:// or https://');
+                return;
+            }
+
+            // Kiểm tra nếu có API URL nhưng không có header nào
+            if (updateMachineRequest.headerRequests.length === 0) {
+                toast.error('At least one header is required when API URL is provided.');
+                return;
+            }
+        }
+
+        // Kiểm tra từng header key và value phải có ít nhất 1 ký tự
+        for (const header of updateMachineRequest.headerRequests) {
+            if (!header.keyHeader.trim() || !header.valueOfKey.trim()) {
+                toast.error('Header key and value must have at least 1 character.');
+                return;
+            }
+        }
+
         setIsLoadingUpdateMachine(true);
         try {
             const response = await MachineAPI.update(machineById.id, updateMachineRequest);
@@ -292,9 +397,53 @@ export default function MachinesManagement() {
         }
     }
 
+    const handleAddHeader = () => {
+        setUpdateMachineRequest((prev) => ({
+            ...prev,
+            headerRequests: [...prev.headerRequests, { keyHeader: '', valueOfKey: '' }],
+        }));
+    };
+
+    const handleRemoveHeader = (index) => {
+        setUpdateMachineRequest((prev) => ({
+            ...prev,
+            headerRequests: prev.headerRequests.filter((_, i) => i !== index),
+        }));
+    };
+
+    const handleChangeHeader = (index, field, value) => {
+        const updatedHeaders = [...updateMachineRequest.headerRequests];
+        updatedHeaders[index][field] = value;
+        setUpdateMachineRequest((prev) => ({
+            ...prev,
+            headerRequests: updatedHeaders,
+        }));
+    };
+
+    const handleTestApiUrl = async () => {
+        if (!updateMachineRequest.apiUrl) {
+            toast.error('API URL is required');
+            return;
+        }
+
+        try {
+            const headers = updateMachineRequest.headerRequests.reduce((acc, header) => {
+                if (header.keyHeader && header.valueOfKey) {
+                    acc[header.keyHeader] = header.valueOfKey;
+                }
+                return acc;
+            }, {});
+
+            const response = await axios.get(updateMachineRequest.apiUrl, { headers });
+            setTestResponse(JSON.stringify(response.data, null, 2));
+        } catch (error) {
+            setTestResponse(`Error: ${error.message}`);
+        }
+    };
+
     useEffect(() => {
-        console.log(createMachineRequest);
-    }, [createMachineRequest]);
+        console.log(updateMachineRequest);
+    }, [updateMachineRequest]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -398,18 +547,22 @@ export default function MachinesManagement() {
                                 }}
                             />
 
-                            {/* <TextField
-                                label="API URL"
-                                name="apiUrl"
+                            {/* Machine Code Input */}
+                            <TextField
+                                label="Machine Code"
+                                name="machineCode"
                                 fullWidth
                                 variant="outlined"
+                                value={createMachineRequest.machineCode}
                                 onChange={(event) => {
                                     setCreateMachineRequest((prev) => ({
                                         ...prev,
-                                        apiUrl: event.target.value,
+                                        machineCode: event.target.value,
                                     }));
                                 }}
-                            /> */}
+                                sx={{ mt: 2 }}
+                            />
+
                             <Box sx={{ mt: 2, p: 2, border: '1px solid #ddd', borderRadius: 2, width: '100%' }}>
                                 <Typography variant="h6">API Configuration</Typography>
 
@@ -430,7 +583,7 @@ export default function MachinesManagement() {
                                         color="secondary"
                                         sx={{ mt: 2 }}
                                         onClick={() =>
-                                            setTempHeaders([...tempHeaders, { keyHeader: '', valueOfHeader: '' }])
+                                            setTempHeaders([...tempHeaders, { keyHeader: '', valueOfKey: '' }])
                                         }
                                     >
                                         Add Header
@@ -455,10 +608,10 @@ export default function MachinesManagement() {
                                             label="Header Value"
                                             fullWidth
                                             variant="outlined"
-                                            value={header.valueOfHeader}
+                                            value={header.valueOfKey}
                                             onChange={(e) => {
                                                 const updatedHeaders = [...tempHeaders];
-                                                updatedHeaders[index].valueOfHeader = e.target.value;
+                                                updatedHeaders[index].valueOfKey = e.target.value;
                                                 setTempHeaders(updatedHeaders);
                                             }}
                                         />
@@ -478,28 +631,13 @@ export default function MachinesManagement() {
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                                     <Button
                                         variant="contained"
-                                        color="primary"
-                                        onClick={() => {
-                                            setCreateMachineRequest((prev) => ({
-                                                ...prev,
-                                                apiUrl: tempApiUrl,
-                                                headerRequests: tempHeaders,
-                                            }));
-                                            toast.success('API URL & Headers saved');
-                                        }}
-                                    >
-                                        Save
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
                                         color="secondary"
                                         onClick={async () => {
                                             try {
                                                 const response = await fetch(tempApiUrl, {
                                                     method: 'GET',
                                                     headers: Object.fromEntries(
-                                                        tempHeaders.map((h) => [h.keyHeader, h.valueOfHeader]),
+                                                        tempHeaders.map((h) => [h.keyHeader, h.valueOfKey]),
                                                     ),
                                                 });
                                                 const data = await response.json();
@@ -562,27 +700,8 @@ export default function MachinesManagement() {
                                     label={attribute.attributeName}
                                     fullWidth
                                     variant="outlined"
-                                    onChange={(event) => {
-                                        const { value } = event.target;
-
-                                        setCreateMachineRequest((prev) => {
-                                            // Kiểm tra xem thuộc tính đã tồn tại trong danh sách chưa
-                                            const updatedAttributes = prev.machineTypeValueCreationRequest.some(
-                                                (item) => item.machineTypeAttributeId === attribute.id,
-                                            )
-                                                ? prev.machineTypeValueCreationRequest.map((item) =>
-                                                      item.machineTypeAttributeId === attribute.id
-                                                          ? { ...item, valueAttribute: value }
-                                                          : item,
-                                                  )
-                                                : [
-                                                      ...prev.machineTypeValueCreationRequest,
-                                                      { machineTypeAttributeId: attribute.id, valueAttribute: value },
-                                                  ];
-
-                                            return { ...prev, machineTypeValueCreationRequest: updatedAttributes };
-                                        });
-                                    }}
+                                    value={attribute.valueAttribute}
+                                    disabled
                                 />
                             ))}
                         </Box>
@@ -619,33 +738,81 @@ export default function MachinesManagement() {
                                 }
                             />
 
-                            {/* API URL */}
-                            <TextField
-                                label="API URL"
-                                fullWidth
-                                variant="outlined"
-                                value={updateMachineRequest.apiUrl || ''}
-                                onChange={(event) =>
-                                    setUpdateMachineRequest((prev) => ({
-                                        ...prev,
-                                        apiUrl: event.target.value,
-                                    }))
-                                }
-                            />
-
-                            {/* Token */}
-                            <TextField
-                                label="Token"
-                                fullWidth
-                                variant="outlined"
-                                value={updateMachineRequest.token || ''}
-                                onChange={(event) =>
-                                    setUpdateMachineRequest((prev) => ({
-                                        ...prev,
-                                        token: event.target.value,
-                                    }))
-                                }
-                            />
+                            <Card
+                                sx={{
+                                    width: '100%',
+                                    borderRadius: 3, // Bo góc mềm mại
+                                    boxShadow: 3, // Tạo hiệu ứng bóng
+                                    padding: 2, // Khoảng cách bên trong
+                                    border: '1px solid #ddd', // Viền nhẹ
+                                }}
+                            >
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        sx={{ fontWeight: 'bold', color: 'primary.main' }}
+                                    >
+                                        API Configuration
+                                    </Typography>
+                                    <Divider sx={{ mb: 2 }} /> {/* Đường kẻ ngăn cách */}
+                                    <TextField
+                                        label="API URL"
+                                        fullWidth
+                                        value={updateMachineRequest.apiUrl}
+                                        onChange={(e) =>
+                                            setUpdateMachineRequest({ ...updateMachineRequest, apiUrl: e.target.value })
+                                        }
+                                        margin="normal"
+                                    />
+                                    {/* Header Key - Value */}
+                                    <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold', mb: 2 }}>
+                                        Headers
+                                    </Typography>
+                                    {updateMachineRequest.headerRequests.map((header, index) => (
+                                        <Box display="flex" alignItems="center" gap={2} key={index} marginBottom={1}>
+                                            <TextField
+                                                label="Header Key"
+                                                value={header.keyHeader}
+                                                onChange={(e) => handleChangeHeader(index, 'keyHeader', e.target.value)}
+                                                sx={{ flex: 1 }}
+                                            />
+                                            <TextField
+                                                label="Header Value"
+                                                value={header.valueOfKey}
+                                                onChange={(e) =>
+                                                    handleChangeHeader(index, 'valueOfKey', e.target.value)
+                                                }
+                                                sx={{ flex: 2 }}
+                                            />
+                                            <IconButton onClick={() => handleRemoveHeader(index)} color="error">
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Box>
+                                    ))}
+                                    <Button onClick={handleAddHeader} startIcon={<AddIcon />} sx={{ mt: 1 }}>
+                                        Add Header
+                                    </Button>
+                                    {/* Test API Button */}
+                                    <Button
+                                        onClick={handleTestApiUrl}
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ mt: 2, width: '100%' }}
+                                    >
+                                        Test API
+                                    </Button>
+                                    {/* Response Display */}
+                                    {testResponse && (
+                                        <Box mt={2} p={2} bgcolor="grey.100" borderRadius={2}>
+                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                Response:
+                                            </Typography>
+                                            <pre style={{ whiteSpace: 'pre-wrap' }}>{testResponse}</pre>
+                                        </Box>
+                                    )}
+                                </CardContent>
+                            </Card>
 
                             {/* Machine Attributes */}
                             {updateMachineRequest.machineTypeValueModifyRequests?.map((attr, index) => (
