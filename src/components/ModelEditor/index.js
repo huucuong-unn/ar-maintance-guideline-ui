@@ -1151,7 +1151,7 @@ export default function SimplifiedModelViewer({
                                     />
 
                                     {/* Code */}
-                                    <TextField
+                                    {/* <TextField
                                         label="Code"
                                         variant="outlined"
                                         name="code"
@@ -1171,7 +1171,7 @@ export default function SimplifiedModelViewer({
                                             },
                                             label: { color: darkMode ? '#ffffff' : '#000000' },
                                         }}
-                                    />
+                                    /> */}
 
                                     {/* Hiển thị ảnh */}
                                     {(imageFile || previewImage) && (
@@ -1246,8 +1246,11 @@ export default function SimplifiedModelViewer({
                                                 },
                                             }}
                                         >
-                                            <MenuItem value="ACTIVE">ACTIVE</MenuItem>
-                                            <MenuItem value="INACTIVE">INACTIVE</MenuItem>
+                                            {modelById?.isUsed && <MenuItem value="ARCHIVED">ARCHIVED</MenuItem>}
+
+                                            {!modelById?.isUsed && <MenuItem value="ACTIVE">ACTIVE</MenuItem>}
+
+                                            {!modelById?.isUsed && <MenuItem value="INACTIVE">INACTIVE</MenuItem>}
                                         </Select>
                                     </FormControl>
                                     <Button
@@ -1256,7 +1259,9 @@ export default function SimplifiedModelViewer({
                                         color="error" // Màu đỏ của Material UI
                                         fullWidth
                                         sx={{ mt: 2 }}
-                                        disabled={isLoadingDeleteModel}
+                                        disabled={
+                                            isLoadingDeleteModel || modelById?.status === 'ACTIVE' || modelById?.isUsed
+                                        }
                                     >
                                         {isLoadingDeleteModel ? (
                                             <CircularProgress size={24} sx={{ color: 'white' }} />
