@@ -405,6 +405,7 @@ export default function SimplifiedModelViewer({
     requestId,
     machineTypeId,
     isDisable = false,
+    companyId,
 }) {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     // State for model transform
@@ -568,9 +569,9 @@ export default function SimplifiedModelViewer({
         const trimmedCode = formData.code.trim();
 
         // Validate required fields
-        if (trimmedName.length < 5 || trimmedName.length > 50) {
+        if (trimmedName.length < 1 || trimmedName.length > 50) {
             setLoading(false);
-            return toast.error('Name must be between 5 and 50 characters.');
+            return toast.error('Name must be between 1 and 50 characters.');
         }
 
         setIsLoadingUpdateModelGuideline(true);
@@ -654,25 +655,25 @@ export default function SimplifiedModelViewer({
         setIsLoading(true);
 
         // Validate required fields
-        if (trimmedName.length < 1 || trimmedName.length > 50) {
-            setIsLoading(false);
-            return toast.error('Name must be between 1 and 50 characters.');
-        }
+        // if (trimmedName.length < 1 || trimmedName.length > 50) {
+        //     setIsLoading(false);
+        //     return toast.error('Name must be between 1 and 50 characters.');
+        // }
 
-        if (!imageFile) {
-            setIsLoading(false);
-            return toast.error('Please select an image.');
-        }
+        // if (!imageFile) {
+        //     setIsLoading(false);
+        //     return toast.error('Please select an image.');
+        // }
 
         try {
             const formDataToCreate = new FormData();
-            formDataToCreate.append('name', trimmedName);
-            formDataToCreate.append('description', formData.description);
-            formDataToCreate.append('imageUrl', imageFile);
+            // formDataToCreate.append('name', trimmedName);
+            // formDataToCreate.append('description', formData.description);
+            // formDataToCreate.append('imageUrl', imageFile);
             formDataToCreate.append('scale', modelTransform.scale);
             formDataToCreate.append('file', modelFile3DToCreate);
             formDataToCreate.append('modelTypeId', machineTypeId);
-            formDataToCreate.append('companyId', userInfo?.company?.id);
+            formDataToCreate.append('companyId', companyId);
             formDataToCreate.append('position', modelTransform?.position || [0, 0, 0]);
             formDataToCreate.append('rotation', modelTransform?.rotation || [0, 0, 0]);
 
@@ -716,8 +717,8 @@ export default function SimplifiedModelViewer({
             ? formData.instructionDetailDescription.trim()
             : '';
 
-        if (trimmedName.length < 5 || trimmedName.length > 50) {
-            return toast.error('Name must be between 5 and 50 characters.');
+        if (trimmedName.length < 1 || trimmedName.length > 50) {
+            return toast.error('Name must be between 1 and 50 characters.');
         }
 
         setIsLoadingCreateInstructionDetail(true);
@@ -805,8 +806,8 @@ export default function SimplifiedModelViewer({
         const trimmedName = formData.instructionDetailName.trim();
         const trimmedDescription = formData.instructionDetailDescription.trim();
 
-        if (trimmedName.length < 5 || trimmedName.length > 50) {
-            return toast.error('Name must be between 5 and 50 characters.');
+        if (trimmedName.length < 1 || trimmedName.length > 50) {
+            return toast.error('Name must be between 1 and 50 characters.');
         }
 
         setIsLoadingUpdateInstructionDetail(true);
@@ -984,60 +985,66 @@ export default function SimplifiedModelViewer({
                                 action !== 'UpdateInstructionDetail' && (
                                     <>
                                         {/* Name */}
-                                        <TextField
-                                            required
-                                            label="Name"
-                                            variant="outlined"
-                                            fullWidth
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
-                                            sx={{
-                                                input: { color: darkMode ? '#ffffff' : '#000000' },
-                                                '& .MuiOutlinedInput-root': {
-                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
-                                                    '&:hover fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                        {!isDisable && (
+                                            <TextField
+                                                disabled={isDisable}
+                                                required
+                                                label="Name"
+                                                variant="outlined"
+                                                fullWidth
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleInputChange}
+                                                sx={{
+                                                    input: { color: darkMode ? '#ffffff' : '#000000' },
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                        '&:hover fieldset': {
+                                                            borderColor: darkMode ? '#ffffff' : '#000000',
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: darkMode ? '#ffffff' : '#000000',
+                                                        },
                                                     },
-                                                    '&.Mui-focused fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
-                                                    },
-                                                },
-                                                label: { color: darkMode ? '#ffffff' : '#000000' },
-                                            }}
-                                        />
+                                                    label: { color: darkMode ? '#ffffff' : '#000000' },
+                                                }}
+                                            />
+                                        )}
 
                                         {/* Description */}
-                                        <TextField
-                                            label="Description"
-                                            variant="outlined"
-                                            fullWidth
-                                            name="description"
-                                            value={formData.description}
-                                            onChange={handleInputChange}
-                                            multiline
-                                            rows={3}
-                                            sx={{
-                                                '& .MuiInputBase-input': {
-                                                    color: darkMode ? '#ffffff' : '#000000',
-                                                },
-                                                '& .MuiOutlinedInput-root': {
-                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
-                                                    '&:hover fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                        {!isDisable && (
+                                            <TextField
+                                                disabled={isDisable}
+                                                label="Description"
+                                                variant="outlined"
+                                                fullWidth
+                                                name="description"
+                                                value={formData.description}
+                                                onChange={handleInputChange}
+                                                multiline
+                                                rows={3}
+                                                sx={{
+                                                    '& .MuiInputBase-input': {
+                                                        color: darkMode ? '#ffffff' : '#000000',
                                                     },
-                                                    '&.Mui-focused fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
+                                                        '&:hover fieldset': {
+                                                            borderColor: darkMode ? '#ffffff' : '#000000',
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: darkMode ? '#ffffff' : '#000000',
+                                                        },
                                                     },
-                                                },
-                                                '& .MuiInputLabel-root': {
-                                                    color: darkMode ? '#ffffff' : '#000000',
-                                                },
-                                            }}
-                                        />
+                                                    '& .MuiInputLabel-root': {
+                                                        color: darkMode ? '#ffffff' : '#000000',
+                                                    },
+                                                }}
+                                            />
+                                        )}
 
                                         {/* Hiển thị ảnh */}
-                                        {(imageFile || previewImage) && (
+                                        {(imageFile || previewImage) && !isDisable && (
                                             <Box sx={{ mt: 2, textAlign: 'center' }}>
                                                 <Typography variant="subtitle1">Current Image</Typography>
                                                 <img
@@ -1060,17 +1067,24 @@ export default function SimplifiedModelViewer({
                                         )}
 
                                         {/* Upload Image */}
-                                        <Button
-                                            disabled={isDisable}
-                                            variant="contained"
-                                            component="label"
-                                            fullWidth
-                                            startIcon={<CloudUploadIcon />}
-                                            sx={{ mt: 2 }}
-                                        >
-                                            Upload Image *
-                                            <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
-                                        </Button>
+                                        {!isDisable && (
+                                            <Button
+                                                disabled={isDisable}
+                                                variant="contained"
+                                                component="label"
+                                                fullWidth
+                                                startIcon={<CloudUploadIcon />}
+                                                sx={{ mt: 2 }}
+                                            >
+                                                Upload Image *
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    hidden
+                                                    onChange={handleImageUpload}
+                                                />
+                                            </Button>
+                                        )}
 
                                         {/* Hiển thị tên file ảnh đã chọn */}
                                         {imageFile && (
@@ -1392,13 +1406,13 @@ export default function SimplifiedModelViewer({
                                     color="primary"
                                     sx={{ width: '100%' }}
                                     onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
-                                    disabled={isLoading || isLoadingUpdateModelGuideline || isDisable}
+                                    disabled={isLoading || isLoadingUpdateModelGuideline}
                                 >
                                     {action === 'CreateModel' ? (
                                         isLoading ? (
                                             <CircularProgress size={24} sx={{ color: 'white' }} />
                                         ) : (
-                                            'Create'
+                                            'Create Model'
                                         )
                                     ) : isLoadingUpdateModelGuideline ? (
                                         <CircularProgress size={24} sx={{ color: 'white' }} />
