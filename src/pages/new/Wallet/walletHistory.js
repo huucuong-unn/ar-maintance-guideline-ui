@@ -31,6 +31,7 @@ export default function WalletHistory() {
         { field: 'serviceName', headerName: 'Service Name', width: 200 },
         { field: 'guidelineName', headerName: 'Guideline Name', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
+        { field: 'receiverName', headerName: 'Receiver Name', width: 200 },
         {
             field: 'amount',
             headerName: 'Amount',

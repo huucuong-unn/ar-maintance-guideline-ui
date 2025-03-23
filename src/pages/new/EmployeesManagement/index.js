@@ -26,6 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import AccountAPI from '~/API/AccountAPI';
 import PaymentAPI from '~/API/PaymentAPI';
 import SubscriptionAPI from '~/API/SubscriptionAPI';
+import WalletAPI from '~/API/WalletAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
 
@@ -44,6 +45,8 @@ const defaultTheme = createTheme();
 export default function EmployeesManagement() {
     const navigate = useNavigate();
     const [isLoadingCreateEmployee, setIsLoadingCreateEmployee] = useState(false);
+    const [isLoadingAllocationPoint, setIsLoadingAllocationPoint] = useState(false);
+
     const [rows, setRows] = useState([]);
     const [searchParams, setSearchParams] = useState({
         username: '',
@@ -59,6 +62,8 @@ export default function EmployeesManagement() {
 
     // Dialog state for creating employee
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
+    const [openAllocationPointDialog, setOpenAllocationPointDialog] = useState(false);
+    const [limitPoint, setLimitPoint] = useState(0);
     const [newEmployee, setNewEmployee] = useState({
         email: '',
         password: '',
@@ -70,6 +75,7 @@ export default function EmployeesManagement() {
         expirationDate: '',
         isPayAdmin: false,
         roleName: 'STAFF',
+        points: 1,
     });
     const [passwordError, setPasswordError] = useState('');
 
@@ -85,6 +91,10 @@ export default function EmployeesManagement() {
         setOpenCreateDialog(true);
     };
 
+    const handleOpenAllocationPointDialog = () => {
+        setOpenAllocationPointDialog(true);
+    };
+
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
         setNewEmployee({
@@ -98,8 +108,13 @@ export default function EmployeesManagement() {
             roleName: 'STAFF',
             expirationDate: '',
             isPayAdmin: false,
+            points: 1,
         });
         setPasswordError('');
+    };
+    const handleCloseAllocationPointDialog = () => {
+        setOpenAllocationPointDialog(false);
+        setLimitPoint(0);
     };
 
     const handleInputChange = (e) => {
@@ -119,6 +134,15 @@ export default function EmployeesManagement() {
                 setPasswordError('');
             }
         }
+    };
+
+    const handleInputChangeForPoint = (e) => {
+        const { name, value } = e.target;
+        const parsedValue = Math.max(1, Math.min(31, Number(value)));
+        setNewEmployee({
+            ...newEmployee,
+            [name]: parsedValue,
+        });
     };
 
     const handleCreateEmployee = async () => {
@@ -141,6 +165,35 @@ export default function EmployeesManagement() {
             toast.error(`Create employee failed. ${error?.response?.data?.message}`);
         } finally {
             setIsLoadingCreateEmployee(false);
+        }
+    };
+
+    const handleAllocatePoint = async () => {
+        if (limitPoint <= 0) {
+            toast.error('Limit point must be greater than 0');
+            return;
+        }
+        if (limitPoint >= 30) {
+            toast.error('Limit point must be less than 30');
+            return;
+        }
+        if (limitPoint > userInfo?.company?.wallet?.balance) {
+            toast.error('Insufficient balance');
+            return;
+        }
+        try {
+            setIsLoadingAllocationPoint(true);
+            const response = await WalletAPI.allocationPoint(userInfo?.company?.id, limitPoint);
+            if (response?.result) {
+                toast.success('Points allocated successfully');
+            }
+            handleCloseAllocationPointDialog();
+            fetchData();
+        } catch (error) {
+            console.error('Failed to allocate points:', error);
+            toast.error(`Failed to allocate points. ${error?.response?.data?.message}`);
+        } finally {
+            setIsLoadingAllocationPoint(false);
         }
     };
 
@@ -194,6 +247,7 @@ export default function EmployeesManagement() {
     const columns = [
         { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', width: 200 },
+        { field: 'points', headerName: 'Points', width: 200 },
         { field: 'roleName', headerName: 'Role', width: 200 },
         {
             field: 'createdDate',
@@ -343,7 +397,7 @@ export default function EmployeesManagement() {
                     </Typography>
 
                     {/* Search and Filter Section */}
-                    <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
+                    <Box sx={{ mb: 4, display: 'flex', justify: 'left', gap: 2 }}>
                         <Button
                             variant="contained"
                             sx={{
@@ -359,6 +413,22 @@ export default function EmployeesManagement() {
                             onClick={handleOpenCreateDialog}
                         >
                             {isLoadingCreateEmployee ? <CircularProgress /> : ' Create Employee'}
+                        </Button>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#051D40',
+                                color: 'white',
+
+                                '&:hover': {
+                                    bgcolor: '#02F18D',
+                                    color: '#051D40',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleOpenAllocationPointDialog}
+                        >
+                            {isLoadingAllocationPoint ? <CircularProgress /> : ' Allocate Points'}
                         </Button>
                     </Box>
 
@@ -440,12 +510,15 @@ export default function EmployeesManagement() {
                                 onChange={handleInputChange}
                                 type="number"
                             />
-
-                            <TextField fullWidth label="Company" name="company" value={newEmployee.company} disabled />
-
-                            <TextField fullWidth label="Role" name="roleName" value={newEmployee.roleName} disabled />
-
-                            <TextField fullWidth label="Status" name="status" value={newEmployee.status} disabled />
+                            <TextField
+                                fullWidth
+                                label="Points"
+                                name="points"
+                                value={newEmployee.points}
+                                onChange={handleInputChangeForPoint}
+                                inputProps={{ min: 0, max: 30 }}
+                                type="number"
+                            />
                         </Box>
                     </DialogContent>
                     <DialogActions>
@@ -462,6 +535,45 @@ export default function EmployeesManagement() {
                             }
                         >
                             Create
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Create Allocation Point Dialog */}
+                <Dialog
+                    open={openAllocationPointDialog}
+                    onClose={handleCloseAllocationPointDialog}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>Allocate Point</DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                label="Limit Point"
+                                name="limitPoint"
+                                value={limitPoint}
+                                onChange={(e) => setLimitPoint(e.target.value)}
+                                type="number"
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseAllocationPointDialog}>Cancel</Button>
+                        <Button
+                            onClick={handleAllocatePoint}
+                            variant="contained"
+                            color="primary"
+                            disabled={
+                                !limitPoint ||
+                                limitPoint <= 0 ||
+                                limitPoint > userInfo?.company?.wallet?.balance ||
+                                isLoadingAllocationPoint
+                            }
+                        >
+                            Allocate
                         </Button>
                     </DialogActions>
                 </Dialog>
