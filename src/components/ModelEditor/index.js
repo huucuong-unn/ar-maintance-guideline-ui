@@ -406,6 +406,7 @@ export default function SimplifiedModelViewer({
     machineTypeId,
     isDisable = false,
     companyId,
+    setDisableApprove,
 }) {
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     // State for model transform
@@ -591,6 +592,9 @@ export default function SimplifiedModelViewer({
             const response = await ModelAPI.updateModel(modelById?.id, formDataForUpdate);
             if (response?.result) {
                 toast.success('Model updated successfully!', { position: 'top-right' });
+                if (requestId) {
+                    setDisableApprove(false);
+                }
                 fetchModel();
                 resetFormData();
             }
@@ -1076,7 +1080,7 @@ export default function SimplifiedModelViewer({
                                                 startIcon={<CloudUploadIcon />}
                                                 sx={{ mt: 2 }}
                                             >
-                                                Upload Image *
+                                                Upload Image
                                                 <input
                                                     type="file"
                                                     accept="image/*"
