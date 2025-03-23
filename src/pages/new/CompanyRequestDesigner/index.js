@@ -104,6 +104,7 @@ export default function CompanyRequestDesigner() {
                                                 e,
                                                 params.row.requestId,
                                                 params.row.machineType?.machineTypeId,
+                                                params.row.company.id,
                                             )
                                         }
                                     />
@@ -231,11 +232,13 @@ export default function CompanyRequestDesigner() {
     const [file3D, setFile3D] = useState(null);
     const [requestId, setRequestId] = useState(null);
     const [machineTypeId, setMachineTypeId] = useState(null);
-    const handle3DFileSelect = (e, requestId, idMachineType) => {
+    const [companyId, setCompanyId] = useState(null);
+    const handle3DFileSelect = (e, requestId, idMachineType, idCompany) => {
         if (e.target.files[0]) {
             setFile3D(e.target.files[0]);
             setRequestId(requestId);
             setMachineTypeId(idMachineType);
+            setCompanyId(idCompany);
             setOpenCreateDialog(true);
             setOpenEditor(true);
         }
@@ -246,6 +249,7 @@ export default function CompanyRequestDesigner() {
         setFile3D(null);
         setRequestId(null);
         setMachineTypeId(null);
+        setCompanyId(null);
         fetchData();
     };
 
@@ -379,6 +383,8 @@ export default function CompanyRequestDesigner() {
                                     handleCloseModal={handleCloseEditor}
                                     requestId={requestId}
                                     machineTypeId={machineTypeId}
+                                    companyId={companyId}
+                                    isDisable={true}
                                 />
                             )}
                         </>

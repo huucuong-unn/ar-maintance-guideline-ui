@@ -56,6 +56,8 @@ export default function CompanyRequestManagement() {
     const [openModelId, setOpenModelId] = useState(null);
     const [requestId, setRequestId] = useState(null);
 
+    const [disableApprove, setDisableApprove] = useState(true);
+
     // Table columns
     const columns = [
         {
@@ -151,7 +153,7 @@ export default function CompanyRequestManagement() {
             field: 'createdAt',
             headerName: 'Created Date',
             width: 200,
-            renderCell: (params) => formatDateTime(params.value),
+            renderCell: (params) => formatDateTime(params.value) || '-',
         },
     ];
 
@@ -492,7 +494,16 @@ export default function CompanyRequestManagement() {
                 </Dialog>
                 {/* Create Model Dialog */}
                 <Dialog open={openEditor} onClose={handleCloseEditor} fullWidth maxWidth="xl">
-                    <DialogTitle>Model Review</DialogTitle>
+                    <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        Model Review
+                        <Box>
+                            <Button onClick={handleCloseEditor}>Cancel</Button>
+                            <Button onClick={handleApprove} disabled={isLoading || disableApprove} variant="contained">
+                                {isLoading ? <CircularProgress size={24} /> : 'Approve'}
+                            </Button>
+                        </Box>
+                    </DialogTitle>
+                    <DialogActions sx={{ marginRight: '20px' }}></DialogActions>
                     <DialogContent sx={{ minHeight: '80vh' }}>
                         <>
                             {openEditor && (
@@ -501,17 +512,11 @@ export default function CompanyRequestManagement() {
                                     modelId={openModelId}
                                     handleCloseModal={handleCloseEditor}
                                     requestId={requestId}
-                                    isDisable={true}
+                                    setDisableApprove={setDisableApprove}
                                 />
                             )}
                         </>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseEditor}>Cancel</Button>
-                        <Button onClick={handleApprove} disabled={isLoading}>
-                            {isLoading ? <CircularProgress size={24} /> : 'Approve'}
-                        </Button>
-                    </DialogActions>
                 </Dialog>
 
                 <Dialog open={openCancelConfirmDialog} onClose={handleCloseCancelConfirm} fullWidth maxWidth="xs">
