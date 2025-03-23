@@ -369,6 +369,7 @@ export default function ServicePriceManagement() {
                                 name="name"
                                 value={editServicePrice.name}
                                 onChange={handleEditInputChange}
+                                disabled
                             />
 
                             <TextField
