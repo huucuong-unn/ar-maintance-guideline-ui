@@ -6,4 +6,4 @@ export const getImage = (image) => {
     return `${host}/api/v1/files/${image}`;
 };
 
-export const host = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
+export const host = process.env.REACT_APP_BACKEND_APP_HOST_LOCAL;
