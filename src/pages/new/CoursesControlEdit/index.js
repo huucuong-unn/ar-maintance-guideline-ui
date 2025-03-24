@@ -105,7 +105,10 @@ export default function CoursesControlEdit() {
     const [isLoadingStartCourse, setIsLoadingStartCourse] = useState(false);
     const [openCourseStatusDialog, setOpenCourseStatusDialog] = useState(false);
 
-    const handleClickToggleCourseStatus = () => {
+    const handleClickToggleCourseStatus = async () => {
+        const count = await CourseAPI.countInstructionDetailsDrafted(course.id);
+        console.log(count);
+        setNumberOfInstructionDetails(count.result);
         // Example: If you require instructions to exist, you could check instructions here
         setOpenCourseStatusDialog(true);
     };
@@ -206,6 +209,24 @@ export default function CoursesControlEdit() {
         setInstructionDetailRequest({ name: '', description: '', file: null, imageFile: null });
     };
 
+    const [isValidCourse, setIsValidCourse] = useState(true);
+
+    useEffect(() => {
+        var flag = true;
+        if (course) {
+            course.instructions.forEach((instruction) => {
+                if (instruction.instructionDetailResponse.length === 0) {
+                    flag = false;
+                    return;
+                }
+            });
+
+            setIsValidCourse(flag);
+            console.log(flag);
+            console.log(isValidCourse);
+        }
+    }, [course]);
+
     const handleCreateInstruction = async () => {
         // Basic validation checks can go here
         if (instructionName.trim().length < 5) {
@@ -232,6 +253,7 @@ export default function CoursesControlEdit() {
             }
 
             const response = await InstructionAPI.create(formData);
+            fetchCourse();
             if (response?.result) {
                 toast.success('Instruction created successfully!');
                 setOpenAddSectionDialog(false);
@@ -537,14 +559,6 @@ export default function CoursesControlEdit() {
     const handleCloseMenuInstruction = (id) => {
         setAnchorElMap((prev) => ({ ...prev, [id]: null }));
     };
-
-    useEffect(() => {
-        let count = 0;
-        instructions?.forEach((instruction) => {
-            count += instruction?.instructionDetailResponse?.length;
-        });
-        setNumberOfInstructionDetails(count);
-    }, [course, instructions, instructionDetailList]);
     // ----------------------------------------------------------------------
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
@@ -584,8 +598,12 @@ export default function CoursesControlEdit() {
 
                     {/* Action Buttons */}
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                        <Button variant="contained" sx={{ padding: '12px 20px' }} onClick={() => navigate(-1)}>
+                            Save Draft
+                        </Button>
                         <Button
                             variant="contained"
+                            disabled={!isValidCourse}
                             sx={{
                                 padding: '12px 20px',
                                 backgroundColor:
@@ -1136,6 +1154,7 @@ export default function CoursesControlEdit() {
                                 setOpenEditor(false);
                                 setOpenAddLessonDialog(false);
                                 fetchInstructionByCourseId();
+                                fetchCourse();
                             }}
                         />
                     )}
@@ -1285,9 +1304,7 @@ export default function CoursesControlEdit() {
                 <DialogContent>
                     <DialogContentText>
                         {course?.status === 'DRAFTED'
-                            ? `its will cost ${
-                                  numberOfInstructionDetails * 3
-                              } points, Are you sure you want to start this guideline ? `
+                            ? `its will cost ${numberOfInstructionDetails} points, Are you sure you want to start this guideline ? `
                             : course?.status === 'INACTIVE'
                             ? 'Are you sure you want to start this guideline ?'
                             : 'Are you sure you want to stop this guideline?'}

@@ -79,6 +79,9 @@ const CourseAPI = {
     delete(id) {
         return axiosClient.delete(`/v1/course/${id}`);
     },
+    countInstructionDetailsDrafted(id) {
+        return axiosClient.get(`/v1/course/instruction-detail-drafted/number/${id}`);
+    },
 };
 
 export default CourseAPI;
