@@ -92,6 +92,11 @@ export const SecondaryListItems = () => {
             title: 'Machine Types',
         },
         {
+            route: '/company/company-request-management',
+            icon: <Mail />,
+            title: 'Company Request',
+        },
+        {
             route: '/company/model-management',
             icon: <Bot />,
             title: '3D Models',
@@ -107,9 +112,9 @@ export const SecondaryListItems = () => {
             title: 'Payment',
         },
         {
-            route: '/company/company-request-management',
+            route: '/company/point-request-management',
             icon: <Mail />,
-            title: 'Company Request',
+            title: 'Point Request',
         },
         {
             route: '/wallet/history',

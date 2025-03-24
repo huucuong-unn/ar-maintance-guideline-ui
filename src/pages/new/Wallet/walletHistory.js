@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import WalletAPI from '~/API/WalletAPI';
 import storageService from '~/components/StorageService/storageService';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import { formatDateTime } from '~/Constant';
 
 function Copyright(props) {
     return (
@@ -28,7 +29,12 @@ export default function WalletHistory() {
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'No.', width: 70 },
         { field: 'type', headerName: 'Type', width: 150 },
-        { field: 'serviceName', headerName: 'Service Name', width: 200 },
+        {
+            field: 'serviceName',
+            headerName: 'Service Name',
+            width: 200,
+            renderCell: (params) => params.row.serviceName || 'Employee Request Point',
+        },
         { field: 'guidelineName', headerName: 'Guideline Name', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'receiverName', headerName: 'Receiver Name', width: 200 },
@@ -81,7 +87,7 @@ export default function WalletHistory() {
                     id: index + 1,
                     amount: item.amount,
                     balance: item.balance,
-                    createdDate: formatDate(item.createdDate),
+                    createdDate: formatDateTime(item.createdDate),
                 }));
                 setRows(data);
             } catch (error) {
@@ -92,14 +98,6 @@ export default function WalletHistory() {
             fetchWalletHistory();
         }
     }, []);
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const day = date.getUTCDate().toString().padStart(2, '0');
-        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        const year = date.getUTCFullYear();
-        return `${month}/${day}/${year}`;
-    };
 
     return (
         <ThemeProvider theme={defaultTheme}>

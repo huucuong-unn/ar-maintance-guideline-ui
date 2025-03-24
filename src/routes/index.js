@@ -33,6 +33,7 @@ import CompanyRequestManagement from '~/pages/new/CompanyRequestManagement';
 import CompanyRequestDesigner from '~/pages/new/CompanyRequestDesigner';
 import ServicePriceManagement from '~/pages/new/ServicePrice/indesx';
 import WalletHistory from '~/pages/new/Wallet/walletHistory';
+import PointRequestManagement from '~/pages/new/PointRequestManagement';
 
 const publicRoutes = [
     //new
@@ -83,6 +84,11 @@ const companyRoutes = [
     },
     { path: '/wallet/purchase', component: PointPurchase, layout: AdminLayout },
     { path: '/wallet/history', component: WalletHistory, layout: AdminLayout },
+    {
+        path: '/company/point-request-management',
+        component: PointRequestManagement,
+        layout: AdminLayout,
+    },
 ];
 
 const designerRoutes = [
