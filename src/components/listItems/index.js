@@ -112,9 +112,9 @@ export const SecondaryListItems = () => {
             title: 'Payment',
         },
         {
-            route: '/company/company-request-management',
+            route: '/company/point-request-management',
             icon: <Mail />,
-            title: 'Company Request',
+            title: 'Point Request',
         },
         {
             route: '/wallet/history',
