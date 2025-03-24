@@ -540,11 +540,11 @@ export default function CoursesControlEdit() {
 
     useEffect(() => {
         let count = 0;
-        course?.instructions?.forEach((instruction) => {
+        instructions?.forEach((instruction) => {
             count += instruction?.instructionDetailResponse?.length;
         });
         setNumberOfInstructionDetails(count);
-    }, [course, instructions]);
+    }, [course, instructions, instructionDetailList]);
     // ----------------------------------------------------------------------
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
