@@ -12,6 +12,8 @@ import {
     FileType,
     AppWindowMacIcon,
     Mail,
+    DollarSign,
+    History,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -113,12 +115,12 @@ export const SecondaryListItems = () => {
         },
         {
             route: '/company/point-request-management',
-            icon: <Mail />,
+            icon: <DollarSign />,
             title: 'Point Request',
         },
         {
             route: '/wallet/history',
-            icon: <AppWindowMac />,
+            icon: <History />,
             title: 'Wallet History',
         },
     ];
