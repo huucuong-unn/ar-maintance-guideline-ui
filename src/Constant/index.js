@@ -3,7 +3,15 @@
 
 //get all file from host, not just image
 export const getImage = (image) => {
-    return `${host}/api/v1/files/${image}`;
+    try {
+        if (!image || image === undefined) {
+            console.warn('getImage called with an invalid image:', image);
+            return; // Return an empty string or a placeholder URL if needed
+        }
+        return `${host}/api/v1/files/${image}`;
+    } catch (e) {
+        return;
+    }
 };
 
 export const formatDate = (dateString) => {
@@ -28,4 +36,4 @@ export const formatDateTime = (dateString) => {
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
-export const host = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
+export const host = process.env.REACT_APP_BACKEND_APP_HOST_LOCAL;

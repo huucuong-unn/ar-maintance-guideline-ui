@@ -209,21 +209,29 @@ export default function CoursesControlEdit() {
         setInstructionDetailRequest({ name: '', description: '', file: null, imageFile: null });
     };
 
-    const [isValidCourse, setIsValidCourse] = useState(true);
+    const [isNotValidCourse, setIsNotValidCourse] = useState(true);
 
     useEffect(() => {
-        var flag = true;
+        console.log(course);
+
+        var flag = false;
         if (course) {
+            if (!course.instruction) {
+                flag = true;
+                return;
+            }
+            console.log(course);
+
             course.instructions.forEach((instruction) => {
-                if (instruction.instructionDetailResponse.length === 0) {
-                    flag = false;
+                if (!instruction.instructionDetailResponse.length == 0) {
+                    flag = true;
                     return;
                 }
             });
+            console.log(course);
 
-            setIsValidCourse(flag);
+            setIsNotValidCourse(flag);
             console.log(flag);
-            console.log(isValidCourse);
         }
     }, [course]);
 
@@ -599,11 +607,11 @@ export default function CoursesControlEdit() {
                     {/* Action Buttons */}
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                         <Button variant="contained" sx={{ padding: '12px 20px' }} onClick={() => navigate(-1)}>
-                            Save Draft
+                            {course?.status != 'ACTIVE' ? 'Save Draft' : 'Back'}
                         </Button>
                         <Button
                             variant="contained"
-                            disabled={!isValidCourse}
+                            disabled={isNotValidCourse}
                             sx={{
                                 padding: '12px 20px',
                                 backgroundColor:
@@ -675,145 +683,27 @@ export default function CoursesControlEdit() {
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
-                        <Tab label="Model" value="1" />
-                        <Tab label="3D Model Viewer" value="2" />
-                        <Tab label="Instruction" value="3" />
+                        <Tab label="3D Model Viewer" value="1" />
+                        <Tab label="Instruction" value="2" />
                         {/* <Tab label="Assign" value="4" /> */}
                     </TabList>
                 </Box>
 
-                {/* ---------- Tab 1: Model Info & QR Code ---------- */}
-                <TabPanel value="1">
-                    {isLoadingModel ? (
-                        <Box sx={{ textAlign: 'center', mt: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : (
-                        <Box>
-                            <Box sx={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
-                                {/* Left: QR Code */}
-                                <Box
-                                    sx={{
-                                        width: '30%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: 2,
-                                    }}
-                                >
-                                    <Typography
-                                        variant="body2"
-                                        sx={{ fontWeight: 400, fontStyle: 'italic', fontSize: '14px' }}
-                                    >
-                                        QR Code must be placed on the real model in the 3D Model Editor for correct
-                                        alignment.
-                                    </Typography>
-
-                                    {/* QR Code */}
-                                    <img
-                                        src={getImage(course?.qrCode)}
-                                        alt="QR Code"
-                                        style={{
-                                            maxWidth: '100%',
-                                            borderRadius: 8,
-                                            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                                        }}
-                                    />
-
-                                    <Button
-                                        variant="contained"
-                                        onClick={() =>
-                                            handleDownloadQrCode(course?.qrCode, `${course?.title}_QRCode.png`)
-                                        }
-                                    >
-                                        Download QR Code
-                                    </Button>
-                                </Box>
-
-                                {/* Right: Model Info */}
-                                <Box
-                                    sx={{
-                                        width: '60%',
-                                        backgroundColor: 'rgba(255,255,255,0.8)',
-                                        p: 3,
-                                        borderRadius: 2,
-                                        boxShadow: 3,
-                                        textAlign: 'left',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 2,
-                                    }}
-                                >
-                                    {/* Model Image */}
-                                    <img
-                                        src={getImage(model?.imageUrl)}
-                                        alt="Model Preview"
-                                        style={{
-                                            width: '200px',
-                                            borderRadius: 8,
-                                            margin: 'auto auto 16px',
-                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                                        }}
-                                    />
-
-                                    {/* Info */}
-                                    <Box sx={{ display: 'flex', mb: 1 }}>
-                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                            Model Name
-                                        </Typography>
-                                        <Typography variant="body1">{model?.name || 'N/A'}</Typography>
-                                    </Box>
-                                    <Divider />
-
-                                    <Box sx={{ display: 'flex', mb: 1 }}>
-                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                            Type
-                                        </Typography>
-                                        <Typography variant="body1">{model?.modelTypeName || 'N/A'}</Typography>
-                                    </Box>
-                                    <Divider />
-
-                                    <Box sx={{ display: 'flex', mb: 1 }}>
-                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                            Description
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            {model?.description || 'No description'}
-                                        </Typography>
-                                    </Box>
-                                    <Divider />
-
-                                    <Box sx={{ display: 'flex', mb: 1 }}>
-                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                            Version
-                                        </Typography>
-                                        <Typography variant="body1">{model?.version || 'N/A'}</Typography>
-                                    </Box>
-                                    <Divider />
-
-                                    <Box sx={{ display: 'flex' }}>
-                                        <Typography variant="body1" sx={{ width: '40%', fontWeight: 'bold' }}>
-                                            Scale
-                                        </Typography>
-                                        <Typography variant="body1">{model?.scale || 'N/A'}</Typography>
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </Box>
-                    )}
-                </TabPanel>
-
                 {/* ---------- Tab 2: 3D Model Viewer / Editor ---------- */}
-                <TabPanel value="2">
+                <TabPanel value="1">
                     <Box>
-                        <Box sx={{ mt: 4 }}>
-                            <ModelEditor modelId={model?.id} action="UpdateModelGuideline" />
-                        </Box>
+                        {model ? (
+                            <Box sx={{ mt: 4 }}>
+                                <ModelEditor modelId={model?.id} action="UpdateModelGuideline" />
+                            </Box>
+                        ) : (
+                            <></>
+                        )}
                     </Box>
                 </TabPanel>
 
                 {/* ---------- Tab 3: Instructions ---------- */}
-                <TabPanel value="3">
+                <TabPanel value="2">
                     <Box>
                         {isLoadingSections ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -1207,7 +1097,11 @@ export default function CoursesControlEdit() {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDeleteSectionDialog}>Cancel</Button>
-                    <Button sx={{ backgroundColor: 'red', color: 'white' }} onClick={handleDeleteSection}>
+                    <Button
+                        disabled={course?.status === 'ARCHIVED'}
+                        sx={{ backgroundColor: 'red', color: 'white' }}
+                        onClick={handleDeleteSection}
+                    >
                         Delete
                     </Button>
                 </DialogActions>

@@ -499,7 +499,8 @@ export default function SimplifiedModelViewer({
     const fetchModel = async () => {
         setLoading(true);
         try {
-            if (modelId != null) {
+            console.log(modelId);
+            if (modelId) {
                 const response = await ModelAPI.getById(modelId);
                 setModelById(response.result);
                 setFormData({
@@ -524,16 +525,20 @@ export default function SimplifiedModelViewer({
 
     const [modelError, setModelError] = useState(false);
     useEffect(() => {
-        if (modelId) {
-            fetch(getImage(modelById?.file))
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error('Không tìm thấy file trên server');
-                    }
-                    return response.blob();
-                })
-                .then(() => setModelError(false))
-                .catch(() => setModelError(true));
+        if (modelById) {
+            try {
+                fetch(getImage(modelById?.file))
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Không tìm thấy file trên server');
+                        }
+                        return response.blob();
+                    })
+                    .then(() => setModelError(false))
+                    .catch(() => setModelError(true));
+            } catch (e) {
+                console.log('');
+            }
         }
     }, [modelId, modelById]);
 
@@ -827,6 +832,7 @@ export default function SimplifiedModelViewer({
                 currentInstructionDetailId,
                 formDataForUpdateInstructionDetail,
             );
+            handleCloseModal();
             if (response?.result) {
                 toast.success('Instruction Detail updated successfully!', { position: 'top-right' });
             }
@@ -959,15 +965,19 @@ export default function SimplifiedModelViewer({
                             {showEnvironment && <Environment preset="city" />}
 
                             <Suspense fallback={null}>
-                                <Scene
-                                    modelTransform={modelTransform}
-                                    viewMode={viewMode}
-                                    onMeshesLoaded={setMeshes}
-                                    onAnimationsLoaded={setAnimations}
-                                    activeAnimation={activeAnimation}
-                                    meshVisibility={meshVisibility}
-                                    model={modelId ? getImage(modelById?.file) : modelFile3D}
-                                />
+                                {modelById ? (
+                                    <Scene
+                                        modelTransform={modelTransform}
+                                        viewMode={viewMode}
+                                        onMeshesLoaded={setMeshes}
+                                        onAnimationsLoaded={setAnimations}
+                                        activeAnimation={activeAnimation}
+                                        meshVisibility={meshVisibility}
+                                        model={modelById ? getImage(modelById?.file) : modelFile3D}
+                                    />
+                                ) : (
+                                    <></>
+                                )}
                             </Suspense>
                         </Canvas>
                     )}
