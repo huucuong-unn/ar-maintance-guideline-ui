@@ -57,6 +57,8 @@ export default function MachinesManagement() {
     });
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
+    const [keyword, setKeyword] = useState('');
+    const [selectedMachineType, setSelectedMachineType] = useState('');
 
     const columns = [
         { field: 'machineName', headerName: 'Name', width: 300 },
@@ -94,6 +96,8 @@ export default function MachinesManagement() {
             const params = {
                 page: pageParam,
                 size: sizeParam,
+                keyword: keyword,
+                machineTypeName: selectedMachineType ? selectedMachineType.name : undefined,
             };
             const response = await MachineAPI.getByCompany(userInfo?.company?.id, params);
             const data = response?.result?.objectList || [];
@@ -102,6 +106,11 @@ export default function MachinesManagement() {
         } catch (error) {
             console.log('Failed to fetch machines: ', error);
         }
+    };
+
+    const handleSearch = () => {
+        setPaginationModel((prev) => ({ ...prev, page: 0 }));
+        fetchMachines();
     };
 
     //Create Machine
@@ -477,14 +486,13 @@ export default function MachinesManagement() {
                         Machines Management
                     </Typography>
 
-                    {/* Search and Filter Machines */}
-                    <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
+                    {/* Nút Create Machine */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
                         <Button
                             variant="contained"
                             sx={{
                                 bgcolor: '#051D40',
                                 color: 'white',
-
                                 '&:hover': {
                                     bgcolor: '#02F18D',
                                     color: '#051D40',
@@ -493,8 +501,46 @@ export default function MachinesManagement() {
                             }}
                             onClick={handleOpenCreateMachineDialog}
                         >
-                            {isLoadingCreateMachine ? <CircularProgress /> : ' Create Machine'}
+                            {isLoadingCreateMachine ? <CircularProgress /> : 'Create Machine'}
                         </Button>
+
+                        {/* Search và Filter Machines */}
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                                label="Search by Name or Code"
+                                variant="outlined"
+                                size="medium"
+                                value={keyword}
+                                onChange={(e) => setKeyword(e.target.value)}
+                                sx={{ mr: 2 }}
+                            />
+                            <Autocomplete
+                                options={machineTypes}
+                                getOptionLabel={(option) => option.name}
+                                value={selectedMachineType}
+                                onChange={(event, newValue) => setSelectedMachineType(newValue)}
+                                sx={{ width: 300, mr: 2 }}
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Machine Type" variant="outlined" />
+                                )}
+                            />
+                            <Button
+                                variant="contained"
+                                size="large"
+                                sx={{
+                                    bgcolor: '#1976d2',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#115293',
+                                        color: 'white',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleSearch}
+                            >
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     <Paper

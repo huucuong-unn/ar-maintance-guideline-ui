@@ -52,10 +52,12 @@ export default function MachineTypeManagement() {
     });
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const columns = [
         { field: 'machineTypeName', headerName: 'Name', width: 300 },
         { field: 'numOfAttribute', headerName: 'Number of Attribute', width: 300 },
+        { field: 'numOfMachine', headerName: 'Number of Machine', width: 300 },
         {
             field: 'action',
             headerName: 'Action',
@@ -88,6 +90,7 @@ export default function MachineTypeManagement() {
             const params = {
                 page: pageParam,
                 size: sizeParam,
+                name: searchTerm,
             };
             const response = await MachineTypeAPI.getByCompany(userInfo?.company?.id, params);
             const data = response?.result?.objectList || [];
@@ -96,6 +99,11 @@ export default function MachineTypeManagement() {
         } catch (error) {
             console.log('Failed to fetch machines type: ', error);
         }
+    };
+
+    const handleSearch = () => {
+        setPaginationModel((prev) => ({ ...prev, page: 0 }));
+        fetchMachineTypes();
     };
 
     //Create Machine Type
@@ -324,8 +332,8 @@ export default function MachineTypeManagement() {
     };
 
     useEffect(() => {
-        console.log(updateMachineTypeRequest);
-    }, [updateMachineTypeRequest]);
+        console.log(searchTerm);
+    }, [searchTerm]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -358,23 +366,51 @@ export default function MachineTypeManagement() {
                     >
                         Machines Type Management
                     </Typography>
-                    <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
                         <Button
                             variant="contained"
                             sx={{
                                 bgcolor: '#051D40',
                                 color: 'white',
-
                                 '&:hover': {
                                     bgcolor: '#02F18D',
                                     color: '#051D40',
                                 },
                                 p: 2,
+                                mr: 2,
                             }}
                             onClick={handleOpenCreateMachineTypeDialog}
                         >
                             Create Machine Type
                         </Button>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                                label="Search Machine Type Name"
+                                variant="outlined"
+                                size="medium"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                sx={{ mr: 2 }}
+                            />
+                            <Button
+                                variant="contained"
+                                size="large"
+                                sx={{
+                                    bgcolor: '#1976d2',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#115293',
+                                        color: 'white',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleSearch}
+                            >
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     <Paper
@@ -400,13 +436,12 @@ export default function MachineTypeManagement() {
                             }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.machineTypeId}
-                            slots={{ toolbar: GridToolbar }}
                         />
                     </Paper>
-                </Box>
 
-                <Box sx={{ mt: 'auto' }}>
-                    <Copyright />
+                    <Box sx={{ mt: 'auto' }}>
+                        <Copyright />
+                    </Box>
                 </Box>
 
                 {/* Create Machine Type Dialog */}
