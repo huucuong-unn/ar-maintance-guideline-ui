@@ -12,6 +12,7 @@ import {
     Skeleton,
     TextField,
     Typography,
+    Autocomplete,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -38,8 +39,6 @@ const defaultTheme = createTheme();
 
 export default function CompanyRequestManagement() {
     const userInfo = storageService.getItem('userInfo')?.user || null;
-    const [isLoading, setIsLoading] = useState(false);
-    const [rows, setRows] = useState([]);
 
     // --------------------- FIRST DIALOG (Select Machine) ---------------------
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -157,14 +156,34 @@ export default function CompanyRequestManagement() {
         },
     ];
 
+    const [isLoading, setIsLoading] = useState(false);
+    const [rows, setRows] = useState([]);
+    const [statusToSort, setStatusToSort] = useState('');
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 5,
+    });
+    const [total, setTotal] = useState(0);
+
     // Fetch existing requests
     const fetchData = async () => {
         try {
+            const pageParam = paginationModel.page + 1;
+            const sizeParam = paginationModel.pageSize;
+            const params = {
+                page: pageParam,
+                size: sizeParam,
+            };
             setIsLoading(true);
-            const response = await CompanyRequestAPI.getAllCompanyRequestsByCompanyId(userInfo?.company?.id);
-            const data = response?.result || [];
+            const response = await CompanyRequestAPI.getAllCompanyRequestsByCompanyId(
+                userInfo?.company?.id,
+                statusToSort ? statusToSort : '',
+                params,
+            );
+            const data = response?.result?.objectList || [];
             console.log('Fetched data:', data);
             setRows(data);
+            setTotal(response?.result?.totalItems || 0);
         } catch (error) {
             console.error('Failed to fetch request:', error);
         } finally {
@@ -172,9 +191,17 @@ export default function CompanyRequestManagement() {
         }
     };
 
+    const handleSearchCompanyRequest = async () => {
+        fetchData();
+    };
+
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [paginationModel]);
+
+    useEffect(() => {
+        console.log(paginationModel);
+    }, [paginationModel]);
 
     // Open the "Select Machine" dialog
     const handleOpenCreateDialog = async () => {
@@ -319,6 +346,10 @@ export default function CompanyRequestManagement() {
         }
     };
 
+    useEffect(() => {
+        console.log(statusToSort);
+    }, [statusToSort]);
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Grid
@@ -352,7 +383,7 @@ export default function CompanyRequestManagement() {
                     </Typography>
 
                     {/* Create Request Button */}
-                    <Box sx={{ mb: 4, display: 'flex', justify: 'left' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
                         <Button
                             variant="contained"
                             sx={{
@@ -368,6 +399,35 @@ export default function CompanyRequestManagement() {
                         >
                             Create Request
                         </Button>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Autocomplete
+                                disablePortal
+                                options={['PENDING', 'APPROVED', 'CANCEL', 'PROCESSING']}
+                                sx={{ width: 200, mr: 2 }}
+                                renderInput={(params) => <TextField {...params} label="Status" />}
+                                onChange={(event, newValue) => {
+                                    setStatusToSort(newValue);
+                                }}
+                            />
+
+                            <Button
+                                variant="contained"
+                                size="large"
+                                sx={{
+                                    bgcolor: '#1976d2',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#115293',
+                                        color: 'white',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleSearchCompanyRequest}
+                            >
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     <Paper
@@ -382,9 +442,17 @@ export default function CompanyRequestManagement() {
                         <DataGrid
                             rows={rows}
                             columns={columns}
+                            rowCount={total}
+                            paginationMode="server"
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={(newModel) =>
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: newModel.page,
+                                }))
+                            }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.requestId}
-                            slots={{ toolbar: GridToolbar }}
                             loading={isLoading}
                         />
                     </Paper>

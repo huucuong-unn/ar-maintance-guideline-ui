@@ -16,6 +16,7 @@ import {
     Select,
     TextField,
     Typography,
+    Autocomplete,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -49,7 +50,7 @@ export default function EmployeesManagement() {
 
     const [rows, setRows] = useState([]);
     const [searchParams, setSearchParams] = useState({
-        username: '',
+        phoneNumber: '',
         email: '',
         status: '',
     });
@@ -339,11 +340,11 @@ export default function EmployeesManagement() {
             const params = {
                 page: pageParam,
                 size: sizeParam,
-                username: searchParams.username || undefined,
+                phoneNumber: searchParams.phoneNumber || undefined,
                 email: searchParams.email || undefined,
                 status: searchParams.status || undefined,
             };
-            const response = await AccountAPI.getStaffByCompanyId(userInfo?.company?.id, params, params);
+            const response = await AccountAPI.getStaffByCompanyId(userInfo?.company?.id, params);
             const data = response?.result?.objectList || [];
             setRows(data);
             setTotal(response?.result?.totalItems || 0);
@@ -354,7 +355,12 @@ export default function EmployeesManagement() {
 
     useEffect(() => {
         fetchData();
-    }, [paginationModel, searchParams]);
+    }, [paginationModel]);
+
+    const handleSearch = () => {
+        setSearchParams((prev) => ({ ...prev }));
+        fetchData();
+    };
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -397,45 +403,96 @@ export default function EmployeesManagement() {
                     </Typography>
 
                     {/* Search and Filter Section */}
-                    <Box sx={{ mb: 4, display: 'flex', justify: 'left', gap: 2 }}>
-                        <Button
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#051D40',
-                                color: 'white',
+                    <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'left', gap: 1 }}>
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    bgcolor: '#051D40',
+                                    color: 'white',
 
-                                '&:hover': {
-                                    bgcolor: '#02F18D',
-                                    color: '#051D40',
-                                },
-                                p: 2,
-                            }}
-                            onClick={handleOpenCreateDialog}
-                        >
-                            {isLoadingCreateEmployee ? <CircularProgress /> : ' Create Employee'}
-                        </Button>
-                        <Button
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#051D40',
-                                color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#02F18D',
+                                        color: '#051D40',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleOpenCreateDialog}
+                            >
+                                {isLoadingCreateEmployee ? <CircularProgress /> : ' Create Employee'}
+                            </Button>
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    bgcolor: '#051D40',
+                                    color: 'white',
 
-                                '&:hover': {
-                                    bgcolor: '#02F18D',
-                                    color: '#051D40',
-                                },
-                                p: 2,
-                            }}
-                            onClick={handleOpenAllocationPointDialog}
-                        >
-                            {isLoadingAllocationPoint ? <CircularProgress /> : ' Allocate Points'}
-                        </Button>
+                                    '&:hover': {
+                                        bgcolor: '#02F18D',
+                                        color: '#051D40',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleOpenAllocationPointDialog}
+                            >
+                                {isLoadingAllocationPoint ? <CircularProgress /> : ' Allocate Points'}
+                            </Button>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            {/* Search Phone Number */}
+                            <TextField
+                                label="Phone Number"
+                                variant="outlined"
+                                size="medium"
+                                value={searchParams.phoneNumber}
+                                onChange={(e) => setSearchParams((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                            />
+
+                            {/* Search Email */}
+                            <TextField
+                                label="Email"
+                                variant="outlined"
+                                size="medium"
+                                value={searchParams.email}
+                                onChange={(e) => setSearchParams((prev) => ({ ...prev, email: e.target.value }))}
+                            />
+
+                            {/* Sort Status */}
+                            <Autocomplete
+                                options={['ACTIVE', 'INACTIVE']}
+                                size="medium"
+                                sx={{ width: 200 }}
+                                renderInput={(params) => <TextField {...params} label="Status" />}
+                                value={searchParams.status || null}
+                                onChange={(event, newValue) =>
+                                    setSearchParams((prev) => ({ ...prev, status: newValue || '' }))
+                                }
+                            />
+
+                            {/* Nút Search */}
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    bgcolor: '#1976d2',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#115293',
+                                        color: 'white',
+                                    },
+                                    p: 2,
+                                }}
+                                onClick={handleSearch}
+                            >
+                                Search
+                            </Button>
+                        </Box>
                     </Box>
 
                     {/* Data Grid */}
                     <Paper
                         sx={{
-                            height: 500,
+                            height: 420,
                             width: '100%',
                             backgroundColor: 'rgba(255, 255, 255, 0.9)',
                             borderRadius: 2,
@@ -456,7 +513,6 @@ export default function EmployeesManagement() {
                             }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.id}
-                            slots={{ toolbar: GridToolbar }}
                         />
                     </Paper>
                 </Box>

@@ -3,6 +3,9 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import { getImage } from '~/Constant';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import img from '~/assets/images/6eca7d1f76dbc6859fca.jpg';
 
 export default function CardCourse({ title, description, image, viewers, lessons, duration, status }) {
     function equalsIgnoreCase(a, b) {
@@ -28,7 +31,7 @@ export default function CardCourse({ title, description, image, viewers, lessons
                 border: '1px solid #02F18D',
             }}
         >
-            <CardMedia
+            {/* <CardMedia
                 component="img"
                 image={getImage(image)} // Construct API URL
                 title={title}
@@ -39,6 +42,19 @@ export default function CardCourse({ title, description, image, viewers, lessons
                     objectFit: 'cover',
                     borderRadius: '8px', // round corners
                     padding: '8px',
+                }}
+            /> */}
+
+            <LazyLoadImage
+                effect="blur"
+                placeholderSrc={img}
+                src={getImage(image)}
+                alt="Card Image"
+                width={'100%'}
+                style={{
+                    objectFit: 'cover',
+                    height: '250px',
+                    borderRadius: '15px',
                 }}
             />
 
