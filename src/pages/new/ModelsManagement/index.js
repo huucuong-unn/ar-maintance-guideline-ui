@@ -313,7 +313,7 @@ export default function ModelsManagement() {
                     >
                         Models Management
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'right', alignItems: 'center', my: 4 }}>
                         {/* <Button
                             variant="contained"
                             component="label"
@@ -335,7 +335,7 @@ export default function ModelsManagement() {
                                 display: 'flex',
                                 gap: 2,
                                 flexWrap: 'wrap',
-                                justifyContent: 'right',
+                                justifyContent: 'center',
                                 alignItems: 'center',
                             }}
                         >
@@ -365,42 +365,27 @@ export default function ModelsManagement() {
                         </Box>
                     </Box>
 
-                    <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
-                        <Box
-                            sx={{
-                                my: 8,
-                                mx: 4,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
+                    <Paper sx={{ height: 450, width: '100%' }}>
+                        {' '}
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            rowCount={total}
+                            paginationMode="server"
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={(newModel) => {
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: newModel.page,
+                                }));
                             }}
-                        >
-                            <Box sx={{ width: '100%', typography: 'body1' }}>
-                                <Paper sx={{ height: 450, width: '100%' }}>
-                                    {' '}
-                                    <DataGrid
-                                        rows={rows}
-                                        columns={columns}
-                                        rowCount={total}
-                                        paginationMode="server"
-                                        paginationModel={paginationModel}
-                                        onPaginationModelChange={(newModel) => {
-                                            setPaginationModel((prev) => ({
-                                                ...prev,
-                                                page: newModel.page,
-                                            }));
-                                        }}
-                                        sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                        getRowId={(row) => row.id}
-                                        slots={{ toolbar: GridToolbar }}
-                                        onRowClick={(params) => handleOpenModal(params.row.id)}
-                                    />
-                                </Paper>
+                            sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                            getRowId={(row) => row.id}
+                            onRowClick={(params) => handleOpenModal(params.row.id)}
+                        />
+                    </Paper>
 
-                                <Copyright sx={{ mt: 5 }} />
-                            </Box>
-                        </Box>
-                    </Grid>
+                    <Copyright sx={{ mt: 5 }} />
                 </Box>
             </Grid>
             {/* Create Model Dialog */}

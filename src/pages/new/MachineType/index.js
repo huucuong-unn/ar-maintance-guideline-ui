@@ -392,7 +392,7 @@ export default function MachineTypeManagement() {
                                 size="medium"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                sx={{ mr: 2 }}
+                                sx={{ mr: 2, width: 300 }}
                             />
                             <Button
                                 variant="contained"

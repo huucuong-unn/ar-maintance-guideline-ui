@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Paper, Typography } from '@mui/material';
+import { Box, Button, Grid, Paper, Typography, TextField, Autocomplete } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { format } from 'date-fns';
@@ -171,6 +171,11 @@ export default function PaymentAndSubscriptionManagement() {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
     };
 
+    const [searchParams, setSearchParams] = useState({
+        status: '',
+        orderCode: '',
+    });
+
     const fetchData = async () => {
         try {
             const pageParam = paginationModel.page + 1;
@@ -181,13 +186,20 @@ export default function PaymentAndSubscriptionManagement() {
                 size: sizeParam,
             };
 
+            const paramsForCompanyRole = {
+                page: pageParam,
+                size: sizeParam,
+                orderCode: searchParams.orderCode || undefined,
+                status: searchParams.status || undefined,
+            };
+
             var response;
             var data;
             if (userInfo?.roleName === 'ADMIN') {
                 response = await PaymentAPI.getPayments(params);
                 data = response?.result?.objectList || [];
             } else if (userInfo?.roleName === 'COMPANY') {
-                response = await PaymentAPI.getPaymentsByCompanyId(userInfo?.company?.id, params);
+                response = await PaymentAPI.getPaymentsByCompanyId(userInfo?.company?.id, paramsForCompanyRole);
                 data = response?.result?.objectList || [];
             }
             for (let i = 0; i < data.length; i++) {
@@ -209,9 +221,18 @@ export default function PaymentAndSubscriptionManagement() {
         }
     };
 
+    const handleSearch = () => {
+        setSearchParams((prev) => ({ ...prev }));
+        fetchData();
+    };
+
     useEffect(() => {
         fetchData();
     }, [paginationModel]);
+
+    useEffect(() => {
+        console.log(searchParams);
+    }, [searchParams]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -245,43 +266,69 @@ export default function PaymentAndSubscriptionManagement() {
                     >
                         Payment History
                     </Typography>
-                    <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '100%' }}>
-                        <Box
-                            sx={{
-                                my: 8,
-                                mx: 4,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Box sx={{ width: '100%', typography: 'body1' }}>
-                                <Paper sx={{ height: 400, width: '100%' }}>
-                                    <DataGrid
-                                        rows={rows}
-                                        columns={columns}
-                                        rowCount={total}
-                                        paginationMode="server"
-                                        paginationModel={paginationModel}
-                                        onPaginationModelChange={(newModel) => {
-                                            setPaginationModel((prev) => ({
-                                                ...prev,
-                                                page: newModel.page,
-                                            }));
-                                        }}
-                                        sx={{
-                                            border: 'none',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                        }}
-                                        getRowId={(row) => row.id}
-                                    />
-                                </Paper>
+                    <Box sx={{ display: 'flex', justifyContent: 'right', gap: 2, mb: 3 }}>
+                        {/* Search Order Code (chỉ nhập số) */}
+                        <TextField
+                            label="Order Code"
+                            variant="outlined"
+                            size="medium"
+                            type="number"
+                            value={searchParams.orderCode}
+                            onChange={(e) => setSearchParams((prev) => ({ ...prev, orderCode: e.target.value }))}
+                        />
 
-                                <Copyright sx={{ mt: 5 }} />
-                            </Box>
-                        </Box>
-                    </Grid>
+                        {/* Search Status */}
+                        <Autocomplete
+                            options={['PENDING', 'PAID', 'FAILED']}
+                            size="medium"
+                            sx={{ width: 200 }}
+                            renderInput={(params) => <TextField {...params} label="Status" />}
+                            value={searchParams.status || null}
+                            onChange={(event, newValue) =>
+                                setSearchParams((prev) => ({ ...prev, status: newValue || '' }))
+                            }
+                        />
+
+                        {/* Nút Search */}
+                        <Button
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#1976d2',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: '#115293',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleSearch}
+                        >
+                            Search
+                        </Button>
+                    </Box>
+
+                    <Paper sx={{ height: 420, width: '100%' }}>
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            rowCount={total}
+                            paginationMode="server"
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={(newModel) => {
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: newModel.page,
+                                }));
+                            }}
+                            sx={{
+                                border: 'none',
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            }}
+                            getRowId={(row) => row.id}
+                        />
+                    </Paper>
+
+                    <Copyright sx={{ mt: 5 }} />
                 </Box>
             </Grid>
         </ThemeProvider>

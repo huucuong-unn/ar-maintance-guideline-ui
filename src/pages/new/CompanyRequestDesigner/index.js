@@ -70,7 +70,7 @@ export default function CompanyRequestDesigner() {
         {
             field: 'action',
             headerName: 'Action',
-            width: 250,
+            width: 350,
             renderCell: (params) => {
                 const currentStatus = params.row.status;
                 return (
@@ -124,6 +124,26 @@ export default function CompanyRequestDesigner() {
                             <>
                                 <Button variant="contained" component="label" disabled>
                                     Waiting for approval
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    sx={{ width: '140px', bgcolor: 'blue', color: 'white' }}
+                                >
+                                    Reupload
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept=".glb,.gltf"
+                                        onChange={(e) =>
+                                            handle3DFileSelect(
+                                                e,
+                                                params.row.requestId,
+                                                params.row.machineType?.machineTypeId,
+                                                params.row.company.id,
+                                            )
+                                        }
+                                    />
                                 </Button>
                             </>
                         )}

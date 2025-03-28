@@ -54,8 +54,8 @@ const CourseAPI = {
     deleteSection(id, includeAuthorization = false) {
         return axiosClient.delete('/v1/lesson/' + id);
     },
-    getByCompanyId(companyId, includeAuthorization = false) {
-        return axiosClient.get('/v1/course/company/' + companyId);
+    getByCompanyId(companyId, page, size, params) {
+        return axiosClient.get(`/v1/course/company/${companyId}?page=${page}&size=${size}`, { params });
     },
     readVideo(videoUrl) {
         return axiosClient
