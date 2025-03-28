@@ -61,6 +61,9 @@ export default function CoursesControlEdit() {
     // -------------------- Course Data --------------------
     const [course, setCourse] = useState(null);
     const [isLoadingCourse, setIsLoadingCourse] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Modify the handleDeleteGuideline function
 
     const fetchCourse = async () => {
         try {
@@ -146,6 +149,7 @@ export default function CoursesControlEdit() {
 
     const handleDeleteGuideline = async () => {
         try {
+            setIsDeleting(true);
             await CourseAPI.delete(course.id);
             toast.success('Guideline deleted successfully!');
             setOpenDeleteConfirm(false);
@@ -153,6 +157,8 @@ export default function CoursesControlEdit() {
         } catch (error) {
             console.error('Failed to delete guideline:', error);
             toast.error('Failed to delete guideline. Please try again.');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -212,26 +218,24 @@ export default function CoursesControlEdit() {
     const [isNotValidCourse, setIsNotValidCourse] = useState(true);
 
     useEffect(() => {
-        console.log(course);
-
-        var flag = false;
         if (course) {
-            if (!course.instruction) {
-                flag = true;
-                return;
-            }
+            var flag = false;
             console.log(course);
 
+            if (!course.instructions) {
+                setIsNotValidCourse(true);
+                console.log(isNotValidCourse);
+                return;
+            }
+
             course.instructions.forEach((instruction) => {
-                if (!instruction.instructionDetailResponse.length == 0) {
+                if (instruction.instructionDetailResponse.length == 0) {
                     flag = true;
                     return;
                 }
             });
-            console.log(course);
-
             setIsNotValidCourse(flag);
-            console.log(flag);
+            console.log(isNotValidCourse);
         }
     }, [course]);
 
@@ -397,6 +401,7 @@ export default function CoursesControlEdit() {
             await InstructionDetailAPI.deleteByIddeleteById(sectionToDelete);
             toast.success('Instruction detail deleted successfully!');
             fetchInstructionByCourseId();
+            fetchCourse();
         } catch (error) {
             console.error('Failed to delete instruction detail:', error);
             toast.error('Failed to delete instruction detail. Please try again.');
@@ -442,8 +447,10 @@ export default function CoursesControlEdit() {
 
     const fetchInstructionDetailById = async (id) => {
         try {
-            const response = await InstructionDetailAPI.getById(id);
-            setInstructionDetailCurrent(response?.result || {});
+            if (id !== undefined) {
+                const response = await InstructionDetailAPI.getById(id);
+                setInstructionDetailCurrent(response?.result || {});
+            }
         } catch (error) {
             console.error('Failed to fetch instruction detail by ID:', error);
         }
@@ -451,8 +458,10 @@ export default function CoursesControlEdit() {
 
     const fetchInstructionDetailByInstructionId = async (instructionId) => {
         try {
-            const response = await InstructionDetailAPI.getByInstructionId(instructionId);
-            setInstructionDetailList(response?.result || []);
+            if (instructionId !== undefined) {
+                const response = await InstructionDetailAPI.getByInstructionId(instructionId);
+                setInstructionDetailList(response?.result || []);
+            }
         } catch (error) {
             console.error('Failed to fetch instruction detail list:', error);
         }
@@ -635,6 +644,7 @@ export default function CoursesControlEdit() {
                             )}
                         </Button>
                         <Button
+                            disabled={course?.in === 'ARCHIVED'}
                             variant="contained"
                             color="error"
                             sx={{ padding: '12px 20px' }}
@@ -669,8 +679,8 @@ export default function CoursesControlEdit() {
                         Are you sure you want to delete this guideline? This action cannot be undone.
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                        <Button variant="contained" color="error" onClick={handleDeleteGuideline}>
-                            Delete
+                        <Button variant="contained" color="error" onClick={handleDeleteGuideline} disabled={isDeleting}>
+                            {isDeleting ? <CircularProgress size={24} /> : 'Delete'}
                         </Button>
                         <Button variant="outlined" onClick={handleCloseDeleteConfirm}>
                             Cancel

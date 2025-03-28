@@ -150,7 +150,7 @@ export default function ModelsManagement() {
             headerName: 'Action',
             width: 150,
             renderCell: (params) => (
-                <Button
+                <EditIcon
                     variant="contained"
                     color="primary"
                     size="small"
@@ -159,9 +159,8 @@ export default function ModelsManagement() {
                         event.stopPropagation();
                         handleOpenUpdateModal(params.row.id);
                     }}
-                >
-                    Action
-                </Button>
+                    sx={{ cursor: 'pointer' }}
+                ></EditIcon>
             ),
         },
     ];

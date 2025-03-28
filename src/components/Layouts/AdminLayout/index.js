@@ -6,7 +6,7 @@ import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styl
 import { AlignJustify } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import WalletAPI from '~/API/WalletAPI';
+import { useWallet } from '~/WalletContext'; // Import the WalletContext
 import { MainListItems, SecondaryListItems } from '~/components/listItems';
 import storageService from '~/components/StorageService/storageService';
 
@@ -118,22 +118,7 @@ export function NavbarAdmin() {
 export function Sidebar() {
     const navigate = useNavigate();
     const user = storageService.getItem('userInfo')?.user || null;
-    const [currentPoints, setCurrentPoints] = useState(0);
-
-    useEffect(() => {
-        const fetchWallet = async () => {
-            try {
-                const response = await WalletAPI.getWalletByUserId(user.id);
-                setCurrentPoints(response.result.balance);
-            } catch (error) {
-                console.error('Failed to fetch wallet:', error);
-            }
-        };
-
-        if (user) {
-            fetchWallet();
-        }
-    }, [user]);
+    const { currentPoints } = useWallet(); // Use WalletContext to get currentPoints
 
     const handleLogout = () => {
         // Remove user information from localStorage

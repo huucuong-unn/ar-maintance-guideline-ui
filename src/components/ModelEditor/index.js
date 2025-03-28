@@ -464,10 +464,6 @@ export default function SimplifiedModelViewer({
         setHiddenMeshes(updatedHiddenMeshes);
     }, [meshVisibility]);
 
-    useEffect(() => {
-        console.log(hiddenMeshes);
-    }, [hiddenMeshes]);
-
     const [modelById, setModelById] = useState(null);
 
     const [formData, setFormData] = useState({
@@ -499,7 +495,6 @@ export default function SimplifiedModelViewer({
     const fetchModel = async () => {
         setLoading(true);
         try {
-            console.log(modelId);
             if (modelId) {
                 const response = await ModelAPI.getById(modelId);
                 setModelById(response.result);
@@ -536,9 +531,7 @@ export default function SimplifiedModelViewer({
                     })
                     .then(() => setModelError(false))
                     .catch(() => setModelError(true));
-            } catch (e) {
-                console.log('');
-            }
+            } catch (e) {}
         }
     }, [modelId, modelById]);
 
@@ -686,7 +679,6 @@ export default function SimplifiedModelViewer({
             formDataToCreate.append('position', modelTransform?.position || [0, 0, 0]);
             formDataToCreate.append('rotation', modelTransform?.rotation || [0, 0, 0]);
 
-            console.log('machineTypeId', machineTypeId);
             const response = await ModelAPI.createModel(formDataToCreate);
             if (response?.result) {
                 const modelId = response?.result?.id;
@@ -715,10 +707,6 @@ export default function SimplifiedModelViewer({
             setIsLoading(false);
         }
     };
-
-    useEffect(() => {
-        console.log(loading);
-    }, [loading]);
 
     const handleCreateInstructionDetail = async () => {
         const trimmedName = formData.instructionDetailName ? formData.instructionDetailName.trim() : '';
@@ -780,17 +768,19 @@ export default function SimplifiedModelViewer({
 
     const fetchInstructionDetail = async () => {
         try {
-            const response = await InstructionDetailAPI.getById(currentInstructionDetailId);
-            const data = response?.result;
+            if (currentInstructionDetailId !== undefined) {
+                const response = await InstructionDetailAPI.getById(currentInstructionDetailId);
+                const data = response?.result;
 
-            if (data) {
-                setInstructionDetailById(data);
-                // Cập nhật formData
-                setFormData((prev) => ({
-                    ...prev,
-                    instructionDetailName: data.name,
-                    instructionDetailDescription: data.description,
-                }));
+                if (data) {
+                    setInstructionDetailById(data);
+                    // Cập nhật formData
+                    setFormData((prev) => ({
+                        ...prev,
+                        instructionDetailName: data.name,
+                        instructionDetailDescription: data.description,
+                    }));
+                }
             }
         } catch (error) {
             console.error('Failed to fetch model:', error);
@@ -800,10 +790,6 @@ export default function SimplifiedModelViewer({
     useEffect(() => {
         fetchInstructionDetail();
     }, [currentInstructionDetailId]);
-
-    useEffect(() => {
-        console.log(instructionDetailById);
-    }, [instructionDetailById]);
 
     const handleUpdateInstructionDetail = async () => {
         if (!currentInstructionDetailId) {
@@ -1263,7 +1249,7 @@ export default function SimplifiedModelViewer({
                                             {!modelById?.isUsed && <MenuItem value="INACTIVE">INACTIVE</MenuItem>}
                                         </Select>
                                     </FormControl>
-                                    <Button
+                                    {/* <Button
                                         onClick={handleOpenConfirmDelete}
                                         variant="contained"
                                         color="error" // Màu đỏ của Material UI
@@ -1278,7 +1264,7 @@ export default function SimplifiedModelViewer({
                                         ) : (
                                             'Delete Model'
                                         )}
-                                    </Button>
+                                    </Button> */}
                                 </>
                             )}
 

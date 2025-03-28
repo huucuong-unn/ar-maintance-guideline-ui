@@ -27,6 +27,7 @@ import * as yup from 'yup';
 import AccountAPI from '~/API/AccountAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
+import { useWallet } from '~/WalletContext';
 
 function Copyright(props) {
     return (
@@ -187,6 +188,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                                 margin="normal"
                                 required
                                 fullWidth
+                                type="email"
                                 label="Email"
                                 error={!!errors.email}
                                 helperText={errors.email?.message}
@@ -271,6 +273,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
 }
 
 export default function AccountsManagement() {
+    const { currentPoints, fetchWallet } = useWallet();
     const [rows, setRows] = useState([]);
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState('');
@@ -305,6 +308,7 @@ export default function AccountsManagement() {
             const data = response?.result?.objectList || [];
             setRows(data);
             setTotal(response?.result?.totalItems || 0);
+            fetchWallet();
         } catch (error) {
             console.error('Failed to fetch accounts:', error);
         }

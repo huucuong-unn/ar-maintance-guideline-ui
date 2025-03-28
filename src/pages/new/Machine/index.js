@@ -69,7 +69,7 @@ export default function MachinesManagement() {
             headerName: 'Action',
             width: 250,
             renderCell: (params) => (
-                <Button
+                <EditIcon
                     variant="contained"
                     color="primary"
                     size="small"
@@ -78,9 +78,8 @@ export default function MachinesManagement() {
                         event.stopPropagation();
                         handleOpenUpdateMachineModal(params.row.id);
                     }}
-                >
-                    Update
-                </Button>
+                    sx={{ cursor: 'pointer' }}
+                ></EditIcon>
             ),
         },
     ];

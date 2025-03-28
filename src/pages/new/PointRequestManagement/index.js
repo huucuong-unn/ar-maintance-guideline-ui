@@ -19,6 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import PointRequestAPI from '~/API/PointRequestAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
+import { useWallet } from '~/WalletContext';
 
 function Copyright(props) {
     return (
@@ -33,6 +34,7 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function PointRequestManagement() {
+    const { currentPoints, fetchWallet } = useWallet();
     const userInfo = storageService.getItem('userInfo')?.user || null;
     const [isLoading, setIsLoading] = useState(false);
     const [rows, setRows] = useState([]);
@@ -114,6 +116,7 @@ export default function PointRequestManagement() {
             const response = await PointRequestAPI.getAllPointRequestsByCompanyId(userInfo?.company?.id);
             const data = response?.result || [];
             setRows(data);
+            fetchWallet();
         } catch (error) {
             console.error('Failed to fetch request:', error);
         } finally {

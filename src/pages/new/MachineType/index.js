@@ -28,6 +28,7 @@ import ModelTypeAPI from '~/API/ModelTypeAPI';
 import MachineTypeAttributeAPI from '~/API/MachineTypeAttributeAPI';
 import EditIcon from '@mui/icons-material/Edit';
 import MachineTypeAPI from '~/API/MachineTypeAPI';
+import { DeleteIcon } from 'lucide-react';
 
 function Copyright(props) {
     return (
@@ -63,7 +64,7 @@ export default function MachineTypeManagement() {
             headerName: 'Action',
             width: 250,
             renderCell: (params) => (
-                <Button
+                <EditIcon
                     variant="contained"
                     color="primary"
                     size="small"
@@ -72,9 +73,8 @@ export default function MachineTypeManagement() {
                         event.stopPropagation();
                         handleOpenUpdateMachineTypeModal(params.row.machineTypeId);
                     }}
-                >
-                    Update
-                </Button>
+                    sx={{ cursor: 'pointer' }}
+                ></EditIcon>
             ),
         },
     ];
@@ -162,10 +162,10 @@ export default function MachineTypeManagement() {
             // Validate Machine Type Name
             if (
                 !createMachineTypeRequest.machineTypeName ||
-                createMachineTypeRequest.machineTypeName.length < 5 ||
+                createMachineTypeRequest.machineTypeName.length < 2 ||
                 createMachineTypeRequest.machineTypeName.length > 100
             ) {
-                toast.error('Machine Type Name must be between 5 and 100 characters.');
+                toast.error('Machine Type Name must be between 2 and 100 characters.');
                 return;
             }
 
@@ -257,17 +257,17 @@ export default function MachineTypeManagement() {
     const handleUpdateMachineType = async () => {
         if (
             !updateMachineTypeRequest.machineTypeName ||
-            updateMachineTypeRequest.machineTypeName.length < 5 ||
+            updateMachineTypeRequest.machineTypeName.length < 2 ||
             updateMachineTypeRequest.machineTypeName.length > 100
         ) {
-            toast.error('Machine Type Name must be between 5 and 100 characters.');
+            toast.error('Machine Type Name must be between 2 and 100 characters.');
             return;
         }
 
         // Validate Machine Attributes
         for (const attr of updateMachineTypeRequest.machineTypeAttributeCreationRequestList) {
-            if (!attr.attributeName || attr.attributeName.length < 5 || attr.attributeName.length > 100) {
-                toast.error('Each attribute name must be between 5 and 100 characters.');
+            if (!attr.attributeName || attr.attributeName.length < 2 || attr.attributeName.length > 100) {
+                toast.error('Each attribute name must be between 2 and 100 characters.');
                 return;
             }
         }
@@ -280,7 +280,7 @@ export default function MachineTypeManagement() {
                 toast.success('Update machine type successfully');
             }
             fetchMachineTypes();
-            handleCloseCreateMachineTypeDialog();
+            handleCloseUpdateMachineTypeDialog();
         } catch (error) {
             console.error('Failed to Update machine type:', error);
             toast.error(`Update machine type failed. ${error?.response?.data?.message}`);
@@ -583,15 +583,14 @@ export default function MachineTypeManagement() {
 
                                     {/* Delete / Remove Button */}
                                     {attr.machineTypeAttributeId !== '' ? (
-                                        <Button
-                                            variant="contained"
+                                        <IconButton
                                             color="error"
                                             onClick={() => handleOpenConfirmDeleteDialog(attr.machineTypeAttributeId)}
                                         >
-                                            Delete
-                                        </Button>
+                                            <Delete />
+                                        </IconButton>
                                     ) : (
-                                        <Button
+                                        <IconButton
                                             variant="contained"
                                             color="error"
                                             onClick={() => {
@@ -604,8 +603,8 @@ export default function MachineTypeManagement() {
                                                 }));
                                             }}
                                         >
-                                            Remove
-                                        </Button>
+                                            <Delete />
+                                        </IconButton>
                                     )}
                                 </Box>
                             ))}

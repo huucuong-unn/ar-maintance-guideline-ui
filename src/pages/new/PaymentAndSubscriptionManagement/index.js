@@ -126,6 +126,7 @@ export default function PaymentAndSubscriptionManagement() {
     const columns = [
         { field: 'orderCode', headerName: 'Order Code', width: 200 },
         { field: 'companyName', headerName: 'Company Name', width: 200 },
+        { field: 'email', headerName: 'User Email', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'amount', headerName: 'Amount', width: 200 },
         { field: 'point', headerName: 'Point', width: 200 },
