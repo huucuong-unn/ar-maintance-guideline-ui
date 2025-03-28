@@ -29,6 +29,7 @@ import SubscriptionAPI from '~/API/SubscriptionAPI';
 import WalletAPI from '~/API/WalletAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
+import { useWallet } from '~/WalletContext';
 
 function Copyright(props) {
     return (
@@ -43,6 +44,8 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function EmployeesManagement() {
+    const { currentPoints, fetchWallet } = useWallet();
+
     const navigate = useNavigate();
     const [isLoadingCreateEmployee, setIsLoadingCreateEmployee] = useState(false);
     const [isLoadingAllocationPoint, setIsLoadingAllocationPoint] = useState(false);
@@ -347,6 +350,7 @@ export default function EmployeesManagement() {
             const data = response?.result?.objectList || [];
             setRows(data);
             setTotal(response?.result?.totalItems || 0);
+            fetchWallet();
         } catch (error) {
             console.error('Failed to fetch accounts:', error);
         }
@@ -534,7 +538,7 @@ export default function EmployeesManagement() {
                                 !!passwordError
                             }
                         >
-                            Create
+                            {isLoadingCreateEmployee ? <CircularProgress /> : ' Create'}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -573,7 +577,7 @@ export default function EmployeesManagement() {
                                 isLoadingAllocationPoint
                             }
                         >
-                            Allocate
+                            {isLoadingAllocationPoint ? <CircularProgress /> : ' Allocate'}
                         </Button>
                     </DialogActions>
                 </Dialog>
