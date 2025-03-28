@@ -1,7 +1,7 @@
 import axiosClient from './AxiosClient';
 const CompanyRequestAPI = {
-    getAllCompanyRequestsByCompanyId(companyId) {
-        return axiosClient.get(`/v1/company-request/${companyId}`);
+    getAllCompanyRequestsByCompanyId(companyId, status, params) {
+        return axiosClient.get(`/v1/company-request/${companyId}?status=${status}`, { params });
     },
 
     getAllCompanyRequests() {

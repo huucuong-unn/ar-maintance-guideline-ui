@@ -4,13 +4,17 @@ import App from '~/App';
 import reportWebVitals from './reportWebVitals';
 import GlobalStyles from './components/GlobalStyles';
 // import 'bootstrap/dist/css/bootstrap.css';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const queryClient = new QueryClient();
 document.title = 'Tortee';
 root.render(
     <React.StrictMode>
         <GlobalStyles>
-            <App />
+            <QueryClientProvider client={queryClient}>
+                <App />
+            </QueryClientProvider>
         </GlobalStyles>
     </React.StrictMode>,
 );

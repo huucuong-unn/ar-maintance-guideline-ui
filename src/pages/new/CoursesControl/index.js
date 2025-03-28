@@ -17,7 +17,7 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { toast } from 'react-toastify';
@@ -28,6 +28,7 @@ import ModelAPI from '~/API/ModelAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CardCourse from '~/components/CardCourse';
 import storageService from '~/components/StorageService/storageService';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 const defaultTheme = createTheme();
 
@@ -37,7 +38,7 @@ export default function CoursesControl() {
     // Original states
     const [courses, setCourses] = useState([]);
     const [unusedModel, setUnusedModel] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    // const [isLoading, setIsLoading] = useState(true);
 
     // States for filtering
     const [searchTerm, setSearchTerm] = useState('');
@@ -61,11 +62,10 @@ export default function CoursesControl() {
     const [imagePreview, setImagePreview] = useState('');
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
     const defaultModel = '3206416a-6cee-4fb9-8742-b3a97b8e0027';
-
-    // Fetch data on mount
-    useEffect(() => {
-        fetchCourses();
-    }, []);
+    const [paramsToSearch, setParamsToSearch] = useState({
+        title: '',
+        status: '',
+    });
 
     useEffect(() => {
         const fetchModelUnused = async () => {
@@ -82,18 +82,54 @@ export default function CoursesControl() {
         fetchModelUnused();
     }, []);
 
-    const fetchCourses = async () => {
-        try {
-            setIsLoading(true);
-            const response = await CourseAPI.getByCompanyId(userInfo?.company?.id);
-            const data = response?.result || [];
-            setCourses(data);
-        } catch (error) {
-            console.error('Failed to fetch courses:', error);
-        } finally {
-            setIsLoading(false);
-        }
+    // const fetchCourses = async () => {
+    //     try {
+    //         setIsLoading(true);
+    //         const response = await CourseAPI.getByCompanyId(userInfo?.company?.id);
+    //         const data = response?.result || [];
+    //         setCourses(data);
+    //     } catch (error) {
+    //         console.error('Failed to fetch courses:', error);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+
+    const fetchCourses = async (pageParam, paramsToSearch) => {
+        const currentPage = pageParam ?? 1;
+        const response = await CourseAPI.getByCompanyId(userInfo?.company?.id, currentPage, 8, paramsToSearch);
+        return {
+            data: response?.result?.objectList || [],
+            nextPage: response?.result?.objectList.length > 0 ? pageParam + 1 : null, // Sửa lỗi kiểm tra nextPage
+        };
     };
+
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+        queryKey: ['courses', paramsToSearch],
+        queryFn: ({ pageParam = 1 }) => fetchCourses(pageParam, paramsToSearch),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => lastPage.nextPage,
+    });
+
+    const loadMoreRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage) {
+                    fetchNextPage();
+                }
+            },
+            { threshold: 1 },
+        );
+
+        const currentRef = loadMoreRef.current;
+        if (currentRef) observer.observe(currentRef);
+
+        return () => {
+            if (currentRef) observer.unobserve(currentRef);
+        };
+    }, [hasNextPage, fetchNextPage]);
 
     // Navigate to Course Edit
     const handleRedirectToCourseEdit = (courseId) => {
@@ -260,15 +296,26 @@ export default function CoursesControl() {
                         sx={{ width: '300px' }}
                     />
 
-                    {/* Filter by status */}
                     <FormControl sx={{ width: '200px' }}>
                         <InputLabel>Status</InputLabel>
                         <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                            <MenuItem value="">All</MenuItem>
+                            <MenuItem value="ALL">All</MenuItem>
                             <MenuItem value="ACTIVE">Active</MenuItem>
                             <MenuItem value="INACTIVE">Inactive</MenuItem>
+                            <MenuItem value="DRAFTED">Drafted</MenuItem>
                         </Select>
                     </FormControl>
+                    <Button
+                        variant="contained"
+                        onClick={() => {
+                            setParamsToSearch({
+                                title: searchTerm,
+                                status: statusFilter === 'ALL' ? '' : statusFilter,
+                            });
+                        }}
+                    >
+                        Search
+                    </Button>
 
                     {/* Create Course button */}
                     <Button variant="contained" sx={{ ml: 'auto' }} onClick={handleOpenCreateDialog}>
@@ -282,12 +329,11 @@ export default function CoursesControl() {
                         backgroundColor: 'rgba(255, 255, 255, 0.8)',
                         py: 4,
                         px: 2,
-                        margin: 'auto autto',
+                        margin: 'auto auto',
                         minHeight: '50vh',
                     }}
                 >
                     {isLoading ? (
-                        /* While loading, show skeleton placeholders */
                         <Grid container spacing={3}>
                             {Array.from(new Array(8)).map((_, idx) => (
                                 <Grid item xs={12} sm={6} md={3} key={idx}>
@@ -306,27 +352,35 @@ export default function CoursesControl() {
                             ))}
                         </Grid>
                     ) : (
-                        /* Map filteredCourses instead of courses */
                         <Grid container spacing={3}>
-                            {filteredCourses.map((data, index) => (
-                                <Grid
-                                    item
-                                    xs={12}
-                                    sm={12}
-                                    md={6}
-                                    lg={3}
-                                    key={index}
-                                    sx={{ cursor: 'pointer' }}
-                                    onClick={() => handleRedirectToCourseEdit(data.id)}
-                                >
-                                    <CardCourse
-                                        title={data.title}
-                                        description={data.description}
-                                        image={data.imageUrl}
-                                        status={data.status}
-                                    />
+                            {data?.pages
+                                .flatMap((page) => page.data)
+                                .map((course, index) => (
+                                    <Grid
+                                        item
+                                        xs={12}
+                                        sm={12}
+                                        md={6}
+                                        lg={3}
+                                        key={index}
+                                        sx={{ cursor: 'pointer' }}
+                                        onClick={() => handleRedirectToCourseEdit(course.id)}
+                                    >
+                                        <CardCourse
+                                            title={course.title}
+                                            description={course.description}
+                                            image={course.imageUrl}
+                                            status={course.status}
+                                        />
+                                    </Grid>
+                                ))}
+
+                            <div ref={loadMoreRef} style={{ height: 20, background: 'transparent' }}></div>
+                            {isFetchingNextPage && (
+                                <Grid item xs={12} textAlign="center">
+                                    <CircularProgress size={30} />
                                 </Grid>
-                            ))}
+                            )}
                         </Grid>
                     )}
                 </Box>

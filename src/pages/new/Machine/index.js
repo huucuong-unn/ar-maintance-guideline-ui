@@ -58,7 +58,7 @@ export default function MachinesManagement() {
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
     const [keyword, setKeyword] = useState('');
-    const [selectedMachineType, setSelectedMachineType] = useState('');
+    const [selectedMachineType, setSelectedMachineType] = useState(null);
 
     const columns = [
         { field: 'machineName', headerName: 'Name', width: 300 },
@@ -112,6 +112,10 @@ export default function MachinesManagement() {
         setPaginationModel((prev) => ({ ...prev, page: 0 }));
         fetchMachines();
     };
+
+    useEffect(() => {
+        console.log(paginationModel);
+    }, [paginationModel]);
 
     //Create Machine
     const [isLoadingCreateMachine, setIsLoadingCreateMachine] = useState(false);
