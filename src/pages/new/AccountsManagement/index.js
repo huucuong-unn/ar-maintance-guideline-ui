@@ -2,6 +2,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import {
     Box,
     Button,
+    CircularProgress,
     Container,
     Dialog,
     DialogActions,
@@ -56,6 +57,8 @@ const validationSchema = yup.object().shape({
 });
 
 function CreateAccountDialog({ open, onClose, onSuccess }) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const {
         control,
         handleSubmit,
@@ -73,6 +76,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
     const role = watch('role');
 
     const onSubmit = async (data) => {
+        setIsSubmitting(true);
         console.log('Form data:', data);
         const requestBody = {
             email: data.email,
@@ -84,7 +88,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
         };
 
         try {
-            const response = null;
+            let response = null;
             if (requestBody.roleName === 'COMPANY') {
                 response = await AccountAPI.createAccount(requestBody);
             } else {
@@ -106,6 +110,8 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
             } else {
                 toast.error('An error occurred. Please check your network connection.');
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -225,6 +231,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                         type="submit"
                         fullWidth
                         variant="contained"
+                        disabled={isSubmitting}
                         sx={{
                             mt: 3,
                             mb: 2,
@@ -233,14 +240,31 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                             py: 1.5,
                             fontSize: '16px',
                             ':hover': { bgcolor: '#051D40', opacity: 0.8 },
+                            position: 'relative',
                         }}
                     >
-                        Create
+                        {isSubmitting ? (
+                            <CircularProgress
+                                size={24}
+                                sx={{
+                                    color: 'white',
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    marginTop: '-12px',
+                                    marginLeft: '-12px',
+                                }}
+                            />
+                        ) : (
+                            'Create'
+                        )}
                     </Button>
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={onClose} disabled={isSubmitting}>
+                    Cancel
+                </Button>
             </DialogActions>
         </Dialog>
     );

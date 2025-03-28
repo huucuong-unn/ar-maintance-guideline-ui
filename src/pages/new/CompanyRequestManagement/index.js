@@ -144,6 +144,12 @@ export default function CompanyRequestManagement() {
             renderCell: (params) => params.row.designer?.email || '-',
         },
         {
+            field: 'modelName',
+            headerName: 'Model Name',
+            width: 200,
+            renderCell: (params) => params.row.assetModel?.name || '-',
+        },
+        {
             field: 'machineType',
             headerName: 'Machine Type',
             width: 200,

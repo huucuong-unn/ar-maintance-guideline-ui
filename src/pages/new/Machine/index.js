@@ -868,6 +868,7 @@ export default function MachinesManagement() {
                                         machineById.machineTypeValueResponses?.[index]?.machineTypeAttributeName ||
                                         'Attribute'
                                     }
+                                    disabled={true}
                                     fullWidth
                                     InputProps={{ readOnly: true }}
                                     variant="outlined"
