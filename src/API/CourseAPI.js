@@ -82,6 +82,9 @@ const CourseAPI = {
     countInstructionDetailsDrafted(id) {
         return axiosClient.get(`/v1/course/instruction-detail-drafted/number/${id}`);
     },
+    isPaid(id) {
+        return axiosClient.get(`/v1/course/is-paid/${id}`);
+    },
 };
 
 export default CourseAPI;

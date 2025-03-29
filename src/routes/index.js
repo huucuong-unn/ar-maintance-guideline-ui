@@ -60,13 +60,13 @@ const adminRoutes = [
 ];
 
 const companyRoutes = [
-    { path: '/company/course', component: CoursesControl, layout: AdminLayout },
-    { path: '/company/course/view/:id', component: CoursesControlEdit, layout: AdminLayout },
+    { path: '/company/guideline', component: CoursesControl, layout: AdminLayout },
+    { path: '/company/guideline/view/:id', component: CoursesControlEdit, layout: AdminLayout },
     { path: '/company/blog-management', component: BlogsManagement, layout: AdminLayout },
     { path: '/company/account-management', component: EmployeesManagement, layout: AdminLayout },
     { path: '/company/payment-management', component: PaymentsManagement, layout: AdminLayout },
     { path: '/company/dashboard', component: DashboardManagement, layout: AdminLayout },
-    { path: '/company/course-management', component: CoursesManagement, layout: AdminLayout },
+    { path: '/company/guideline-management', component: CoursesManagement, layout: AdminLayout },
     { path: '/company/model-management', component: ModelsManagement, layout: AdminLayout },
     { path: '/company/model-management/view/:id', component: ModelDetail, layout: AdminLayout },
     { path: '/company/model-request-management', component: ModelRequestManagement, layout: AdminLayout },

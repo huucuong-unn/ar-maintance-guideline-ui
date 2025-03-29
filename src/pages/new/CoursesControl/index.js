@@ -84,7 +84,6 @@ export default function CoursesControl() {
 
     // const fetchCourses = async () => {
     //     try {
-    //         setIsLoading(true);
     //         const response = await CourseAPI.getByCompanyId(userInfo?.company?.id);
     //         const data = response?.result || [];
     //         setCourses(data);
@@ -133,7 +132,7 @@ export default function CoursesControl() {
 
     // Navigate to Course Edit
     const handleRedirectToCourseEdit = (courseId) => {
-        navigate(`/company/course/view/${courseId}`);
+        navigate(`/company/guideline/view/${courseId}`);
     };
 
     // ===========================

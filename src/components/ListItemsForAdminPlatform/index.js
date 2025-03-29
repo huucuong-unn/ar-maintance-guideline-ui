@@ -18,7 +18,7 @@ export const ListItemForAdminPlatform = () => {
 
     const companyRoutes = [
         {
-            route: '/company/course',
+            route: '/company/guideline',
             icon: <AppWindowMac />,
             title: 'Courses',
         },
@@ -70,7 +70,7 @@ export const SecondaryListItemsForAdminPlatForm = () => {
             title: 'Dashboard',
         },
         {
-            route: '/company/course-management',
+            route: '/company/guideline-management',
             icon: <Book />,
             title: 'Courses',
         },

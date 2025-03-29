@@ -32,7 +32,7 @@ export const MainListItems = () => {
 
     const companyRoutes = [
         {
-            route: '/company/course',
+            route: '/company/guideline',
             icon: <AppWindowMac />,
             title: 'My Guidelines',
         },

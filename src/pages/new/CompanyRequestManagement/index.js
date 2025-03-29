@@ -160,6 +160,12 @@ export default function CompanyRequestManagement() {
             width: 200,
             renderCell: (params) => formatDateTime(params.value) || '-',
         },
+        {
+            field: 'cancelledAt',
+            headerName: 'Cancelled Date',
+            width: 200,
+            renderCell: (params) => formatDateTime(params.value) || '-',
+        },
     ];
 
     const [isLoading, setIsLoading] = useState(false);

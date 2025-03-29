@@ -47,7 +47,7 @@ export default function CompanyLogin() {
                 }
 
                 if (userInfo?.result?.user?.role?.roleName === companyRole) {
-                    navigate('/company/course'); // Navigate
+                    navigate('/company/guideline'); // Navigate
                 }
 
                 if (userInfo?.result?.user?.role?.roleName === designerRole) {

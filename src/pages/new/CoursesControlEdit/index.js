@@ -153,7 +153,7 @@ export default function CoursesControlEdit() {
             await CourseAPI.delete(course.id);
             toast.success('Guideline deleted successfully!');
             setOpenDeleteConfirm(false);
-            navigate('/company/course');
+            navigate('/company/guideline');
         } catch (error) {
             console.error('Failed to delete guideline:', error);
             toast.error('Failed to delete guideline. Please try again.');
@@ -165,7 +165,7 @@ export default function CoursesControlEdit() {
     // -------------------- Instructions (like “Sections”) --------------------
     const [instructions, setInstructions] = useState([]);
     const [isLoadingSections, setIsLoadingSections] = useState(true);
-
+    const [isPaid, setIsPaid] = useState(false);
     const fetchInstructionByCourseId = async () => {
         try {
             setIsLoadingSections(true);
@@ -220,11 +220,8 @@ export default function CoursesControlEdit() {
     useEffect(() => {
         if (course) {
             var flag = false;
-            console.log(course);
-
-            if (!course.instructions) {
+            if (course.instructions.length == 0) {
                 setIsNotValidCourse(true);
-                console.log(isNotValidCourse);
                 return;
             }
 
@@ -235,8 +232,22 @@ export default function CoursesControlEdit() {
                 }
             });
             setIsNotValidCourse(flag);
-            console.log(isNotValidCourse);
         }
+    }, [course]);
+    useEffect(() => {
+        const fetchIsPaid = async () => {
+            if (course) {
+                try {
+                    const response = await CourseAPI.isPaid(course.id);
+                    if (response?.result) {
+                        setIsPaid(response.result);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch payment status:', error);
+                }
+            }
+        };
+        fetchIsPaid();
     }, [course]);
 
     const handleCreateInstruction = async () => {
@@ -644,7 +655,7 @@ export default function CoursesControlEdit() {
                             )}
                         </Button>
                         <Button
-                            disabled={course?.in === 'ARCHIVED'}
+                            disabled={isPaid}
                             variant="contained"
                             color="error"
                             sx={{ padding: '12px 20px' }}

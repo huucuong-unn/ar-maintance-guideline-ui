@@ -53,7 +53,7 @@ export default function LoginAdmin() {
                 }
 
                 if (userInfo?.result?.user?.role?.roleName === companyRole) {
-                    navigate('/company/course'); // Navigate
+                    navigate('/company/guideline'); // Navigate
                 }
             } else {
                 // If login fails (non-200 status)

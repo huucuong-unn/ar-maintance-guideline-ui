@@ -66,7 +66,12 @@ export default function EmployeesManagement() {
     // Dialog state for creating employee
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [openAllocationPointDialog, setOpenAllocationPointDialog] = useState(false);
-    const [limitPoint, setLimitPoint] = useState(0);
+    const [limitPoint, setLimitPoint] = useState(1);
+    const handleChangeLimitPoint = (e) => {
+        const { value } = e.target;
+        const parsedValue = Math.max(1, Math.min(30, Number(value)));
+        setLimitPoint(parsedValue);
+    };
     const [newEmployee, setNewEmployee] = useState({
         email: '',
         password: '',
@@ -141,7 +146,7 @@ export default function EmployeesManagement() {
 
     const handleInputChangeForPoint = (e) => {
         const { name, value } = e.target;
-        const parsedValue = Math.max(1, Math.min(31, Number(value)));
+        const parsedValue = Math.max(1, Math.min(30, Number(value)));
         setNewEmployee({
             ...newEmployee,
             [name]: parsedValue,
@@ -307,14 +312,6 @@ export default function EmployeesManagement() {
                         )}
                         <Button variant="outlined" size="small" onClick={() => handleOpenResetPassword(params.row.id)}>
                             Reset Password
-                        </Button>
-                        <Button
-                            color="error"
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleOpenDeleteConfirm(params.row.id)}
-                        >
-                            Delete
                         </Button>
                     </Box>
                 );
@@ -559,7 +556,8 @@ export default function EmployeesManagement() {
                                 label="Limit Point"
                                 name="limitPoint"
                                 value={limitPoint}
-                                onChange={(e) => setLimitPoint(e.target.value)}
+                                onChange={handleChangeLimitPoint} // Pass the event directly
+                                inputProps={{ min: 1, max: 30 }} // min should be 1 to match Math.max(1, value)
                                 type="number"
                             />
                         </Box>
