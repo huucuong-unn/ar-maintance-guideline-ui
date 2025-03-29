@@ -1,852 +1,221 @@
-import { AttachMoney, Description, Layers, People, TrendingUp } from '@mui/icons-material';
-import {
-    Avatar,
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Chip,
-    Grid,
-    LinearProgress,
-    Tab,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Tabs,
-    Typography,
-    useTheme,
-} from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { BarChart, LineChart, PieChart } from '@mui/x-charts';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import DashboardAPI from '../../../API/DashboardAPI'; // Adjust the import path as needed
 
-// Import APIs
-import DashboardAPI from '~/API/DashboardAPI'; // This would be your new API for dashboard data
-import storageService from '~/components/StorageService/storageService';
+const AdminDashboard = () => {
+    // State for dashboard data
+    const [dashboardData, setDashboardData] = useState({
+        numberOfActiveGuidelines: 0,
+        numberOfInactiveGuidelines: 0,
+        numberOfActiveAccount: 0,
+        numberOfInactiveAccount: 0,
+        numberOfActiveModels: 0,
+        numberOfInactiveModels: 0,
+        totalRevenue: 0,
+        top3Company: [],
+        monthRevenueList: [],
+        pointOptionRevenueList: [],
+        top3Guidelines: [],
+    });
 
-// Gradient for charts
-const AreaGradient = ({ color, id }) => (
-    <defs>
-        <linearGradient id={id} x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor={color} stopOpacity={0.5} />
-            <stop offset="100%" stopColor={color} stopOpacity={0.1} />
-        </linearGradient>
-    </defs>
-);
+    // State for loading and error handling
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-// Copyright component
-const Copyright = (props) => {
-    return (
-        <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright © Tortee '}
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-};
-
-// Create theme with primary and secondary colors
-const customTheme = createTheme({
-    palette: {
-        primary: {
-            main: '#2563eb',
-            light: '#60a5fa',
-            dark: '#1e40af',
-        },
-        secondary: {
-            main: '#7c3aed',
-            light: '#a78bfa',
-            dark: '#5b21b6',
-        },
-        background: {
-            default: '#f1f5f9',
-            paper: '#ffffff',
-        },
-    },
-    typography: {
-        fontFamily: "'Inter', sans-serif",
-        h1: {
-            fontWeight: 700,
-        },
-        h2: {
-            fontWeight: 700,
-        },
-        h3: {
-            fontWeight: 600,
-        },
-        h4: {
-            fontWeight: 600,
-        },
-        h5: {
-            fontWeight: 600,
-        },
-        h6: {
-            fontWeight: 600,
-        },
-    },
-    components: {
-        MuiCard: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 12,
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                },
-            },
-        },
-        MuiCardHeader: {
-            styleOverrides: {
-                root: {
-                    padding: '16px 24px 0px 24px',
-                },
-            },
-        },
-        MuiCardContent: {
-            styleOverrides: {
-                root: {
-                    padding: '16px 24px 24px 24px',
-                    '&:last-child': {
-                        paddingBottom: '24px',
-                    },
-                },
-            },
-        },
-    },
-});
-
-// Dashboard component with role-based UI
-export default function DashboardManagement() {
-    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
-    const role = userInfo?.roleName;
-    const companyId = userInfo?.company?.id;
-    const theme = useTheme();
-    const [dashboardData, setDashboardData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState(0);
-
-    // Helper function to format currency
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-    };
-
-    // Fetch dashboard data based on role
+    // Fetch dashboard data on component mount
     useEffect(() => {
         const fetchDashboardData = async () => {
-            setLoading(true);
             try {
-                if (role === 'ADMIN') {
-                    const response = await DashboardAPI.getDashboardAdmin();
+                setIsLoading(true);
+                const response = await DashboardAPI.getDashboardAdmin();
+
+                // Assuming the API returns the data directly in response.data
+                if (response.code === 1000 && response.result) {
                     setDashboardData(response.result);
-                } else if (role === 'COMPANY' && companyId) {
-                    const response = await DashboardAPI.getDashboardCompany(companyId);
-                    setDashboardData(response.result);
+                } else {
+                    throw new Error('Failed to fetch dashboard data');
                 }
-            } catch (error) {
-                console.error('Failed to fetch dashboard data:', error);
+            } catch (err) {
+                setError(err.message);
+                console.error('Error fetching dashboard data:', err);
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
 
         fetchDashboardData();
-    }, [role, companyId]);
+    }, []);
 
-    // Mock data for the months
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // Colors for charts
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-    // Handle tab change
-    const handleTabChange = (event, newValue) => {
-        setActiveTab(newValue);
-    };
+    // Loading state component
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-xl">Loading...</div>
+            </div>
+        );
+    }
 
-    // // Switch role for demonstration purposes
-    // const toggleRole = () => {
-    //     setRole(role === 'admin' ? 'company' : 'admin');
-    //     // Set dummy companyId for company role
-    //     setCompanyId(role === 'admin' ? 1 : null);
-    // };
+    // Error state component
+    if (error) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-red-50">
+                <div className="text-xl text-red-600">
+                    Error: {error}
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="ml-4 px-4 py-2 bg-blue-500 text-white rounded"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <ThemeProvider theme={customTheme}>
-            <Box
-                sx={{
-                    minHeight: '100vh',
-                    backgroundColor: theme.palette.background.default,
-                    padding: { xs: 2, sm: 3, md: 4 },
-                }}
-            >
-                {/* Header with role toggle */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            fontWeight: 700,
-                            color: theme.palette.primary.main,
-                        }}
-                    >
-                        Dashboard {role === 'ADMIN' ? 'Admin' : 'Company'}
-                    </Typography>
-                    {/* <Chip
-                        label={`Switch to ${role === 'admin' ? 'Company' : 'Admin'} View`}
-                        color="primary"
-                        onClick={toggleRole}
-                        variant="outlined"
-                    /> */}
-                </Box>
+        <div className="p-6 bg-gray-50 min-h-screen">
+            <div className="container mx-auto">
+                <h1 className="text-3xl font-bold mb-6 text-gray-800">Admin Dashboard</h1>
 
-                {loading ? (
-                    <Box sx={{ width: '100%', mt: 4 }}>
-                        <LinearProgress />
-                    </Box>
-                ) : (
-                    <>
-                        {/* Top Cards Section */}
-                        <Grid container spacing={3} sx={{ mb: 4 }}>
-                            {/* Total Accounts */}
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
-                                <Card>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            <Avatar sx={{ bgcolor: theme.palette.primary.light, mr: 2 }}>
-                                                <People />
-                                            </Avatar>
-                                            <Typography variant="h6">Accounts</Typography>
-                                        </Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                            {dashboardData?.numberOfAccount || 0}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                            <Chip
-                                                size="small"
-                                                label={`Active: ${dashboardData?.numberOfActiveAccount || 0}`}
-                                                color="success"
-                                                sx={{ mr: 1 }}
-                                            />
-                                            <Chip
-                                                size="small"
-                                                label={`Inactive: ${dashboardData?.numberOfInactiveAccount || 0}`}
-                                                color="error"
-                                            />
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                {/* Overview Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Guidelines Card */}
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Guidelines</h2>
+                        <div className="flex justify-between">
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded">
+                                Active: {dashboardData.numberOfActiveGuidelines}
+                            </span>
+                            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded">
+                                Inactive: {dashboardData.numberOfInactiveGuidelines}
+                            </span>
+                        </div>
+                    </div>
 
-                            {/* Guidelines */}
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
-                                <Card>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            <Avatar sx={{ bgcolor: theme.palette.secondary.light, mr: 2 }}>
-                                                <Description />
-                                            </Avatar>
-                                            <Typography variant="h6">Guidelines</Typography>
-                                        </Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                            {(dashboardData?.numberOfActiveGuidelines || 0) +
-                                                (dashboardData?.numberOfInactiveGuidelines || 0)}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                            <Chip
-                                                size="small"
-                                                label={`Active: ${dashboardData?.numberOfActiveGuidelines || 0}`}
-                                                color="success"
-                                                sx={{ mr: 1 }}
-                                            />
-                                            <Chip
-                                                size="small"
-                                                label={`Inactive: ${dashboardData?.numberOfInactiveGuidelines || 0}`}
-                                                color="error"
-                                            />
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                    {/* Accounts Card */}
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Accounts</h2>
+                        <div className="flex justify-between">
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded">
+                                Active: {dashboardData.numberOfActiveAccount}
+                            </span>
+                            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded">
+                                Inactive: {dashboardData.numberOfInactiveAccount}
+                            </span>
+                        </div>
+                    </div>
 
-                            {/* Models */}
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
-                                <Card>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            <Avatar sx={{ bgcolor: theme.palette.primary.dark, mr: 2 }}>
-                                                <Layers />
-                                            </Avatar>
-                                            <Typography variant="h6">Models</Typography>
-                                        </Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                            {(dashboardData?.numberOfActiveModels || 0) +
-                                                (dashboardData?.numberOfInactiveModels || 0)}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                            <Chip
-                                                size="small"
-                                                label={`Active: ${dashboardData?.numberOfActiveModels || 0}`}
-                                                color="success"
-                                                sx={{ mr: 1 }}
-                                            />
-                                            <Chip
-                                                size="small"
-                                                label={`Inactive: ${dashboardData?.numberOfInactiveModels || 0}`}
-                                                color="error"
-                                            />
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                    {/* Models Card */}
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Models</h2>
+                        <div className="flex justify-between">
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded">
+                                Active: {dashboardData.numberOfActiveModels}
+                            </span>
+                            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded">
+                                Inactive: {dashboardData.numberOfInactiveModels}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                            {/* Revenue (Admin only) */}
-                            {role === 'ADMIN' && (
-                                <Grid item xs={12} sm={6} md={4} lg={3}>
-                                    <Card>
-                                        <CardContent>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                <Avatar sx={{ bgcolor: theme.palette.secondary.dark, mr: 2 }}>
-                                                    <AttachMoney />
-                                                </Avatar>
-                                                <Typography variant="h6">Revenue</Typography>
-                                            </Box>
-                                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                                {formatCurrency(dashboardData?.totalRevenue || 0)}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                                <TrendingUp color="success" sx={{ mr: 1 }} />
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Total Revenue
-                                                </Typography>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            )}
-                        </Grid>
+                {/* Revenue and Guidelines Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Monthly Revenue */}
+                    <div className="md:col-span-2 bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Monthly Revenue</h2>
+                        <div className="w-full h-96">
+                            <BarChart
+                                width={500}
+                                height={300}
+                                data={dashboardData.monthRevenueList}
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="month" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="revenue" fill="#8884d8" />
+                            </BarChart>
+                        </div>
+                    </div>
 
-                        {/* Charts Section */}
-                        <Grid container spacing={3}>
-                            {/* Admin-specific charts */}
-                            {role === 'ADMIN' && (
-                                <>
-                                    {/* Monthly Revenue Chart */}
-                                    <Grid item xs={12} md={8}>
-                                        <Card>
-                                            <CardHeader
-                                                title="Monthly Revenue"
-                                                subheader="Performance overview throughout the year"
-                                            />
-                                            <CardContent>
-                                                <Box sx={{ height: 320 }}>
-                                                    <LineChart
-                                                        series={[
-                                                            {
-                                                                data:
-                                                                    dashboardData?.monthRevenueList?.map(
-                                                                        (item) => item.revenue,
-                                                                    ) || Array(12).fill(0),
-                                                                area: true,
-                                                                showMark: false,
-                                                                label: 'Revenue',
-                                                                color: theme.palette.primary.main,
-                                                            },
-                                                        ]}
-                                                        xAxis={[
-                                                            {
-                                                                data: months,
-                                                                scaleType: 'band',
-                                                            },
-                                                        ]}
-                                                        sx={{
-                                                            '.MuiLineElement-root': {
-                                                                strokeWidth: 2,
-                                                            },
-                                                            '.MuiAreaElement-root': {
-                                                                fill: `url('#revenueGradient')`,
-                                                            },
-                                                        }}
-                                                        height={300}
-                                                    >
-                                                        <AreaGradient
-                                                            color={theme.palette.primary.main}
-                                                            id="revenueGradient"
-                                                        />
-                                                    </LineChart>
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
+                    {/* Point Option Revenue */}
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Revenue by Point Option</h2>
+                        <div className="w-full h-96">
+                            <PieChart width={400} height={400}>
+                                <Pie
+                                    data={dashboardData.pointOptionRevenueList}
+                                    cx={200}
+                                    cy={200}
+                                    labelLine={false}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="revenue"
+                                >
+                                    {dashboardData.pointOptionRevenueList.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </div>
+                    </div>
 
-                                    {/* Revenue Distribution */}
-                                    <Grid item xs={12} md={4}>
-                                        <Card sx={{ height: '100%' }}>
-                                            <CardHeader
-                                                title="Revenue Distribution"
-                                                subheader="By company and subscription type"
-                                            />
-                                            <CardContent>
-                                                <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 2 }}>
-                                                    <Tab label="Companies" />
-                                                    <Tab label="Subscriptions" />
-                                                </Tabs>
+                    {/* Top 3 Companies and Top Guidelines in one line */}
+                    <div className="col-span-full grid grid-cols-2 gap-6">
+                        {/* Top 3 Companies */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-xl font-semibold mb-4">Top 3 Companies</h2>
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="p-2 text-left">Company Name</th>
+                                        <th className="p-2 text-right">Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {dashboardData.top3Company.map((company, index) => (
+                                        <tr key={index} className="border-b">
+                                            <td className="p-2">{company.name}</td>
+                                            <td className="p-2 text-right">${company.revenue.toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
-                                                <Box sx={{ height: 240, display: activeTab === 0 ? 'block' : 'none' }}>
-                                                    {dashboardData?.companyRevenueList &&
-                                                    dashboardData.companyRevenueList.length > 0 ? (
-                                                        <PieChart
-                                                            series={[
-                                                                {
-                                                                    data: dashboardData.companyRevenueList.map(
-                                                                        (item, index) => ({
-                                                                            id: index,
-                                                                            value: item.revenue,
-                                                                            label: item.name,
-                                                                        }),
-                                                                    ),
-                                                                    innerRadius: 30,
-                                                                    paddingAngle: 2,
-                                                                    cornerRadius: 4,
-                                                                },
-                                                            ]}
-                                                            height={240}
-                                                            slotProps={{
-                                                                legend: {
-                                                                    direction: 'column',
-                                                                    position: {
-                                                                        vertical: 'middle',
-                                                                        horizontal: 'right',
-                                                                    },
-                                                                    padding: 0,
-                                                                },
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center',
-                                                                height: '100%',
-                                                            }}
-                                                        >
-                                                            <Typography color="text.secondary">
-                                                                No company revenue data available
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-
-                                                <Box sx={{ height: 240, display: activeTab === 1 ? 'block' : 'none' }}>
-                                                    {dashboardData?.subscriptionRevenueList &&
-                                                    dashboardData.subscriptionRevenueList.length > 0 ? (
-                                                        <PieChart
-                                                            series={[
-                                                                {
-                                                                    data: dashboardData.subscriptionRevenueList.map(
-                                                                        (item, index) => ({
-                                                                            id: index,
-                                                                            value: item.revenue,
-                                                                            label:
-                                                                                item.name.charAt(0).toUpperCase() +
-                                                                                item.name.slice(1),
-                                                                        }),
-                                                                    ),
-                                                                    innerRadius: 30,
-                                                                    paddingAngle: 2,
-                                                                    cornerRadius: 4,
-                                                                },
-                                                            ]}
-                                                            height={240}
-                                                            slotProps={{
-                                                                legend: {
-                                                                    direction: 'column',
-                                                                    position: {
-                                                                        vertical: 'middle',
-                                                                        horizontal: 'right',
-                                                                    },
-                                                                    padding: 0,
-                                                                },
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center',
-                                                                height: '100%',
-                                                            }}
-                                                        >
-                                                            <Typography color="text.secondary">
-                                                                No subscription revenue data available
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                </>
-                            )}
-
-                            {/* Company-specific charts */}
-                            {role === 'COMPANY' && (
-                                <>
-                                    {/* Top Guidelines */}
-                                    <Grid item xs={12} md={6}>
-                                        <Card sx={{ mb: 4 }}>
-                                            <CardHeader title="Current Subscription" />
-                                            <CardContent>
-                                                <Grid container spacing={3}>
-                                                    {/* Plan Details */}
-                                                    <Grid item xs={12} md={4}>
-                                                        <Box>
-                                                            <Typography
-                                                                variant="body2"
-                                                                color="text.secondary"
-                                                                gutterBottom
-                                                            >
-                                                                Current Plan
-                                                            </Typography>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                                <Chip
-                                                                    label={dashboardData?.companySubscriptionResponse?.subscriptionResponse?.subscriptionCode?.toUpperCase()}
-                                                                    color="primary"
-                                                                    sx={{
-                                                                        textTransform: 'capitalize',
-                                                                        fontWeight: 'bold',
-                                                                        fontSize: '1rem',
-                                                                        height: 32,
-                                                                    }}
-                                                                />
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    color="text.secondary"
-                                                                    sx={{ ml: 2 }}
-                                                                >
-                                                                    {dashboardData?.companySubscriptionResponse
-                                                                        ?.status === 'ACTIVE'
-                                                                        ? 'Active'
-                                                                        : 'Inactive'}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
-                                                                {formatCurrency(
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.monthlyFee,
-                                                                )}
-                                                                <Typography
-                                                                    component="span"
-                                                                    variant="body2"
-                                                                    color="text.secondary"
-                                                                >
-                                                                    /month
-                                                                </Typography>
-                                                            </Typography>
-                                                        </Box>
-                                                    </Grid>
-
-                                                    {/* Storage Usage */}
-                                                    <Grid item xs={12} md={4}>
-                                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                            Storage Usage
-                                                        </Typography>
-                                                        <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 1 }}>
-                                                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                                                                {dashboardData?.companySubscriptionResponse?.storageUsage.toFixed(
-                                                                    2,
-                                                                )}
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="body2"
-                                                                color="text.secondary"
-                                                                sx={{ mx: 1 }}
-                                                            >
-                                                                /
-                                                            </Typography>
-                                                            <Typography variant="body1">
-                                                                {
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.subscriptionResponse?.maxStorageUsage
-                                                                }{' '}
-                                                                {
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.subscriptionResponse?.storageUnit
-                                                                }
-                                                            </Typography>
-                                                        </Box>
-                                                        <LinearProgress
-                                                            variant="determinate"
-                                                            value={Math.min(
-                                                                (dashboardData?.companySubscriptionResponse
-                                                                    ?.storageUsage /
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.subscriptionResponse?.maxStorageUsage) *
-                                                                    100,
-                                                                100,
-                                                            )}
-                                                            sx={{ height: 8, borderRadius: 4 }}
-                                                        />
-                                                    </Grid>
-
-                                                    {/* Users */}
-                                                    <Grid item xs={12} md={4}>
-                                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                            Users
-                                                        </Typography>
-                                                        <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 1 }}>
-                                                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                                                                {
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.numberOfUsers
-                                                                }
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="body2"
-                                                                color="text.secondary"
-                                                                sx={{ mx: 1 }}
-                                                            >
-                                                                /
-                                                            </Typography>
-                                                            <Typography variant="body1">
-                                                                {
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.subscriptionResponse?.maxNumberOfUsers
-                                                                }
-                                                            </Typography>
-                                                        </Box>
-                                                        <LinearProgress
-                                                            variant="determinate"
-                                                            value={Math.min(
-                                                                (dashboardData?.companySubscriptionResponse
-                                                                    ?.numberOfUsers /
-                                                                    dashboardData?.companySubscriptionResponse
-                                                                        ?.subscriptionResponse?.maxNumberOfUsers) *
-                                                                    100,
-                                                                100,
-                                                            )}
-                                                            sx={{ height: 8, borderRadius: 4 }}
-                                                            color={
-                                                                dashboardData?.companySubscriptionResponse
-                                                                    ?.numberOfUsers >=
-                                                                dashboardData?.companySubscriptionResponse
-                                                                    ?.subscriptionResponse?.maxNumberOfUsers
-                                                                    ? 'error'
-                                                                    : 'primary'
-                                                            }
-                                                        />
-                                                    </Grid>
-
-                                                    {/* Subscription Period */}
-                                                    <Grid item xs={12}>
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                mt: 2,
-                                                                justifyContent: 'space-between',
-                                                            }}
-                                                        >
-                                                            <Box>
-                                                                <Typography variant="body2" color="text.secondary">
-                                                                    Start Date
-                                                                </Typography>
-                                                                <Typography>
-                                                                    {new Date(
-                                                                        dashboardData?.companySubscriptionResponse?.subscriptionStartDate,
-                                                                    ).toLocaleDateString()}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Box>
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    color="text.secondary"
-                                                                    align="right"
-                                                                >
-                                                                    Expiry Date
-                                                                </Typography>
-                                                                <Typography align="right">
-                                                                    {new Date(
-                                                                        dashboardData?.companySubscriptionResponse?.subscriptionExpireDate,
-                                                                    ).toLocaleDateString()}
-                                                                </Typography>
-                                                            </Box>
-                                                        </Box>
-                                                    </Grid>
-                                                </Grid>
-                                            </CardContent>
-                                        </Card>
-                                        <Card sx={{ mb: 4 }}>
-                                            <CardHeader title="Top Guidelines" subheader="Most used guidelines" />
-                                            <CardContent>
-                                                {dashboardData?.top3Guidelines &&
-                                                dashboardData.top3Guidelines.length > 0 ? (
-                                                    <TableContainer>
-                                                        <Table>
-                                                            <TableHead>
-                                                                <TableRow>
-                                                                    <TableCell>Guideline Name</TableCell>
-                                                                    <TableCell align="right">Scan Times</TableCell>
-                                                                </TableRow>
-                                                            </TableHead>
-                                                            <TableBody>
-                                                                {dashboardData.top3Guidelines.map(
-                                                                    (guideline, index) => (
-                                                                        <TableRow key={index}>
-                                                                            <TableCell component="th" scope="row">
-                                                                                {guideline.name}
-                                                                            </TableCell>
-                                                                            <TableCell align="right">
-                                                                                {guideline.scanTimes !== null
-                                                                                    ? guideline.scanTimes
-                                                                                    : 'N/A'}
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    ),
-                                                                )}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </TableContainer>
-                                                ) : (
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center',
-                                                            height: 200,
-                                                        }}
-                                                    >
-                                                        <Typography color="text.secondary">
-                                                            No guideline data available
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-
-                                    {/* Guidelines Status */}
-                                    <Grid item xs={12} md={6}>
-                                        <Card sx={{ height: '100%' }}>
-                                            <CardHeader
-                                                title="Guidelines Status"
-                                                subheader="Active vs Inactive Guidelines"
-                                            />
-                                            <CardContent>
-                                                <Box
-                                                    sx={{
-                                                        height: 280,
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        justifyContent: 'center',
-                                                    }}
-                                                >
-                                                    <PieChart
-                                                        series={[
-                                                            {
-                                                                data: [
-                                                                    {
-                                                                        id: 0,
-                                                                        value:
-                                                                            dashboardData?.numberOfActiveGuidelines ||
-                                                                            0,
-                                                                        label: 'Active',
-                                                                    },
-                                                                    {
-                                                                        id: 1,
-                                                                        value:
-                                                                            dashboardData?.numberOfInactiveGuidelines ||
-                                                                            0,
-                                                                        label: 'Inactive',
-                                                                    },
-                                                                ],
-                                                                innerRadius: 60,
-                                                                paddingAngle: 2,
-                                                                cornerRadius: 4,
-                                                                cx: 150,
-                                                                cy: 140,
-                                                            },
-                                                        ]}
-                                                        height={280}
-                                                        slotProps={{
-                                                            legend: {
-                                                                direction: 'row',
-                                                                position: { vertical: 'bottom', horizontal: 'middle' },
-                                                                padding: 0,
-                                                            },
-                                                        }}
-                                                    />
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                </>
-                            )}
-
-                            {/* Common charts for both roles */}
-                            <Grid item xs={12}>
-                                <Card>
-                                    <CardHeader
-                                        title="Accounts & Models Status"
-                                        subheader="Overview of active vs inactive status"
-                                    />
-                                    <CardContent>
-                                        <Grid container spacing={3}>
-                                            <Grid item xs={12} md={6}>
-                                                <Typography variant="h6" gutterBottom>
-                                                    Accounts
-                                                </Typography>
-                                                <BarChart
-                                                    series={[
-                                                        {
-                                                            data: [dashboardData?.numberOfActiveAccount || 0],
-                                                            label: 'Active',
-                                                            color: theme.palette.success.main,
-                                                        },
-                                                        {
-                                                            data: [dashboardData?.numberOfInactiveAccount || 0],
-                                                            label: 'Inactive',
-                                                            color: theme.palette.error.main,
-                                                        },
-                                                    ]}
-                                                    xAxis={[{ scaleType: 'linear' }]}
-                                                    // The y-axis will now contain the category labels.
-                                                    yAxis={[{ scaleType: 'band', data: ['Active', 'Inactive'] }]}
-                                                    height={300}
-                                                    layout="horizontal"
-                                                />
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <Typography variant="h6" gutterBottom>
-                                                    Models
-                                                </Typography>
-                                                <BarChart
-                                                    series={[
-                                                        {
-                                                            data: [dashboardData?.numberOfActiveModels || 0],
-                                                            label: 'Active',
-                                                            color: theme.palette.success.main,
-                                                        },
-                                                        {
-                                                            data: [dashboardData?.numberOfInactiveModels || 0],
-                                                            label: 'Inactive',
-                                                            color: theme.palette.error.main,
-                                                        },
-                                                    ]}
-                                                    xAxis={[{ scaleType: 'linear' }]}
-                                                    // The y-axis will now contain the category labels.
-                                                    yAxis={[{ scaleType: 'band', data: ['Active', 'Inactive'] }]}
-                                                    height={300}
-                                                    layout="horizontal"
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
-                    </>
-                )}
-
-                <Copyright sx={{ mt: 4 }} />
-            </Box>
-        </ThemeProvider>
+                        {/* Top Guidelines */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-xl font-semibold mb-4">Top Guidelines</h2>
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="p-2 text-left">Guideline Name</th>
+                                        <th className="p-2 text-right">Scan Times</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {dashboardData.top3Guidelines.map((guideline, index) => (
+                                        <tr key={index} className="border-b">
+                                            <td className="p-2">{guideline.name}</td>
+                                            <td className="p-2 text-right">{guideline.scanTimes}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
-}
+};
+
+export default AdminDashboard;

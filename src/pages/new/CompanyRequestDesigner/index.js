@@ -256,6 +256,8 @@ export default function CompanyRequestDesigner() {
     const handle3DFileSelect = (e, requestId, idMachineType, idCompany) => {
         if (e.target.files[0]) {
             setFile3D(e.target.files[0]);
+            console.log(file3D);
+
             setRequestId(requestId);
             setMachineTypeId(idMachineType);
             setCompanyId(idCompany);

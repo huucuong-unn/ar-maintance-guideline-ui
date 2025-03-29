@@ -1052,9 +1052,15 @@ export default function CoursesControlEdit() {
             <Dialog open={openAddLessonDialog} onClose={handleCloseAddLessonDialog} fullWidth maxWidth="xl">
                 <DialogTitle>Add New Instruction Detail</DialogTitle>
                 <DialogContent sx={{ minHeight: '80vh' }}>
-                    <DialogContentText sx={{ mb: 2 }}>
-                        Please fill out the form below to create a new instruction detail.
-                    </DialogContentText>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <DialogContentText sx={{ mb: 2 }}>
+                            Please fill out the form below to create a new instruction detail.
+                        </DialogContentText>
+                        <Button onClick={handleCloseAddLessonDialog} disabled={isCreatingLesson}>
+                            Cancel
+                        </Button>
+                    </div>
+
                     {/* The ModelEditor can handle the creation of the detail with position data */}
                     {openEditor && (
                         <ModelEditor
@@ -1070,11 +1076,6 @@ export default function CoursesControlEdit() {
                         />
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseAddLessonDialog} disabled={isCreatingLesson}>
-                        Cancel
-                    </Button>
-                </DialogActions>
             </Dialog>
 
             {/* -------------------- Update Instruction Detail Dialog -------------------- */}

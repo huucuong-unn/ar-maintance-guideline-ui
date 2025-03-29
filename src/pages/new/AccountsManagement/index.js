@@ -326,6 +326,19 @@ export default function AccountsManagement() {
         return `${month}/${day}/${year}`;
     };
 
+    const handleChangeStatus = async (id) => {
+        try {
+            const response = await AccountAPI.changeStatusStaff(id);
+            if (response?.result) {
+                toast.success('Update status successfully');
+            }
+            fetchData();
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            toast.error('Failed to update status. ' + error?.response?.data?.message);
+        }
+    };
+
     const columns = [
         { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', width: 200 },
@@ -379,7 +392,7 @@ export default function AccountsManagement() {
                                 color="error"
                                 size="small"
                                 onClick={() => {
-                                    // Open your confirm status dialog here
+                                    handleChangeStatus(params.row.id);
                                 }}
                                 sx={{ width: '100px' }}
                             >
@@ -391,7 +404,7 @@ export default function AccountsManagement() {
                                 color="success"
                                 size="small"
                                 onClick={() => {
-                                    // Open your confirm status dialog here
+                                    handleChangeStatus(params.row.id);
                                 }}
                                 sx={{ width: '100px' }}
                             >

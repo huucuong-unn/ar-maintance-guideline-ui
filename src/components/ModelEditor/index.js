@@ -951,7 +951,7 @@ export default function SimplifiedModelViewer({
                             {showEnvironment && <Environment preset="city" />}
 
                             <Suspense fallback={null}>
-                                {modelById ? (
+                                {modelById || modelFile3D ? (
                                     <Scene
                                         modelTransform={modelTransform}
                                         viewMode={viewMode}

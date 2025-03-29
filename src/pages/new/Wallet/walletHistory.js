@@ -33,7 +33,7 @@ export default function WalletHistory() {
             field: 'serviceName',
             headerName: 'Service Name',
             width: 200,
-            renderCell: (params) => params.row.serviceName || 'Employee Request Point',
+            renderCell: (params) => params.row.serviceName,
         },
         { field: 'guidelineName', headerName: 'Guideline Name', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },

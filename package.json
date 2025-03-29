@@ -80,6 +80,7 @@
         "react-slick": "^0.30.3",
         "react-toastify": "^11.0.5",
         "react-window": "^1.8.10",
+        "recharts": "^2.15.1",
         "slick-carousel": "^1.8.1",
         "styled-components": "^6.1.11",
         "swiper": "^11.2.1",

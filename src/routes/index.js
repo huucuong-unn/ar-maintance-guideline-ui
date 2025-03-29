@@ -34,6 +34,7 @@ import CompanyRequestDesigner from '~/pages/new/CompanyRequestDesigner';
 import ServicePriceManagement from '~/pages/new/ServicePrice/indesx';
 import WalletHistory from '~/pages/new/Wallet/walletHistory';
 import PointRequestManagement from '~/pages/new/PointRequestManagement';
+import AdminDashboard from '~/pages/new/DashboardManagement';
 
 const publicRoutes = [
     //new
@@ -65,7 +66,7 @@ const companyRoutes = [
     { path: '/company/blog-management', component: BlogsManagement, layout: AdminLayout },
     { path: '/company/account-management', component: EmployeesManagement, layout: AdminLayout },
     { path: '/company/payment-management', component: PaymentsManagement, layout: AdminLayout },
-    { path: '/company/dashboard', component: DashboardManagement, layout: AdminLayout },
+    { path: '/company/dashboard', component: AdminDashboard, layout: AdminLayout },
     { path: '/company/guideline-management', component: CoursesManagement, layout: AdminLayout },
     { path: '/company/model-management', component: ModelsManagement, layout: AdminLayout },
     { path: '/company/model-management/view/:id', component: ModelDetail, layout: AdminLayout },
