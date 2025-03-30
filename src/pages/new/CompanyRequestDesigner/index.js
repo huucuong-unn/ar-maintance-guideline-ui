@@ -10,6 +10,8 @@ import {
     Grid,
     Paper,
     Typography,
+    TextField,
+    Autocomplete,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -35,8 +37,6 @@ const defaultTheme = createTheme();
 
 export default function CompanyRequestDesigner() {
     const userInfo = storageService.getItem('userInfo')?.user || null;
-    const [isLoading, setIsLoading] = useState(false);
-    const [rows, setRows] = useState([]);
 
     // New state for Approve confirmation dialog
     const [openApproveDialog, setOpenApproveDialog] = useState(false);
@@ -191,14 +191,40 @@ export default function CompanyRequestDesigner() {
             renderCell: (params) => formatDateTime(params.value),
         },
     ];
+    const [isLoading, setIsLoading] = useState(false);
+    const [rows, setRows] = useState([]);
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 5,
+    });
+    const [total, setTotal] = useState(0);
+
+    const statusOptions = ['APPROVED', 'PENDING', 'DRAFTED', 'CANCEL', 'PROCESSING'];
+
+    const [searchCompanyName, setSearchCompanyName] = useState('');
+    const [searchStatus, setSearchStatus] = useState('');
+
+    // Xử lý tìm kiếm
+    const handleSearch = () => {
+        fetchData();
+    };
 
     // Fetch existing requests
     const fetchData = async () => {
         try {
+            const pageParam = paginationModel.page + 1;
+            const sizeParam = paginationModel.pageSize;
+            const params = {
+                page: pageParam,
+                size: sizeParam,
+                status: searchStatus,
+                companyName: searchCompanyName,
+            };
             setIsLoading(true);
-            const response = await CompanyRequestAPI.getAllCompanyRequests();
-            const data = response?.result || [];
+            const response = await CompanyRequestAPI.getAllCompanyRequests(params);
+            const data = response?.result?.objectList || [];
             setRows(data);
+            setTotal(response?.result?.totalItems || 0);
         } catch (error) {
             console.error('Failed to fetch request:', error);
         } finally {
@@ -208,7 +234,7 @@ export default function CompanyRequestDesigner() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [paginationModel]);
 
     const handleOpenApproveDialog = (requestId) => {
         setSelectedRequestId(requestId);
@@ -333,6 +359,44 @@ export default function CompanyRequestDesigner() {
                         Company Requests Management
                     </Typography>
 
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'right', gap: 2, mb: 2 }}>
+                        {/* TextField để nhập tên công ty */}
+                        <TextField
+                            label="Search Company Name"
+                            variant="outlined"
+                            value={searchCompanyName}
+                            onChange={(e) => setSearchCompanyName(e.target.value)}
+                            sx={{ width: 250 }}
+                        />
+
+                        {/* Autocomplete để chọn status */}
+                        <Autocomplete
+                            options={statusOptions}
+                            value={searchStatus}
+                            onChange={(event, newValue) => setSearchStatus(newValue)}
+                            renderInput={(params) => <TextField {...params} label="Search Status" variant="outlined" />}
+                            sx={{ width: 200 }}
+                        />
+
+                        {/* Nút Search */}
+                        <Button
+                            variant="contained"
+                            size="large"
+                            sx={{
+                                bgcolor: '#1976d2',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: '#115293',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleSearch}
+                        >
+                            Search
+                        </Button>
+                    </Box>
+
                     <Paper
                         sx={{
                             height: 500,
@@ -345,9 +409,17 @@ export default function CompanyRequestDesigner() {
                         <DataGrid
                             rows={rows}
                             columns={columns}
+                            rowCount={total}
+                            paginationMode="server"
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={(newModel) =>
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: newModel.page,
+                                }))
+                            }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.requestId}
-                            slots={{ toolbar: GridToolbar }}
                             loading={isLoading}
                         />
                     </Paper>

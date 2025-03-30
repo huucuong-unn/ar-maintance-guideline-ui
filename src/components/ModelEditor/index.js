@@ -718,6 +718,12 @@ export default function SimplifiedModelViewer({
             return toast.error('Name must be between 1 and 50 characters.');
         }
 
+        if (!formData.animationName) {
+            return toast.error('Please select an animation before creating the Instruction Detail.', {
+                position: 'top-right',
+            });
+        }
+
         setIsLoadingCreateInstructionDetail(true);
 
         try {
@@ -1044,7 +1050,7 @@ export default function SimplifiedModelViewer({
                                         )}
 
                                         {/* Hiển thị ảnh */}
-                                        {(imageFile || previewImage) && !isDisable && (
+                                        {/* {(imageFile || previewImage) && !isDisable && (
                                             <Box sx={{ mt: 2, textAlign: 'center' }}>
                                                 <Typography variant="subtitle1">Current Image</Typography>
                                                 <img
@@ -1064,10 +1070,55 @@ export default function SimplifiedModelViewer({
                                                     }}
                                                 />
                                             </Box>
-                                        )}
+                                        )} */}
+
+                                        {/* Hiển thị ảnh - Ẩn nếu action là UpdateModelGuideline */}
+                                        {(imageFile || previewImage) &&
+                                            !isDisable &&
+                                            action !== 'UpdateModelGuideline' && (
+                                                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                                    <Typography variant="subtitle1">Current Image</Typography>
+                                                    <img
+                                                        src={
+                                                            imageFile
+                                                                ? URL.createObjectURL(imageFile)
+                                                                : getImage(previewImage)
+                                                        }
+                                                        alt="Preview"
+                                                        style={{
+                                                            width: '100%',
+                                                            maxWidth: '100%',
+                                                            maxHeight: '300px',
+                                                            objectFit: 'contain',
+                                                            borderRadius: 8,
+                                                            border: '2px solid #ddd',
+                                                        }}
+                                                    />
+                                                </Box>
+                                            )}
 
                                         {/* Upload Image */}
-                                        {!isDisable && (
+                                        {/* {!isDisable && (
+                                            <Button
+                                                disabled={isDisable}
+                                                variant="contained"
+                                                component="label"
+                                                fullWidth
+                                                startIcon={<CloudUploadIcon />}
+                                                sx={{ mt: 2 }}
+                                            >
+                                                Upload Image
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    hidden
+                                                    onChange={handleImageUpload}
+                                                />
+                                            </Button>
+                                        )} */}
+
+                                        {/* Upload Image - Ẩn nếu action là UpdateModelGuideline */}
+                                        {!isDisable && action !== 'UpdateModelGuideline' && (
                                             <Button
                                                 disabled={isDisable}
                                                 variant="contained"
