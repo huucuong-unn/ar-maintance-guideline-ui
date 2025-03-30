@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
+import { TextField, Button } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid } from '@mui/x-data-grid';
@@ -31,19 +32,40 @@ const formatDate = (dateString) => {
     return `${month}/${day}/${year}`;
 };
 export default function CompaniesManagement() {
-    useEffect(() => {
-        const fetchBlogs = async () => {
-            try {
-                const response = await CompanyAPI.getAll();
-                const data = response?.result || [];
+    const [rows, setRows] = useState([]);
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 5,
+    });
+    const [total, setTotal] = useState(0);
+    const [searchCompanyName, setSearchCompanyName] = useState('');
 
-                setRows(data);
-            } catch (error) {
-                console.log('Failed to fetch blogs: ', error);
-            }
-        };
+    const handleSearch = () => {
         fetchBlogs();
-    }, []);
+    };
+
+    const fetchBlogs = async () => {
+        try {
+            const pageParam = paginationModel.page + 1;
+            const sizeParam = paginationModel.pageSize;
+            const params = {
+                page: pageParam,
+                size: sizeParam,
+                companyName: searchCompanyName,
+            };
+            const response = await CompanyAPI.getAll(params);
+            const data = response?.result?.objectList || [];
+            setRows(data);
+            setTotal(response?.result?.totalItems || 0);
+        } catch (error) {
+            console.log('Failed to fetch blogs: ', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchBlogs();
+    }, [paginationModel]);
+
     const columns = [
         { field: 'companyName', headerName: 'Company Name', width: 300 },
         { field: 'numberOfAccount', headerName: 'Number of Account', width: 250 },
@@ -55,8 +77,6 @@ export default function CompaniesManagement() {
             renderCell: (params) => formatDate(params.value),
         },
     ];
-
-    const [rows, setRows] = useState([]);
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -90,6 +110,35 @@ export default function CompaniesManagement() {
                     >
                         Companies
                     </Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'right', gap: 2, mb: 2 }}>
+                        {/* TextField để nhập tên công ty */}
+                        <TextField
+                            label="Search Company Name"
+                            variant="outlined"
+                            value={searchCompanyName}
+                            onChange={(e) => setSearchCompanyName(e.target.value)}
+                            sx={{ width: 250 }}
+                        />
+
+                        {/* Nút Search */}
+                        <Button
+                            variant="contained"
+                            size="large"
+                            sx={{
+                                bgcolor: '#1976d2',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: '#115293',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleSearch}
+                        >
+                            Search
+                        </Button>
+                    </Box>
                     <Grid sx={{ borderRadius: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', width: '100%' }}>
                         <Box
                             sx={{
@@ -105,6 +154,16 @@ export default function CompaniesManagement() {
                                     <DataGrid
                                         rows={rows}
                                         columns={columns}
+                                        rowCount={total}
+                                        paginationMode="server"
+                                        paginationModel={paginationModel}
+                                        onPaginationModelChange={(newModel) =>
+                                            setPaginationModel((prev) => ({
+                                                ...prev,
+                                                page: newModel.page,
+                                            }))
+                                        }
+                                        getRowId={(row) => row.id}
                                         sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
                                     />
                                 </Paper>

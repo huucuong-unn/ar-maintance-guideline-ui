@@ -184,6 +184,8 @@ export default function PaymentAndSubscriptionManagement() {
             const params = {
                 page: pageParam,
                 size: sizeParam,
+                orderCode: searchParams.orderCode || undefined,
+                status: searchParams.status || undefined,
             };
 
             const paramsForCompanyRole = {
@@ -222,7 +224,6 @@ export default function PaymentAndSubscriptionManagement() {
     };
 
     const handleSearch = () => {
-        setSearchParams((prev) => ({ ...prev }));
         fetchData();
     };
 

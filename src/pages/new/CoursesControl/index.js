@@ -103,7 +103,7 @@ export default function CoursesControl() {
         };
     };
 
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useInfiniteQuery({
         queryKey: ['courses', paramsToSearch],
         queryFn: ({ pageParam = 1 }) => fetchCourses(pageParam, paramsToSearch),
         initialPageParam: 1,
@@ -242,7 +242,7 @@ export default function CoursesControl() {
 
             if (response?.result) {
                 toast.success('Guideline created successfully!', { position: 'top-right' });
-                await fetchCourses();
+                await refetch();
                 handleCloseCreateDialog();
             }
         } catch (error) {
