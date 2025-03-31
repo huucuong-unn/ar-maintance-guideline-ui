@@ -4,8 +4,8 @@ const CompanyRequestAPI = {
         return axiosClient.get(`/v1/company-request/${companyId}?status=${status}`, { params });
     },
 
-    getAllCompanyRequests() {
-        return axiosClient.get(`/v1/company-request`);
+    getAllCompanyRequests(params) {
+        return axiosClient.get(`/v1/company-request`, { params });
     },
 
     createRequest(data) {

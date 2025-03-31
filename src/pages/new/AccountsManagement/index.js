@@ -528,7 +528,6 @@ export default function AccountsManagement() {
                                         }))
                                     }
                                     getRowId={(row) => row.id}
-                                    slots={{ toolbar: GridToolbar }}
                                     onRowClick={(params) => {
                                         // Optionally open a modal with user details
                                     }}

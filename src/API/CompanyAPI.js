@@ -1,8 +1,8 @@
 import axiosClient from './AxiosClient';
 
 const CompanyAPI = {
-    getAll() {
-        return axiosClient.get('/v1/company/all');
+    getAll(params) {
+        return axiosClient.get('/v1/company/all', { params });
     },
     getByUserId(userId) {
         return axiosClient.get(`/v1/company/userId?userId=${userId}`);
