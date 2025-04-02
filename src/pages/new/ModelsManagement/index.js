@@ -158,21 +158,21 @@ export default function ModelsManagement() {
     const columns = [
         { field: 'name', headerName: 'Name', width: 350 },
         { field: 'courseName', headerName: 'Guideline Name', width: 350 },
-        {
-            field: 'isUsed',
-            headerName: 'Is Used',
-            width: 100,
-            renderCell: (params) => (
-                <Chip
-                    label={params.value ? 'Yes' : 'No'}
-                    style={{
-                        backgroundColor: params.value ? 'green' : 'yellow',
-                        color: params.value ? 'white' : 'black',
-                        fontWeight: 'bold',
-                    }}
-                />
-            ),
-        },
+        // {
+        //     field: 'isUsed',
+        //     headerName: 'Is Used',
+        //     width: 100,
+        //     renderCell: (params) => (
+        //         <Chip
+        //             label={params.value ? 'Yes' : 'No'}
+        //             style={{
+        //                 backgroundColor: params.value ? 'green' : 'yellow',
+        //                 color: params.value ? 'white' : 'black',
+        //                 fontWeight: 'bold',
+        //             }}
+        //         />
+        //     ),
+        // },
         {
             field: 'status',
             headerName: 'Status',
