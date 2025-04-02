@@ -41,6 +41,10 @@ const ModelAPI = {
     deleteById(id) {
         return axiosClient.delete(`/v1/model/${id}`);
     },
+
+    changeStatus(id) {
+        return axiosClient.delete(`/v1/model/${id}`);
+    },
 };
 
 export default ModelAPI;

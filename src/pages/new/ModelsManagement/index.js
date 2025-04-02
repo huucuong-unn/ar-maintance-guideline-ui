@@ -69,6 +69,10 @@ export default function ModelsManagement() {
     const [modelTypeId, setModelTypeId] = useState('');
     const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
 
+    // Add these state variables at the top of the component
+    const [openStatusConfirmDialog, setOpenStatusConfirmDialog] = useState(false);
+    const [selectedModelId, setSelectedModelId] = useState(null);
+
     const [rows, setRows] = useState([]);
     const [typeSearch, setTypeSearch] = useState('');
     const [nameSearch, setNameSearch] = useState('');
@@ -91,6 +95,26 @@ export default function ModelsManagement() {
     const [imageFile, setImageFile] = useState(null);
     const [modelFile, setModelFile] = useState(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const handleChangeStatus = async () => {
+        if (!selectedModelId) return;
+
+        try {
+            setIsLoading(true);
+            const response = await ModelAPI.changeStatus(selectedModelId);
+
+            if (response?.result) {
+                toast.success('Model status changed successfully!', { position: 'top-right' });
+                fetchModels();
+            }
+        } catch (error) {
+            console.error('Failed to change model status:', error);
+            toast.error('Failed to change model status. Please try again.', { position: 'top-right' });
+        } finally {
+            setIsLoading(false);
+            setOpenStatusConfirmDialog(false);
+            setSelectedModelId(null);
+        }
+    };
 
     const handleOpenConfirmDelete = () => {
         setConfirmDeleteOpen(true);
@@ -115,6 +139,11 @@ export default function ModelsManagement() {
             console.error('Failed to delete model:', error);
             toast.error('Failed to delete model. Please try again.', { position: 'top-right' });
         }
+    };
+
+    const handleOpenStatusConfirm = (modelId) => {
+        setSelectedModelId(modelId);
+        setOpenStatusConfirmDialog(true);
     };
 
     const [openEditor, setOpenEditor] = useState(false);
@@ -144,24 +173,69 @@ export default function ModelsManagement() {
                 />
             ),
         },
-        { field: 'status', headerName: 'Status', width: 150 },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 200,
+            renderCell: (params) => {
+                let color = 'black';
+                switch (params.value) {
+                    case 'ACTIVE':
+                        color = 'green';
+                        break;
+                    case 'INACTIVE':
+                        color = 'orange';
+                        break;
+                    default:
+                        color = 'black';
+                }
+                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value}</Box>;
+            },
+        },
         {
             field: 'action',
             headerName: 'Action',
             width: 150,
-            renderCell: (params) => (
-                <EditIcon
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    startIcon={<EditIcon />}
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        handleOpenUpdateModal(params.row.id);
-                    }}
-                    sx={{ cursor: 'pointer' }}
-                ></EditIcon>
-            ),
+            renderCell: (params) => {
+                const currentStatus = params.row.status;
+                return (
+                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                        {currentStatus === 'ACTIVE' ? (
+                            <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => {
+                                    handleOpenStatusConfirm(params.row.id);
+                                    setSelectedModelId(params.row.id);
+                                }}
+                                sx={{ width: '100px', backgroundColor: 'orange' }}
+                            >
+                                Disable
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                onClick={() => {
+                                    handleOpenStatusConfirm(params.row.id);
+                                    setSelectedModelId(params.row.id);
+                                }}
+                                sx={{ width: '100px' }}
+                            >
+                                Active
+                            </Button>
+                        )}
+                        <EditIcon
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleOpenUpdateModal(params.row.id);
+                            }}
+                            sx={{ cursor: 'pointer' }}
+                        />
+                    </Box>
+                );
+            },
         },
     ];
 
@@ -586,19 +660,20 @@ export default function ModelsManagement() {
                 </Box>
             </Modal>
 
-            <Dialog open={confirmDeleteOpen} onClose={handleCloseConfirmDelete}>
-                <DialogTitle>Confirm Delete</DialogTitle>
+            <Dialog
+                open={openStatusConfirmDialog}
+                onClose={() => setOpenStatusConfirmDialog(false)}
+                fullWidth
+                maxWidth="xs"
+            >
+                <DialogTitle>Confirm Action</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete this model? This action cannot be undone.
-                    </DialogContentText>
+                    <DialogContentText>Are you sure you want to change the status of this model?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseConfirmDelete} color="inherit">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleDeleteModel} color="error" variant="contained">
-                        Delete
+                    <Button onClick={() => setOpenStatusConfirmDialog(false)}>Cancel</Button>
+                    <Button onClick={handleChangeStatus} autoFocus>
+                        Confirm
                     </Button>
                 </DialogActions>
             </Dialog>
