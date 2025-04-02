@@ -81,6 +81,23 @@ export default function CompanyRequestManagement() {
             width: 250,
             renderCell: (params) => {
                 const currentStatus = params.row.status;
+                const currentUserEmail = userInfo?.email; // Assuming userInfo contains the current user's email
+                const designerEmail = params.row.designer?.email;
+                console.log(currentUserEmail);
+                console.log(designerEmail);
+
+                // Check if the current user is the designer of the request
+                const isDesigner = currentUserEmail === designerEmail;
+
+                if (!isDesigner) {
+                    // If not the designer, return null or a placeholder
+                    return (
+                        <Typography variant="body2" color="text.secondary">
+                            No Actions
+                        </Typography>
+                    );
+                }
+
                 return (
                     <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
                         {currentStatus === 'PROCESSING' && (

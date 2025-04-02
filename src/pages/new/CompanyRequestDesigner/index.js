@@ -73,6 +73,21 @@ export default function CompanyRequestDesigner() {
             width: 350,
             renderCell: (params) => {
                 const currentStatus = params.row.status;
+                const currentUserEmail = userInfo?.email; // Assuming userInfo contains the current user's email
+                const designerEmail = params.row.designer?.email;
+
+                // Check if the current user is the designer of the request
+                const isDesigner = currentUserEmail === designerEmail;
+
+                // If not the designer, return a message or null
+                if (!isDesigner) {
+                    return (
+                        <Typography variant="body2" color="text.secondary">
+                            No Actions Available
+                        </Typography>
+                    );
+                }
+
                 return (
                     <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
                         {currentStatus === 'PENDING' && (
