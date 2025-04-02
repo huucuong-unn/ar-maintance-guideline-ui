@@ -10,9 +10,15 @@ export const WalletProvider = ({ children }) => {
 
     const fetchWallet = async () => {
         try {
+            const user = storageService.getItem('userInfo')?.user;
+
+            console.log(user);
+
             const response = await WalletAPI.getWalletByUserId(user.id);
             setCurrentPoints(response.result.balance);
+            console.log(currentPoints);
         } catch (error) {
+            setCurrentPoints(0);
             console.error('Failed to fetch wallet:', error);
         }
     };
@@ -22,6 +28,12 @@ export const WalletProvider = ({ children }) => {
             fetchWallet();
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            fetchWallet();
+        }
+    }, []);
 
     return <WalletContext.Provider value={{ currentPoints, fetchWallet }}>{children}</WalletContext.Provider>;
 };

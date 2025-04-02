@@ -29,6 +29,7 @@ import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CardCourse from '~/components/CardCourse';
 import storageService from '~/components/StorageService/storageService';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useWallet } from '~/WalletContext'; // Import the WalletContext
 
 const defaultTheme = createTheme();
 
@@ -66,6 +67,7 @@ export default function CoursesControl() {
         title: '',
         status: '',
     });
+    const { currentPoints, fetchWallet } = useWallet(); // Use WalletContext to get currentPoints
 
     useEffect(() => {
         const fetchModelUnused = async () => {
@@ -80,6 +82,7 @@ export default function CoursesControl() {
             }
         };
         fetchModelUnused();
+        fetchWallet();
     }, []);
 
     // const fetchCourses = async () => {

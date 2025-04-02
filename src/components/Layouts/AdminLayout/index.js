@@ -118,21 +118,21 @@ export function NavbarAdmin() {
 export function Sidebar() {
     const navigate = useNavigate();
     const user = storageService.getItem('userInfo')?.user || null;
-    const { currentPoints } = useWallet(); // Use WalletContext to get currentPoints
+    const { currentPoints, fetchWallet } = useWallet(); // Use WalletContext to get currentPoints
 
     const handleLogout = () => {
         // Remove user information from localStorage
         localStorage.removeItem('userInfo');
 
-        // Redirect to the sign-up page
         navigate('/login');
     };
-
     const handleBuyPoints = () => {
         // Navigate to buy points page
         navigate('/wallet/purchase');
     };
-
+    useEffect(() => {
+        fetchWallet();
+    }, [user]);
     const [open, setOpen] = useState(true);
     const toggleDrawer = () => {
         setOpen(!open);
@@ -173,14 +173,14 @@ export function Sidebar() {
                     p: 2,
                 }}
             >
-                {user?.roleName === 'COMPANY' && (
-                    <Box sx={{ mb: 1 }}>
-                        <Typography variant="body1">{user?.company.companyName || 'Admin'}</Typography>
+                <Box sx={{ mb: 1 }}>
+                    <Typography variant="body1">{user?.company?.companyName ?? user?.email ?? 'Admin'}</Typography>
+                    {user?.roleName === 'COMPANY' && (
                         <Typography variant="contained" color="primary">
                             Current Points: {currentPoints}
                         </Typography>
-                    </Box>
-                )}
+                    )}
+                </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                     {user?.roleName === 'COMPANY' && (
                         <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>

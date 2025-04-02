@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AccountAPI from '~/API/AccountAPI';
 import storageService from '~/components/StorageService/storageService';
+import { useWallet } from '~/WalletContext'; // Import the WalletContext
 
 function Copyright(props) {
     return (
@@ -25,6 +26,7 @@ export default function CompanyLogin() {
     const managerRole = 'MANAGER';
     const [showAlertError, setShowAlertError] = useState(false);
     const [loginLoading, setLoginLoading] = useState(false);
+    const { currentPoints, fetchWallet } = useWallet(); // Use WalletContext to get currentPoints
 
     const navigate = useNavigate();
 
@@ -41,6 +43,7 @@ export default function CompanyLogin() {
                 setLoginLoading(false);
 
                 storageService.setItem('userInfo', userInfo?.result); // Store user info
+                fetchWallet();
 
                 if (userInfo?.result?.user?.role?.roleName === adminRole) {
                     navigate('/admin/dashboard'); // Navigate

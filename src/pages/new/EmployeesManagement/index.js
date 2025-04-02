@@ -74,6 +74,7 @@ export default function EmployeesManagement() {
         setLimitPoint(parsedValue);
     };
     const [newEmployee, setNewEmployee] = useState({
+        fullName: '', // New field
         email: '',
         password: '',
         confirmPassword: '',
@@ -107,6 +108,7 @@ export default function EmployeesManagement() {
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
         setNewEmployee({
+            fullName: '', // Reset fullName
             email: '',
             password: '',
             confirmPassword: '',
@@ -120,19 +122,34 @@ export default function EmployeesManagement() {
             points: 1,
         });
         setPasswordError('');
+        setFullNameError(''); // Reset full name error
     };
     const handleCloseAllocationPointDialog = () => {
         setOpenAllocationPointDialog(false);
         setLimitPoint(0);
     };
 
+    const [fullNameError, setFullNameError] = useState('');
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+
+        // Validate full name if applicable
+        if (name === 'fullName') {
+            // Validate full name length
+            if (value.length < 2) {
+                setFullNameError('Full name must be at least 2 characters');
+            } else if (value.length > 50) {
+                setFullNameError('Full name must be at most 50 characters');
+            } else {
+                setFullNameError('');
+            }
+        }
+
         setNewEmployee({
             ...newEmployee,
             [name]: value,
         });
-
         // Password validation
         if (name === 'confirmPassword' || name === 'password') {
             if (name === 'confirmPassword' && value !== newEmployee.password) {
@@ -154,11 +171,18 @@ export default function EmployeesManagement() {
         });
     };
 
+    // Modify handleCreateEmployee to validate full name
     const handleCreateEmployee = async () => {
+        // Check if full name meets validation
+        if (newEmployee.fullName.length < 2 || newEmployee.fullName.length > 50) {
+            setFullNameError('Full name must be between 2 and 50 characters');
+            return;
+        }
+
         if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword) {
             return;
         }
-        if (passwordError) {
+        if (passwordError || fullNameError) {
             return;
         }
         try {
@@ -529,6 +553,20 @@ export default function EmployeesManagement() {
                             <TextField
                                 required
                                 fullWidth
+                                label="Full Name"
+                                name="fullName"
+                                value={newEmployee.fullName}
+                                onChange={handleInputChange}
+                                error={!!fullNameError}
+                                helperText={fullNameError}
+                                inputProps={{
+                                    minLength: 2,
+                                    maxLength: 50,
+                                }}
+                            />
+                            <TextField
+                                required
+                                fullWidth
                                 label="Email"
                                 name="email"
                                 value={newEmployee.email}
@@ -587,7 +625,8 @@ export default function EmployeesManagement() {
                                 !newEmployee.email ||
                                 !newEmployee.password ||
                                 !newEmployee.confirmPassword ||
-                                !!passwordError
+                                !!passwordError ||
+                                !!fullNameError
                             }
                         >
                             {isLoadingCreateEmployee ? <CircularProgress /> : ' Create'}
