@@ -453,6 +453,21 @@ export default function MachinesManagement() {
         }
     };
 
+    const [openConfirmDeleteMachineTypeDialog, setOpenConfirmDeleteMachineTypeDialog] = useState(false);
+
+    const handleDeleteMachine = async () => {
+        try {
+            await MachineAPI.delete(machineById.id);
+            toast.success('Machine deleted successfully');
+            setOpenConfirmDeleteMachineTypeDialog(false);
+            setOpenUpdateMachineDialog(false);
+            fetchMachines();
+        } catch (error) {
+            console.error('Failed to delete Machine:', error);
+            toast.error(`Delete Machine failed. ${error?.response?.data?.message}`);
+        }
+    };
+
     useEffect(() => {
         console.log(updateMachineRequest);
     }, [updateMachineRequest]);
@@ -970,6 +985,31 @@ export default function MachinesManagement() {
                             disabled={isLoadingUpdateMachine}
                         >
                             {isLoadingUpdateMachine ? <CircularProgress /> : ' Save Changes'}
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => setOpenConfirmDeleteMachineTypeDialog(true)}
+                        >
+                            Delete Machine
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog
+                    open={openConfirmDeleteMachineTypeDialog}
+                    onClose={() => setOpenConfirmDeleteMachineTypeDialog(false)}
+                >
+                    <DialogTitle>Confirm Delete Machine</DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to delete this Machine? This action cannot be undone.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenConfirmDeleteMachineTypeDialog(false)}>Cancel</Button>
+                        <Button variant="contained" color="error" onClick={handleDeleteMachine}>
+                            Delete
                         </Button>
                     </DialogActions>
                 </Dialog>

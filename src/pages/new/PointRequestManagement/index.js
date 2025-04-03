@@ -10,6 +10,8 @@ import {
     Grid,
     Paper,
     Typography,
+    Autocomplete,
+    TextField,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -37,7 +39,6 @@ export default function PointRequestManagement() {
     const { currentPoints, fetchWallet } = useWallet();
     const userInfo = storageService.getItem('userInfo')?.user || null;
     const [isLoading, setIsLoading] = useState(false);
-    const [rows, setRows] = useState([]);
     const [requestId, setRequestId] = useState(null);
 
     // Table columns
@@ -108,14 +109,35 @@ export default function PointRequestManagement() {
             renderCell: (params) => formatDateTime(params.value) || '-',
         },
     ];
+    const [rows, setRows] = useState([]);
+    const [searchParams, setSearchParams] = useState({
+        requestNumber: '',
+        status: '',
+        employeeEmail: '',
+    });
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 5,
+    });
+    const [total, setTotal] = useState(0);
 
     // Fetch existing requests
     const fetchData = async () => {
         try {
+            const pageParam = paginationModel.page + 1;
+            const sizeParam = paginationModel.pageSize;
+            const params = {
+                page: pageParam,
+                size: sizeParam,
+                requestNumber: searchParams.requestNumber || undefined,
+                status: searchParams.status || undefined,
+                employeeEmail: searchParams.employeeEmail || undefined,
+            };
             setIsLoading(true);
-            const response = await PointRequestAPI.getAllPointRequestsByCompanyId(userInfo?.company?.id);
-            const data = response?.result || [];
+            const response = await PointRequestAPI.getAllPointRequestsByCompanyId(userInfo?.company?.id, params);
+            const data = response?.result?.objectList || [];
             setRows(data);
+            setTotal(response?.result?.totalItems || 0);
             fetchWallet();
         } catch (error) {
             console.error('Failed to fetch request:', error);
@@ -126,7 +148,26 @@ export default function PointRequestManagement() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [paginationModel]);
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setSearchParams((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleStatusChange = (event, newValue) => {
+        setSearchParams((prev) => ({
+            ...prev,
+            status: newValue || '',
+        }));
+    };
+
+    const handleSearch = () => {
+        fetchData();
+    };
 
     const formatDateTime = (dateString) => {
         if (!dateString) return '';
@@ -228,6 +269,54 @@ export default function PointRequestManagement() {
                         Point Requests Management
                     </Typography>
 
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'right', gap: 2, mb: 2 }}>
+                        {/* Search Request Number */}
+                        <TextField
+                            label="Request Number"
+                            variant="outlined"
+                            name="requestNumber"
+                            value={searchParams.requestNumber}
+                            onChange={handleInputChange}
+                            sx={{ width: 200 }}
+                        />
+
+                        {/* Search Employee Email */}
+                        <TextField
+                            label="Employee Email"
+                            variant="outlined"
+                            name="employeeEmail"
+                            value={searchParams.employeeEmail}
+                            onChange={handleInputChange}
+                            sx={{ width: 250 }}
+                        />
+
+                        {/* Sort Status */}
+                        <Autocomplete
+                            options={['REJECT', 'PROCESSING', 'APPROVED']}
+                            value={searchParams.status}
+                            onChange={handleStatusChange}
+                            renderInput={(params) => <TextField {...params} label="Status" variant="outlined" />}
+                            sx={{ width: 200 }}
+                        />
+
+                        {/* Search Button */}
+                        <Button
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#1976d2',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: '#115293',
+                                    color: 'white',
+                                },
+                                p: 2,
+                            }}
+                            onClick={handleSearch}
+                        >
+                            Search
+                        </Button>
+                    </Box>
+
                     <Paper
                         sx={{
                             height: 500,
@@ -240,9 +329,17 @@ export default function PointRequestManagement() {
                         <DataGrid
                             rows={rows}
                             columns={columns}
+                            rowCount={total}
+                            paginationMode="server"
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={(newModel) =>
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: newModel.page,
+                                }))
+                            }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.id}
-                            slots={{ toolbar: GridToolbar }}
                             loading={isLoading}
                         />
                     </Paper>

@@ -53,7 +53,7 @@ export default function CardCourse({ title, description, image, viewers, lessons
                 width={'100%'}
                 style={{
                     objectFit: 'cover',
-                    height: '250px',
+                    aspectRatio: '16 / 9',
                     borderRadius: '15px',
                 }}
             />

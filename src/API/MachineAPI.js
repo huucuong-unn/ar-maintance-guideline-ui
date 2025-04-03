@@ -24,6 +24,9 @@ const MachineAPI = {
     update(id, data) {
         return axiosClient.put(`/v1/machine/${id}`, data);
     },
+    delete(id) {
+        return axiosClient.delete(`/v1/machine/${id}`);
+    },
 };
 
 export default MachineAPI;
