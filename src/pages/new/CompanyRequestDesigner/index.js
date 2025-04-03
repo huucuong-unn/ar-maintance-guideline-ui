@@ -80,7 +80,7 @@ export default function CompanyRequestDesigner() {
                 const isDesigner = currentUserEmail === designerEmail;
 
                 // If not the designer, return a message or null
-                if (!isDesigner) {
+                if (designerEmail && !isDesigner) {
                     return (
                         <Typography variant="body2" color="text.secondary">
                             No Actions Available
