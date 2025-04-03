@@ -993,7 +993,7 @@ export default function SimplifiedModelViewer({
                                         {/* Name */}
                                         {!isDisable && (
                                             <TextField
-                                                disabled={isDisable}
+                                                disabled={isDisable || action === 'UpdateModelGuideline'}
                                                 required
                                                 label="Name"
                                                 variant="outlined"
@@ -1002,7 +1002,15 @@ export default function SimplifiedModelViewer({
                                                 value={formData.name}
                                                 onChange={handleInputChange}
                                                 sx={{
-                                                    input: { color: darkMode ? '#ffffff' : '#000000' },
+                                                    '& .MuiInputBase-input': {
+                                                        color: darkMode ? '#ffffff' : '#000000',
+                                                        '-webkit-text-fill-color':
+                                                            isDisable || action === 'UpdateModelGuideline'
+                                                                ? darkMode
+                                                                    ? '#ffffff'
+                                                                    : '#000000'
+                                                                : 'inherit',
+                                                    },
                                                     '& .MuiOutlinedInput-root': {
                                                         '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
                                                         '&:hover fieldset': {
@@ -1012,7 +1020,9 @@ export default function SimplifiedModelViewer({
                                                             borderColor: darkMode ? '#ffffff' : '#000000',
                                                         },
                                                     },
-                                                    label: { color: darkMode ? '#ffffff' : '#000000' },
+                                                    '& .MuiInputLabel-root': {
+                                                        color: darkMode ? '#ffffff' : '#000000',
+                                                    },
                                                 }}
                                             />
                                         )}
@@ -1020,7 +1030,7 @@ export default function SimplifiedModelViewer({
                                         {/* Description */}
                                         {!isDisable && (
                                             <TextField
-                                                disabled={isDisable}
+                                                disabled={isDisable || action === 'UpdateModelGuideline'}
                                                 label="Description"
                                                 variant="outlined"
                                                 fullWidth
@@ -1032,6 +1042,12 @@ export default function SimplifiedModelViewer({
                                                 sx={{
                                                     '& .MuiInputBase-input': {
                                                         color: darkMode ? '#ffffff' : '#000000',
+                                                        '-webkit-text-fill-color':
+                                                            isDisable || action === 'UpdateModelGuideline'
+                                                                ? darkMode
+                                                                    ? '#ffffff'
+                                                                    : '#000000'
+                                                                : 'inherit',
                                                     },
                                                     '& .MuiOutlinedInput-root': {
                                                         '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
@@ -1096,26 +1112,6 @@ export default function SimplifiedModelViewer({
                                                     />
                                                 </Box>
                                             )}
-
-                                        {/* Upload Image */}
-                                        {/* {!isDisable && (
-                                            <Button
-                                                disabled={isDisable}
-                                                variant="contained"
-                                                component="label"
-                                                fullWidth
-                                                startIcon={<CloudUploadIcon />}
-                                                sx={{ mt: 2 }}
-                                            >
-                                                Upload Image
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    hidden
-                                                    onChange={handleImageUpload}
-                                                />
-                                            </Button>
-                                        )} */}
 
                                         {/* Upload Image - Ẩn nếu action là UpdateModelGuideline */}
                                         {!isDisable && action !== 'UpdateModelGuideline' && (
@@ -1457,25 +1453,27 @@ export default function SimplifiedModelViewer({
                                         },
                                     }}
                                 />
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    sx={{ width: '100%' }}
-                                    onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
-                                    disabled={isLoading || isLoadingUpdateModelGuideline}
-                                >
-                                    {action === 'CreateModel' ? (
-                                        isLoading ? (
+                                {action !== 'UpdateModelGuideline' && (
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ width: '100%' }}
+                                        onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
+                                        disabled={isLoading || isLoadingUpdateModelGuideline}
+                                    >
+                                        {action === 'CreateModel' ? (
+                                            isLoading ? (
+                                                <CircularProgress size={24} sx={{ color: 'white' }} />
+                                            ) : (
+                                                'Create Model'
+                                            )
+                                        ) : isLoadingUpdateModelGuideline ? (
                                             <CircularProgress size={24} sx={{ color: 'white' }} />
                                         ) : (
-                                            'Create Model'
-                                        )
-                                    ) : isLoadingUpdateModelGuideline ? (
-                                        <CircularProgress size={24} sx={{ color: 'white' }} />
-                                    ) : (
-                                        'Save changes'
-                                    )}
-                                </Button>
+                                            'Save changes'
+                                        )}
+                                    </Button>
+                                )}
                             </>
                         )}
                         {action == 'UpdateInstructionDetail' && (

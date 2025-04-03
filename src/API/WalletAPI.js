@@ -10,9 +10,9 @@ const WalletAPI = {
         }
     },
 
-    getWalletHistoryByUserId: async (userId) => {
+    getWalletHistoryByUserId: async (userId, params) => {
         try {
-            const response = await axiosClient.get(`/v1/wallets/history/user/${userId}`);
+            const response = await axiosClient.get(`/v1/wallets/history/user/${userId}`, { params });
             return response;
         } catch (error) {
             throw error;

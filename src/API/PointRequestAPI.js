@@ -1,7 +1,7 @@
 import axiosClient from './AxiosClient';
 const PointRequestAPI = {
-    getAllPointRequestsByCompanyId(companyId) {
-        return axiosClient.get(`/v1/point-request/company/${companyId}`);
+    getAllPointRequestsByCompanyId(companyId, params) {
+        return axiosClient.get(`/v1/point-request/company/${companyId}`, { params });
     },
 
     getAllPointRequests() {
