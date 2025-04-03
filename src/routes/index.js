@@ -36,6 +36,7 @@ import WalletHistory from '~/pages/new/Wallet/walletHistory';
 import PointRequestManagement from '~/pages/new/PointRequestManagement';
 import AdminDashboard from '~/pages/new/DashboardManagement';
 import CompanyDashboard from '~/pages/new/DashboardManagement/companyDashboard';
+import PointOptionManagement from '~/pages/new/PointOptionManagement';
 
 const publicRoutes = [
     //new
@@ -59,6 +60,7 @@ const adminRoutes = [
     { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
     { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
     { path: '/admin/service-price-management', component: ServicePriceManagement, layout: AdminLayout },
+    {path:'/admin/point-options-management',component: PointOptionManagement, layout:AdminLayout}
 ];
 
 const companyRoutes = [

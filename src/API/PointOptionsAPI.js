@@ -28,9 +28,26 @@ const PointOptionsAPI = {
         }
     },
 
+    getAllPointOptionsAdmin: async () => {
+        try {
+            const response = await axiosClient.get('/v1/point-options/admin');
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     deletePointOptions: async (id) => {
         try {
             const response = await axiosClient.delete(`/v1/point-options/${id}`);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+    changeStatus: async (id) => {
+        try {
+            const response = await axiosClient.put(`/v1/point-options/status/${id}`);
             return response;
         } catch (error) {
             throw error;
