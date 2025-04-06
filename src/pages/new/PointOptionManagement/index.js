@@ -123,11 +123,9 @@ export default function PointOptionManagement() {
         try {
             setIsDeleting(true);
             const response = await PointOptionsAPI.deletePointOptions(selectedPointOptionId);
-            if (response?.result) {
-                toast.success('Point option deleted successfully!');
-                fetchPointOptions();
-                handleCloseDeleteConfirmDialog();
-            }
+            toast.success('Point option deleted successfully!');
+            fetchPointOptions();
+            handleCloseDeleteConfirmDialog();
         } catch (error) {
             console.error('Failed to delete point option:', error);
             toast.error('Point Option is currently in use');
@@ -341,13 +339,6 @@ export default function PointOptionManagement() {
                                 value={point}
                                 onChange={(e) => setPoint(e.target.value)}
                             />
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                label="Currency"
-                                value={currency}
-                                onChange={(e) => setCurrency(e.target.value)}
-                            />
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={handleCloseEditDialog}>Cancel</Button>
@@ -358,6 +349,45 @@ export default function PointOptionManagement() {
                                 disabled={isUpdating}
                             >
                                 {isUpdating ? <CircularProgress size={20} /> : 'Update'}
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                    <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="sm">
+                        <DialogTitle>Create Point Option</DialogTitle>
+                        <DialogContent>
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Amount"
+                                type="number"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                            />
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Points"
+                                type="number"
+                                value={point}
+                                onChange={(e) => setPoint(e.target.value)}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+                            <Button
+                                onClick={handleCreatePointOption}
+                                variant="contained"
+                                color="primary"
+                                disabled={isCreating}
+                            >
+                                {isCreating ? <CircularProgress size={20} /> : 'Create'}
                             </Button>
                         </DialogActions>
                     </Dialog>
