@@ -24,6 +24,7 @@ import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import CardMachine from '~/components/CardMachine'; // The updated CardMachine
 import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function Copyright(props) {
     return (
@@ -39,6 +40,7 @@ const defaultTheme = createTheme();
 
 export default function CompanyRequestManagement() {
     const userInfo = storageService.getItem('userInfo')?.user || null;
+    const navigate = useNavigate(); // Declare navigate
 
     // --------------------- FIRST DIALOG (Select Machine) ---------------------
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -87,12 +89,11 @@ export default function CompanyRequestManagement() {
                         {currentStatus === 'PROCESSING' && (
                             <Button
                                 variant="contained"
-                                size="small"
-                                color="error"
+                                component="label"
                                 sx={{ width: '100px', bgcolor: 'orange' }}
-                                onClick={() => handleOpenCancelConfirm(params.row.requestId)}
+                                onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
                             >
-                                Cancel
+                                Chat
                             </Button>
                         )}
                         {currentStatus === 'DRAFTED' && (

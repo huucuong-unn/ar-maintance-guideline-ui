@@ -16,6 +16,7 @@ import {
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CompanyRequestAPI from '~/API/CompanyRequestAPI'; // Your API
@@ -36,6 +37,8 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function CompanyRequestDesigner() {
+    const navigate = useNavigate(); // Declare navigate
+
     const userInfo = storageService.getItem('userInfo')?.user || null;
 
     // New state for Approve confirmation dialog
@@ -108,21 +111,9 @@ export default function CompanyRequestDesigner() {
                                     variant="contained"
                                     component="label"
                                     sx={{ width: '100px', bgcolor: 'orange' }}
+                                    onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
                                 >
-                                    Upload
-                                    <input
-                                        type="file"
-                                        hidden
-                                        accept=".glb,.gltf"
-                                        onChange={(e) =>
-                                            handle3DFileSelect(
-                                                e,
-                                                params.row.requestId,
-                                                params.row.machineType?.machineTypeId,
-                                                params.row.company.id,
-                                            )
-                                        }
-                                    />
+                                    Chat
                                 </Button>
                                 <Button
                                     variant="contained"
@@ -216,9 +207,9 @@ export default function CompanyRequestDesigner() {
 
     const statusOptions = ['APPROVED', 'PENDING', 'DRAFTED', 'CANCEL', 'PROCESSING'];
 
-    const [searchCompanyName, setSearchCompanyName] = useState('');
-    const [searchDesignerEmail, setSearchDesignerEmail] = useState('');
-    const [searchStatus, setSearchStatus] = useState('');
+    const [searchCompanyName, setSearchCompanyName] = useState(null);
+    const [searchDesignerEmail, setSearchDesignerEmail] = useState(null);
+    const [searchStatus, setSearchStatus] = useState(null);
 
     // Xử lý tìm kiếm
     const handleSearch = () => {
