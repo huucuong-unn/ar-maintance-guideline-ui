@@ -33,9 +33,11 @@ import { CirclePlus, File, MoreVerticalIcon } from 'lucide-react';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import DeviceHubIcon from '@mui/icons-material/DeviceHub';
 import MemoryIcon from '@mui/icons-material/Memory';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -664,6 +666,36 @@ export default function CoursesControlEdit() {
         console.log(machineTypeOfGuideline);
     }, [machineTypeOfGuideline]);
 
+    const handleDownloadDocumentFile = (name, documentFile) => {
+        try {
+            // File ID cứng cho mục đích test
+            const hardcodedFileId = '2e0e9247-4c73-41bf-93e0-0a7962905c6e.pdf';
+
+            const fileId = documentFile || hardcodedFileId;
+
+            if (!fileId) {
+                console.error('No document file ID provided');
+                return;
+            }
+
+            const fileUrl = getImage(fileId);
+
+            if (!fileUrl) {
+                console.error('Could not generate URL for file ID:', fileId);
+                return;
+            }
+
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = `${name}-document.pdf`; // Đặt tên file
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+        }
+    };
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             {/* -------------------- Guideline Banner (Image + Title) -------------------- */}
@@ -897,16 +929,16 @@ export default function CoursesControlEdit() {
                                     justifyContent: 'space-between',
                                     borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
                                     background: 'primary.main',
-                                    color: 'white',
+                                    color: 'black',
                                 }}
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <QrCodeIcon sx={{ mr: 1.5, color: 'white' }} />
-                                    <Typography variant="h6" fontWeight="bold" color="white">
+                                    <QrCodeIcon sx={{ mr: 1.5, color: 'black' }} />
+                                    <Typography variant="h6" fontWeight="bold" color="black">
                                         Machines
                                     </Typography>
                                 </Box>
-                                <Typography variant="body2" color="white" sx={{ opacity: 0.9 }}>
+                                <Typography variant="body2" color="black" sx={{ opacity: 0.9 }}>
                                     {machinesOfGuideline?.length || 0} machines found
                                 </Typography>
                             </Box>
@@ -1138,6 +1170,99 @@ export default function CoursesControlEdit() {
                                 </DialogActions>
                             </Dialog>
                         ))}
+
+                        {/* Machines List Section */}
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                background: '#ffffff',
+                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                                mt: 4,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                                    background: 'primary.main',
+                                    color: 'black',
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <PrecisionManufacturingIcon sx={{ mr: 1.5, color: 'black' }} />
+                                    <Typography variant="h6" fontWeight="bold" color="black">
+                                        3D Model
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            <Box sx={{ p: 2 }}>
+                                <Accordion
+                                    key={model?.id}
+                                    sx={{
+                                        mb: 1.5,
+                                        border: '1px solid rgba(0, 0, 0, 0.08)',
+                                        borderRadius: '8px',
+                                        '&:before': { display: 'none' },
+                                        overflow: 'hidden',
+                                        boxShadow: 'none',
+                                        '&:hover': {
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                                        },
+                                    }}
+                                >
+                                    <AccordionSummary
+                                        aria-controls={`machine-${model?.id}-content`}
+                                        id={`machine-${model?.id}-header`}
+                                        sx={{
+                                            backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                                            '&.Mui-expanded': {
+                                                borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                                            },
+                                        }}
+                                    >
+                                        <Grid container alignItems="center" spacing={2}>
+                                            <Grid item xs={10} sm={11} md={10}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <SmartToyIcon
+                                                        sx={{ mr: 1.5, color: 'primary.main', opacity: 0.8 }}
+                                                    />
+                                                    <Typography fontWeight={500}>{model?.name}</Typography>
+                                                </Box>
+                                            </Grid>
+                                            <Grid item xs={2} sm={1} md={2}>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="primary"
+                                                    startIcon={<DownloadIcon />}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDownloadDocumentFile(model?.name, model?.documentFile);
+                                                    }}
+                                                    size="small"
+                                                    sx={{
+                                                        borderRadius: '6px',
+                                                        textTransform: 'none',
+                                                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                                                        '&:hover': {
+                                                            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.15)',
+                                                        },
+                                                    }}
+                                                >
+                                                    Download document
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                    </AccordionSummary>
+                                </Accordion>
+                            </Box>
+                        </Paper>
                     </Box>
                 </TabPanel>
 
