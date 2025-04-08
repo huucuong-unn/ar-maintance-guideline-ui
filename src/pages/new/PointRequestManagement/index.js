@@ -41,6 +41,8 @@ export default function PointRequestManagement() {
     const [isLoading, setIsLoading] = useState(false);
     const [requestId, setRequestId] = useState(null);
 
+    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
     // Table columns
     const columns = [
         {
@@ -54,9 +56,18 @@ export default function PointRequestManagement() {
             width: 150,
             renderCell: (params) => {
                 let color = 'black';
-                if (params.value === 'ACTIVE') color = 'green';
-                else if (params.value === 'INACTIVE') color = 'orange';
-                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value || '-'}</Box>;
+                if (params.value === 'ACTIVE') {
+                    color = 'green';
+                } else if (params.value === 'INACTIVE') {
+                    color = 'orange';
+                } else if (params.value === 'APPROVED') {
+                    color = 'green';
+                } else if (params.value === 'REJECT') {
+                    color = 'red';
+                } else if (params.value === 'PROCESSING') {
+                    color = '#ff9800';
+                }
+                return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value) || '-'}</Box>;
             },
         },
         {
@@ -73,10 +84,10 @@ export default function PointRequestManagement() {
                                     variant="contained"
                                     component="label"
                                     color="success"
-                                    sx={{ width: '100px' }}
+                                    sx={{ width: '100px', textTransform: 'none' }}
                                     onClick={() => handleOpenApproveConfirm(params.row.id)}
                                 >
-                                    APPROVE
+                                    Approve
                                 </Button>
                             </>
                         )}
@@ -84,10 +95,10 @@ export default function PointRequestManagement() {
                             <Button
                                 variant="contained"
                                 color="error"
-                                sx={{ width: '100px', bgcolor: 'orange' }}
+                                sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                 onClick={() => handleOpenCancelConfirm(params.row.id)}
                             >
-                                REJECT
+                                Reject
                             </Button>
                         )}
                     </Box>
@@ -114,6 +125,7 @@ export default function PointRequestManagement() {
         requestNumber: '',
         status: '',
         employeeEmail: '',
+        createDate: '',
     });
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
@@ -132,6 +144,7 @@ export default function PointRequestManagement() {
                 requestNumber: searchParams.requestNumber || undefined,
                 status: searchParams.status || undefined,
                 employeeEmail: searchParams.employeeEmail || undefined,
+                createDate: searchParams.createDate || undefined,
             };
             setIsLoading(true);
             const response = await PointRequestAPI.getAllPointRequestsByCompanyId(userInfo?.company?.id, params);
@@ -299,12 +312,26 @@ export default function PointRequestManagement() {
                             sx={{ width: 200 }}
                         />
 
+                        <TextField
+                            label="Create Date"
+                            variant="outlined"
+                            name="createDate"
+                            type="date"
+                            value={searchParams.createDate}
+                            onChange={handleInputChange}
+                            sx={{ width: 200 }}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+
                         {/* Search Button */}
                         <Button
                             variant="contained"
                             sx={{
                                 bgcolor: '#1976d2',
                                 color: 'white',
+                                textTransform: 'none',
                                 '&:hover': {
                                     bgcolor: '#115293',
                                     color: 'white',
@@ -313,7 +340,7 @@ export default function PointRequestManagement() {
                             }}
                             onClick={handleSearch}
                         >
-                            Search
+                            Filter
                         </Button>
                     </Box>
 
@@ -357,8 +384,15 @@ export default function PointRequestManagement() {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCancelConfirm}>No</Button>
-                        <Button onClick={handleConfirmCancel} variant="contained" color="error">
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCancelConfirm}>
+                            No
+                        </Button>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleConfirmCancel}
+                            variant="contained"
+                            color="error"
+                        >
                             {isLoading ? <CircularProgress /> : 'Yes, Cancel'}
                         </Button>
                     </DialogActions>
@@ -372,8 +406,15 @@ export default function PointRequestManagement() {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseApproveConfirm}>No</Button>
-                        <Button onClick={handleApprove} variant="contained" color="success">
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseApproveConfirm}>
+                            No
+                        </Button>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleApprove}
+                            variant="contained"
+                            color="success"
+                        >
                             {isLoading ? <CircularProgress /> : 'Yes, Approve'}
                         </Button>
                     </DialogActions>

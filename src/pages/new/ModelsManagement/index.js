@@ -21,6 +21,7 @@ import {
     Paper,
     TextField,
     Typography,
+    Autocomplete,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -30,8 +31,6 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModelAPI from '~/API/ModelAPI';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
-import PaymentAPI from '~/API/PaymentAPI';
-import SubscriptionAPI from '~/API/SubscriptionAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
@@ -80,6 +79,7 @@ export default function ModelsManagement() {
     const [searchParams, setSearchParams] = useState({
         nameSearch: '',
         codeSearch: '',
+        machineTypeId: '',
     });
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
@@ -155,9 +155,12 @@ export default function ModelsManagement() {
         fetchModels();
     };
 
+    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
     const columns = [
         { field: 'name', headerName: 'Name', width: 350 },
         { field: 'courseName', headerName: 'Guideline Name', width: 350 },
+        { field: 'modelTypeName', headerName: 'Machine Type', width: 250 },
         // {
         //     field: 'isUsed',
         //     headerName: 'Is Used',
@@ -176,7 +179,7 @@ export default function ModelsManagement() {
         {
             field: 'status',
             headerName: 'Status',
-            width: 200,
+            width: 150,
             renderCell: (params) => {
                 let color = 'black';
                 switch (params.value) {
@@ -189,7 +192,7 @@ export default function ModelsManagement() {
                     default:
                         color = 'black';
                 }
-                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value}</Box>;
+                return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value)}</Box>;
             },
         },
         {
@@ -208,7 +211,7 @@ export default function ModelsManagement() {
                                     handleOpenStatusConfirm(params.row.id);
                                     setSelectedModelId(params.row.id);
                                 }}
-                                sx={{ width: '100px', backgroundColor: 'orange' }}
+                                sx={{ width: '100px', backgroundColor: 'orange', textTransform: 'none' }}
                             >
                                 Disable
                             </Button>
@@ -221,12 +224,15 @@ export default function ModelsManagement() {
                                     handleOpenStatusConfirm(params.row.id);
                                     setSelectedModelId(params.row.id);
                                 }}
-                                sx={{ width: '100px' }}
+                                sx={{ width: '100px', textTransform: 'none' }}
                             >
                                 Active
                             </Button>
                         )}
                         <EditIcon
+                            variant="contained"
+                            color="primary"
+                            size="small"
                             onClick={(event) => {
                                 event.stopPropagation();
                                 handleOpenUpdateModal(params.row.id);
@@ -277,9 +283,22 @@ export default function ModelsManagement() {
         setSelectedModel({});
     };
 
+    const [machineTypes, setMachineTypes] = useState([]);
+    const [selectedMachineType, setSelectedMachineType] = useState(null);
+
     useEffect(() => {
-        console.log(updatedModel);
-    }, [updatedModel]);
+        fetchMachineTypes();
+    }, []);
+
+    const fetchMachineTypes = async () => {
+        try {
+            const response = await ModelTypeAPI.getByCompanyId(userInfo?.company?.id);
+            const data = response?.result || [];
+            setMachineTypes(data);
+        } catch (error) {
+            console.log('Failed to fetch machines: ', error);
+        }
+    };
 
     useEffect(() => {
         fetchModels();
@@ -296,6 +315,7 @@ export default function ModelsManagement() {
                 name: searchParams.nameSearch || undefined,
                 code: searchParams.codeSearch || undefined,
                 type: searchParams.typeSearch || undefined,
+                machineTypeId: searchParams.machineTypeId || undefined,
             };
             const response = await ModelAPI.getByCompany(userInfo?.company?.id, params);
             const data = response?.result?.objectList || [];
@@ -413,7 +433,16 @@ export default function ModelsManagement() {
                                 alignItems: 'center',
                             }}
                         >
-                            {/* Search by email */}
+                            <Autocomplete
+                                options={machineTypes}
+                                getOptionLabel={(option) => option.name}
+                                sx={{ width: 300 }}
+                                renderInput={(params) => <TextField {...params} label="Machine Types" />}
+                                onChange={(event, newValue) => {
+                                    setSelectedMachineType(newValue);
+                                }}
+                            />
+                            {/* Search by name */}
                             <TextField
                                 variant="outlined"
                                 label="Search by Name"
@@ -421,20 +450,27 @@ export default function ModelsManagement() {
                                 value={nameSearch}
                                 onChange={(e) => setNameSearch(e.target.value)}
                             />
-                            <TextField
+                            {/* <TextField
                                 variant="outlined"
                                 label="Search by Code"
                                 sx={{ width: '300px' }}
                                 value={codeSearch}
                                 onChange={(e) => setCodeSearch(e.target.value)}
-                            />
+                            /> */}
                             {/* Search button */}
                             <Button
                                 variant="contained"
-                                onClick={() => setSearchParams({ nameSearch, codeSearch, typeSearch })}
-                                sx={{ p: 2 }}
+                                onClick={() =>
+                                    setSearchParams({
+                                        nameSearch,
+                                        codeSearch,
+                                        typeSearch,
+                                        machineTypeId: selectedMachineType ? selectedMachineType.id : '',
+                                    })
+                                }
+                                sx={{ p: 2, textTransform: 'none' }}
                             >
-                                Search
+                                Filter
                             </Button>
                         </Box>
                     </Box>
@@ -483,7 +519,7 @@ export default function ModelsManagement() {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseCreateDialog} disabled={isCreating}>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog} disabled={isCreating}>
                         Cancel
                     </Button>
                     {/* <Button onClick={handleCreateModel} disabled={isCreating}>
@@ -522,7 +558,7 @@ export default function ModelsManagement() {
                         onClick={handleCloseUpdateModal}
                         variant="contained"
                         color="error"
-                        sx={{ mt: 2, float: 'right' }}
+                        sx={{ mt: 2, float: 'right', textTransform: 'none' }}
                     >
                         Close
                     </Button>
@@ -671,9 +707,17 @@ export default function ModelsManagement() {
                     <DialogContentText>Are you sure you want to change the status of this model?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenStatusConfirmDialog(false)}>Cancel</Button>
-                    <Button onClick={handleChangeStatus} autoFocus>
-                        Confirm
+                    <Button sx={{ textTransform: 'none' }} onClick={() => setOpenStatusConfirmDialog(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        sx={{ textTransform: 'none' }}
+                        onClick={handleChangeStatus}
+                        autoFocus
+                    >
+                        Disable
                     </Button>
                 </DialogActions>
             </Dialog>

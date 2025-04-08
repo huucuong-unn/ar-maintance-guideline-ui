@@ -213,10 +213,11 @@ export default function WalletHistory() {
                                     color: 'white',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleSearch}
                         >
-                            Search
+                            Filter
                         </Button>
                     </Box>
                     <Paper

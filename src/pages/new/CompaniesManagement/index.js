@@ -133,6 +133,7 @@ export default function CompaniesManagement() {
                                     color: 'white',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleSearch}
                         >

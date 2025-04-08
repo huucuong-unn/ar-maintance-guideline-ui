@@ -59,6 +59,8 @@ export default function CompanyRequestManagement() {
 
     const [disableApprove, setDisableApprove] = useState(true);
 
+    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
     // Table columns
     const columns = [
         {
@@ -73,8 +75,13 @@ export default function CompanyRequestManagement() {
             renderCell: (params) => {
                 let color = 'black';
                 if (params.value === 'ACTIVE') color = 'green';
-                else if (params.value === 'INACTIVE') color = 'orange';
-                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value || '-'}</Box>;
+                else if (params.value === 'INACTIVE') color = 'gray';
+                else if (params.value === 'DRAFTED') color = '#9c27b0';
+                else if (params.value === 'PROCESSING') color = 'blue';
+                else if (params.value === 'PENDING') color = 'orange';
+                else if (params.value === 'APPROVED') color = 'green';
+                else if (params.value === 'CANCEL') color = 'red';
+                return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value) || '-'}</Box>;
             },
         },
         {
@@ -101,7 +108,7 @@ export default function CompanyRequestManagement() {
                                 <Button
                                     variant="contained"
                                     component="label"
-                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                     onClick={() => handleOpenEditor(params.row.assetModel?.id, params.row.requestId)}
                                 >
                                     Review
@@ -110,7 +117,7 @@ export default function CompanyRequestManagement() {
                                     variant="contained"
                                     component="label"
                                     color="error"
-                                    sx={{ width: '100px' }}
+                                    sx={{ width: '100px', textTransform: 'none' }}
                                     onClick={() => handleOpenCancelConfirm(params.row.requestId)}
                                 >
                                     Cancel
@@ -123,7 +130,7 @@ export default function CompanyRequestManagement() {
                                     variant="contained"
                                     component="label"
                                     disabled
-                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                 >
                                     Done
                                 </Button>
@@ -408,6 +415,7 @@ export default function CompanyRequestManagement() {
                                     color: '#051D40',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleOpenCreateDialog}
                         >
@@ -436,10 +444,11 @@ export default function CompanyRequestManagement() {
                                         color: 'white',
                                     },
                                     p: 2,
+                                    textTransform: 'none',
                                 }}
                                 onClick={handleSearchCompanyRequest}
                             >
-                                Search
+                                Filter
                             </Button>
                         </Box>
                     </Box>
@@ -525,7 +534,9 @@ export default function CompanyRequestManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog}>
+                            Cancel
+                        </Button>
                     </DialogActions>
                 </Dialog>
 
@@ -568,8 +579,15 @@ export default function CompanyRequestManagement() {
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseMachineDialog}>Cancel</Button>
-                        <Button onClick={handleCreateRequest} disabled={isLoading} variant="contained">
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseMachineDialog}>
+                            Cancel
+                        </Button>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleCreateRequest}
+                            disabled={isLoading}
+                            variant="contained"
+                        >
                             {isLoading ? <CircularProgress /> : 'Create'}
                         </Button>
                     </DialogActions>
@@ -579,8 +597,15 @@ export default function CompanyRequestManagement() {
                     <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         Model Review
                         <Box>
-                            <Button onClick={handleCloseEditor}>Cancel</Button>
-                            <Button onClick={handleApprove} disabled={isLoading || disableApprove} variant="contained">
+                            <Button sx={{ textTransform: 'none' }} onClick={handleCloseEditor}>
+                                Cancel
+                            </Button>
+                            <Button
+                                sx={{ textTransform: 'none' }}
+                                onClick={handleApprove}
+                                disabled={isLoading || disableApprove}
+                                variant="contained"
+                            >
                                 {isLoading ? <CircularProgress size={24} /> : 'Approve'}
                             </Button>
                         </Box>
@@ -609,8 +634,15 @@ export default function CompanyRequestManagement() {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCancelConfirm}>No</Button>
-                        <Button onClick={handleConfirmCancel} variant="contained" color="error">
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCancelConfirm}>
+                            No
+                        </Button>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleConfirmCancel}
+                            variant="contained"
+                            color="error"
+                        >
                             {isLoading ? <CircularProgress /> : 'Yes, Cancel'}
                         </Button>
                     </DialogActions>
