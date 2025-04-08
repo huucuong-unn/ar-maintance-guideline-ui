@@ -45,6 +45,10 @@ const ModelAPI = {
     changeStatus(id) {
         return axiosClient.delete(`/v1/model/${id}`);
     },
+
+    getByMachineTypeIdAndCompanyId(machineTypeId, companyId) {
+        return axiosClient.get(`/v1/model/machine-type/${machineTypeId}/company/${companyId}`);
+    },
 };
 
 export default ModelAPI;

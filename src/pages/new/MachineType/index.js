@@ -272,6 +272,11 @@ export default function MachineTypeManagement() {
             }
         }
 
+        if (updateMachineTypeRequest.machineTypeAttributeCreationRequestList.length === 0) {
+            toast.error('At least 1 Machine Type Attribute is required to save changes.');
+            return;
+        }
+
         setIsLoadingUpdateMachineType(true);
 
         try {
@@ -300,9 +305,18 @@ export default function MachineTypeManagement() {
     };
 
     const handleDeleteAttribute = async () => {
+        if (updateMachineTypeRequest.machineTypeAttributeCreationRequestList.length === 1) {
+            toast.error('This is the last Machine Type Attribute and cannot be deleted.');
+            return;
+        }
+
         try {
-            await MachineTypeAttributeAPI.delete(currentMachineTypeAttributeIdToDelete);
-            toast.success('Attribute deleted successfully');
+            // Nếu attribute cần xóa đã có id (đã được lưu trong database)
+            if (currentMachineTypeAttributeIdToDelete) {
+                await MachineTypeAttributeAPI.delete(currentMachineTypeAttributeIdToDelete);
+                toast.success('Attribute deleted successfully');
+            }
+
             setUpdateMachineTypeRequest((prev) => ({
                 ...prev,
                 machineTypeAttributeCreationRequestList: prev.machineTypeAttributeCreationRequestList.filter(
@@ -379,6 +393,7 @@ export default function MachineTypeManagement() {
                                 },
                                 p: 2,
                                 mr: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleOpenCreateMachineTypeDialog}
                         >
@@ -405,10 +420,11 @@ export default function MachineTypeManagement() {
                                         color: 'white',
                                     },
                                     p: 2,
+                                    textTransform: 'none',
                                 }}
                                 onClick={handleSearch}
                             >
-                                Search
+                                Filter
                             </Button>
                         </Box>
                     </Box>
@@ -494,16 +510,24 @@ export default function MachineTypeManagement() {
                             ))}
 
                             {/* Add Attribute Button */}
-                            <Button variant="outlined" onClick={handleAddAttribute} fullWidth>
+                            <Button
+                                sx={{ textTransform: 'none' }}
+                                variant="contained"
+                                onClick={handleAddAttribute}
+                                fullWidth
+                            >
                                 Add Attribute
                             </Button>
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCreateMachineTypeDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateMachineTypeDialog}>
+                            Cancel
+                        </Button>
                         <Button
                             variant="contained"
                             color="primary"
+                            sx={{ textTransform: 'none' }}
                             onClick={handleCreateMachineType}
                             disabled={isLoadingCreateMachineType}
                         >
@@ -613,6 +637,7 @@ export default function MachineTypeManagement() {
                             <Button
                                 variant="contained"
                                 color="primary"
+                                sx={{ textTransform: 'none' }}
                                 onClick={() => {
                                     setUpdateMachineTypeRequest((prev) => ({
                                         ...prev,
@@ -628,10 +653,13 @@ export default function MachineTypeManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseUpdateMachineTypeDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseUpdateMachineTypeDialog}>
+                            Cancel
+                        </Button>
                         <Button
                             variant="contained"
                             color="primary"
+                            sx={{ textTransform: 'none' }}
                             onClick={handleUpdateMachineType}
                             disabled={isLoadingUpdateMachineType}
                         >
@@ -640,9 +668,10 @@ export default function MachineTypeManagement() {
                         <Button
                             variant="contained"
                             color="error"
+                            sx={{ textTransform: 'none' }}
                             onClick={() => setOpenConfirmDeleteMachineTypeDialog(true)}
                         >
-                            Delete Machine Type
+                            Delete
                         </Button>
                     </DialogActions>
                 </Dialog>

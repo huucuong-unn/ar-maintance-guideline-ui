@@ -394,7 +394,7 @@ export default function AccountsManagement() {
                                 onClick={() => {
                                     handleChangeStatus(params.row.id);
                                 }}
-                                sx={{ width: '100px' }}
+                                sx={{ width: '100px', textTransform: 'none' }}
                             >
                                 Disable
                             </Button>
@@ -406,7 +406,7 @@ export default function AccountsManagement() {
                                 onClick={() => {
                                     handleChangeStatus(params.row.id);
                                 }}
-                                sx={{ width: '100px' }}
+                                sx={{ width: '100px', textTransform: 'none' }}
                             >
                                 Active
                             </Button>
@@ -417,6 +417,7 @@ export default function AccountsManagement() {
                             onClick={() => {
                                 // Open reset password dialog here
                             }}
+                            sx={{ textTransform: 'none' }}
                         >
                             Reset Password
                         </Button>
@@ -469,6 +470,7 @@ export default function AccountsManagement() {
                                     color: '#051D40',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={() => setOpenCreateAccountDialog(true)}
                         >
@@ -503,7 +505,7 @@ export default function AccountsManagement() {
                             </FormControl>
                             <Button
                                 variant="contained"
-                                sx={{ p: 2 }}
+                                sx={{ p: 2, textTransform: 'none' }}
                                 onClick={() => setSearchParams({ email, status })}
                             >
                                 Search

@@ -18,6 +18,9 @@ const MachineTypeAPI = {
     getById(id) {
         return axiosClient.get(`/v1/machine-type/${id}`);
     },
+    getByGuidelineCode(code) {
+        return axiosClient.get(`/v1/machine-type/guideline/code/${code}`);
+    },
     create(data) {
         return axiosClient.post('/v1/machine-type', data);
     },

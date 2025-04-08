@@ -277,6 +277,8 @@ export default function EmployeesManagement() {
         setOpenDeleteConfirmDialog(true);
     };
 
+    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
     const columns = [
         { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', width: 200 },
@@ -304,7 +306,7 @@ export default function EmployeesManagement() {
                     default:
                         color = 'black';
                 }
-                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value}</Box>;
+                return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value)}</Box>;
             },
         },
         {
@@ -320,7 +322,7 @@ export default function EmployeesManagement() {
                                 variant="contained"
                                 size="small"
                                 onClick={() => handleOpenStatusConfirm(params.row.id)}
-                                sx={{ width: '100px', backgroundColor: 'orange' }}
+                                sx={{ width: '100px', backgroundColor: 'orange', textTransform: 'none' }}
                             >
                                 Disable
                             </Button>
@@ -330,12 +332,17 @@ export default function EmployeesManagement() {
                                 color="success"
                                 size="small"
                                 onClick={() => handleOpenStatusConfirm(params.row.id)}
-                                sx={{ width: '100px' }}
+                                sx={{ width: '100px', textTransform: 'none' }}
                             >
                                 Active
                             </Button>
                         )}
-                        <Button variant="outlined" size="small" onClick={() => handleOpenResetPassword(params.row.id)}>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleOpenResetPassword(params.row.id)}
+                        >
                             Reset Password
                         </Button>
                     </Box>
@@ -434,7 +441,7 @@ export default function EmployeesManagement() {
                                 sx={{
                                     bgcolor: '#051D40',
                                     color: 'white',
-
+                                    textTransform: 'none',
                                     '&:hover': {
                                         bgcolor: '#02F18D',
                                         color: '#051D40',
@@ -450,7 +457,7 @@ export default function EmployeesManagement() {
                                 sx={{
                                     bgcolor: '#051D40',
                                     color: 'white',
-
+                                    textTransform: 'none',
                                     '&:hover': {
                                         bgcolor: '#02F18D',
                                         color: '#051D40',
@@ -500,6 +507,7 @@ export default function EmployeesManagement() {
                                 sx={{
                                     bgcolor: '#1976d2',
                                     color: 'white',
+                                    textTransform: 'none',
                                     '&:hover': {
                                         bgcolor: '#115293',
                                         color: 'white',
@@ -508,7 +516,7 @@ export default function EmployeesManagement() {
                                 }}
                                 onClick={handleSearch}
                             >
-                                Search
+                                Filter
                             </Button>
                         </Box>
                     </Box>
@@ -616,11 +624,14 @@ export default function EmployeesManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog}>
+                            Cancel
+                        </Button>
                         <Button
                             onClick={handleCreateEmployee}
                             variant="contained"
                             color="primary"
+                            sx={{ textTransform: 'none' }}
                             disabled={
                                 !newEmployee.email ||
                                 !newEmployee.password ||
@@ -657,11 +668,14 @@ export default function EmployeesManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseAllocationPointDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseAllocationPointDialog}>
+                            Cancel
+                        </Button>
                         <Button
                             onClick={handleAllocatePoint}
                             variant="contained"
                             color="primary"
+                            sx={{ textTransform: 'none' }}
                             disabled={
                                 !limitPoint ||
                                 limitPoint <= 0 ||
@@ -686,8 +700,11 @@ export default function EmployeesManagement() {
                         <DialogContentText>Are you sure to change status of this employee?</DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenStatusConfirmDialog(false)}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={() => setOpenStatusConfirmDialog(false)}>
+                            Cancel
+                        </Button>
                         <Button
+                            sx={{ textTransform: 'none' }}
                             onClick={() => {
                                 handleChangeStatus(selectedEmployeeId);
                                 setOpenStatusConfirmDialog(false);
@@ -720,8 +737,11 @@ export default function EmployeesManagement() {
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenResetPasswordDialog(false)}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={() => setOpenResetPasswordDialog(false)}>
+                            Cancel
+                        </Button>
                         <Button
+                            sx={{ textTransform: 'none' }}
                             onClick={() => {
                                 handleResetPassword();
                                 setOpenResetPasswordDialog(false);
@@ -745,8 +765,11 @@ export default function EmployeesManagement() {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenDeleteConfirmDialog(false)}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={() => setOpenDeleteConfirmDialog(false)}>
+                            Cancel
+                        </Button>
                         <Button
+                            sx={{ textTransform: 'none' }}
                             onClick={() => {
                                 handleDelete(selectedEmployeeId);
                                 setOpenDeleteConfirmDialog(false);

@@ -1121,7 +1121,7 @@ export default function SimplifiedModelViewer({
                                                 component="label"
                                                 fullWidth
                                                 startIcon={<CloudUploadIcon />}
-                                                sx={{ mt: 2 }}
+                                                sx={{ mt: 2, textTransform: 'none' }}
                                             >
                                                 Upload Image
                                                 <input
@@ -1243,7 +1243,7 @@ export default function SimplifiedModelViewer({
                                         component="label"
                                         fullWidth
                                         startIcon={<CloudUploadIcon />}
-                                        sx={{ mt: 2 }}
+                                        sx={{ mt: 2, textTransform: 'none' }}
                                     >
                                         Upload Image
                                         <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
@@ -1266,7 +1266,7 @@ export default function SimplifiedModelViewer({
                                     </Typography>
 
                                     {/* Select Status */}
-                                    <FormControl fullWidth sx={{ mt: 2 }}>
+                                    {/* <FormControl fullWidth sx={{ mt: 2 }}>
                                         <InputLabel>Status</InputLabel>
                                         <Select
                                             value={formData.status || ''}
@@ -1295,7 +1295,7 @@ export default function SimplifiedModelViewer({
 
                                             {!modelById?.isUsed && <MenuItem value="INACTIVE">INACTIVE</MenuItem>}
                                         </Select>
-                                    </FormControl>
+                                    </FormControl> */}
                                     {/* <Button
                                         onClick={handleOpenConfirmDelete}
                                         variant="contained"
@@ -1371,7 +1371,7 @@ export default function SimplifiedModelViewer({
                                         variant="contained"
                                         color="primary"
                                         fullWidth
-                                        sx={{ mt: 2 }}
+                                        sx={{ mt: 2, textTransform: 'none' }}
                                         onClick={handleCreateInstructionDetail}
                                         disabled={isLoadingCreateInstructionDetail}
                                     >
@@ -1457,7 +1457,7 @@ export default function SimplifiedModelViewer({
                                     <Button
                                         variant="contained"
                                         color="primary"
-                                        sx={{ width: '100%' }}
+                                        sx={{ width: '100%', textTransform: 'none' }}
                                         onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
                                         disabled={isLoading || isLoadingUpdateModelGuideline}
                                     >
@@ -1532,16 +1532,12 @@ export default function SimplifiedModelViewer({
                                 />
                                 <Button
                                     variant="contained"
-                                    color="primary"
                                     fullWidth
+                                    color="primary"
                                     onClick={handleUpdateInstructionDetail}
                                     sx={{
-                                        backgroundColor: darkMode ? '#ffffff' : '#1976d2',
-                                        color: darkMode ? '#000000' : '#ffffff',
-                                        '&:hover': {
-                                            backgroundColor: darkMode ? '#cccccc' : '#1565c0',
-                                        },
                                         mt: 2,
+                                        textTransform: 'none',
                                     }}
                                     disabled={isLoadingUpdateInstructionDetail}
                                 >
