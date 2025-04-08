@@ -12,6 +12,7 @@ import {
     Select,
     Skeleton,
     TextField,
+    Autocomplete,
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -23,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CourseAPI from '~/API/CourseAPI';
+import ModelTypeAPI from '~/API/ModelTypeAPI';
 import MachineTypeAPI from '~/API/MachineTypeAPI';
 import ModelAPI from '~/API/ModelAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
@@ -66,6 +68,7 @@ export default function CoursesControl() {
     const [paramsToSearch, setParamsToSearch] = useState({
         title: '',
         status: '',
+        machineTypeId: '',
     });
     const { currentPoints, fetchWallet } = useWallet(); // Use WalletContext to get currentPoints
 
@@ -97,12 +100,29 @@ export default function CoursesControl() {
     //     }
     // };
 
+    const [machineTypes, setMachineTypes] = useState([]);
+    const [selectedMachineType, setSelectedMachineType] = useState(null);
+
+    useEffect(() => {
+        fetchMachineTypes();
+    }, []);
+
+    const fetchMachineTypes = async () => {
+        try {
+            const response = await ModelTypeAPI.getByCompanyId(userInfo?.company?.id);
+            const data = response?.result || [];
+            setMachineTypes(data);
+        } catch (error) {
+            console.log('Failed to fetch machines: ', error);
+        }
+    };
+
     const fetchCourses = async (pageParam, paramsToSearch) => {
         const currentPage = pageParam ?? 1;
         const response = await CourseAPI.getByCompanyId(userInfo?.company?.id, currentPage, 8, paramsToSearch);
         return {
             data: response?.result?.objectList || [],
-            nextPage: response?.result?.objectList.length > 0 ? pageParam + 1 : null, // Sửa lỗi kiểm tra nextPage
+            nextPage: response?.result?.objectList.length > 0 ? pageParam + 1 : null,
         };
     };
 
@@ -156,6 +176,29 @@ export default function CoursesControl() {
     // ===========================
     const [machineTypeByCompanyId, setMachineTypeByCompanyId] = useState([]);
     const [machineTypeIdToCreate, setMachineTypeIdToCreate] = useState('');
+    const [selectedMachineTypeToCreate, setSelectedMachineTypeToCreate] = useState(null);
+    const [modelsByMachineType, setModelsByMachineType] = useState([]);
+
+    const handleSelectMachineType = async (event, value) => {
+        if (!value) {
+            setSelectedMachineTypeToCreate(null);
+            setModelsByMachineType([]);
+            setModel('');
+            return;
+        }
+
+        setSelectedMachineTypeToCreate(value);
+        setModel('');
+
+        try {
+            const response = await ModelAPI.getByMachineTypeIdAndCompanyId(value.machineTypeId, userInfo?.company?.id);
+            const data = response?.result || [];
+            setModelsByMachineType(data);
+        } catch (error) {
+            console.error('Failed to fetch models by machine type:', error);
+        }
+    };
+
     useEffect(() => {
         const fetchMachineTypeByCompanyId = async () => {
             try {
@@ -194,6 +237,7 @@ export default function CoursesControl() {
         setImagePreview('');
         setModel('');
         setOpenCreateDialog(false);
+        setSelectedMachineTypeToCreate(null);
     };
 
     const handleImageUpload = (event) => {
@@ -256,6 +300,10 @@ export default function CoursesControl() {
         }
     };
 
+    useEffect(() => {
+        console.log(model);
+    }, [model]);
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box
@@ -298,6 +346,16 @@ export default function CoursesControl() {
                         sx={{ width: '300px' }}
                     />
 
+                    <Autocomplete
+                        options={machineTypes}
+                        getOptionLabel={(option) => option.name}
+                        sx={{ width: 300 }}
+                        renderInput={(params) => <TextField {...params} label="Machine Types" />}
+                        onChange={(event, newValue) => {
+                            setSelectedMachineType(newValue);
+                        }}
+                    />
+
                     <FormControl sx={{ width: '200px' }}>
                         <InputLabel>Status</InputLabel>
                         <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -309,18 +367,24 @@ export default function CoursesControl() {
                     </FormControl>
                     <Button
                         variant="contained"
+                        sx={{ textTransform: 'none' }}
                         onClick={() => {
                             setParamsToSearch({
                                 title: searchTerm,
                                 status: statusFilter === 'ALL' ? '' : statusFilter,
+                                machineTypeId: selectedMachineType ? selectedMachineType.id : '',
                             });
                         }}
                     >
-                        Search
+                        Filter
                     </Button>
 
                     {/* Create Course button */}
-                    <Button variant="contained" sx={{ ml: 'auto' }} onClick={handleOpenCreateDialog}>
+                    <Button
+                        variant="contained"
+                        sx={{ ml: 'auto', textTransform: 'none' }}
+                        onClick={handleOpenCreateDialog}
+                    >
                         Create Guideline
                     </Button>
                 </Box>
@@ -373,6 +437,8 @@ export default function CoursesControl() {
                                             description={course.description}
                                             image={course.imageUrl}
                                             status={course.status}
+                                            machineType={course.machineType}
+                                            modelName={course.modelName}
                                         />
                                     </Grid>
                                 ))}
@@ -387,7 +453,7 @@ export default function CoursesControl() {
                     )}
                 </Box>
 
-                {/* ===================== CREATE COURSE DIALOG ===================== */}
+                {/* ===================== CREATE Guideline DIALOG ===================== */}
                 <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="sm">
                     <DialogTitle>Create New Guideline</DialogTitle>
                     <DialogContent>
@@ -405,15 +471,37 @@ export default function CoursesControl() {
                             required
                         />
 
+                        <Autocomplete
+                            options={machineTypeByCompanyId}
+                            getOptionLabel={(option) => option.machineTypeName || ''}
+                            value={selectedMachineTypeToCreate}
+                            onChange={handleSelectMachineType}
+                            renderInput={(params) => (
+                                <TextField {...params} label="Machine Type" margin="normal" required />
+                            )}
+                        />
+
+                        {selectedMachineTypeToCreate && (
+                            <Autocomplete
+                                options={modelsByMachineType}
+                                getOptionLabel={(option) => option.name || ''}
+                                value={modelsByMachineType.find((m) => m.id === model) || null}
+                                onChange={(e, value) => setModel(value?.id || '')}
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Model" margin="normal" required />
+                                )}
+                            />
+                        )}
+
                         {/* Model Field */}
-                        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+                        {/* <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
                             <InputLabel>Model*</InputLabel>
                             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
                                 {unusedModel.map((data, index) => (
                                     <MenuItem value={data.id}>{data.name}</MenuItem>
                                 ))}
                             </Select>
-                        </FormControl>
+                        </FormControl> */}
 
                         {/* Image Upload Field */}
                         <input
@@ -435,6 +523,7 @@ export default function CoursesControl() {
                                     backgroundColor: '#f5f5f5',
                                     boxShadow: 'none',
                                     color: '#0f6cbf',
+                                    textTransform: 'none',
                                     ':hover': {
                                         backgroundColor: '#f5f5f5',
                                         border: '2px solid #0f6cbf',
@@ -463,10 +552,10 @@ export default function CoursesControl() {
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCreateDialog} disabled={isCreating}>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog} disabled={isCreating}>
                             Cancel
                         </Button>
-                        <Button onClick={handleCreateCourse} disabled={isCreating}>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCreateCourse} disabled={isCreating}>
                             {isCreating ? <CircularProgress size={24} /> : 'Create'}
                         </Button>
                     </DialogActions>

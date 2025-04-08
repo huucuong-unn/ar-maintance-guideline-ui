@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PointOptionsAPI from '~/API/PointOptionsAPI';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 
 const defaultTheme = createTheme();
@@ -193,7 +194,7 @@ export default function PointOptionManagement() {
             renderCell: (params) => {
                 const currentStatus = params.row.status;
                 return (
-                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', height: '100%', alignItems: 'center' }}>
                         <Button
                             variant="contained"
                             size="small"
@@ -201,23 +202,31 @@ export default function PointOptionManagement() {
                             onClick={() => {
                                 handleChangeStatus(params.row.id);
                             }}
-                            sx={{ width: '100px' }}
+                            sx={{ width: '100px', textTransform: 'none' }}
                         >
                             {currentStatus === 'ACTIVE' ? 'Disable' : 'Activate'}
                         </Button>
 
-                        <Button
+                        {/* <Button
                             variant="contained"
                             size="small"
                             color="error"
                             onClick={() => {
                                 handleOpenDeleteConfirmDialog(params.row.id);
                             }}
-                            sx={{ width: '100px' }}
+                            sx={{ width: '100px', textTransform: 'none' }}
                         >
                             Delete
-                        </Button>
+                        </Button> */}
+                        <DeleteIcon
+                            color="error"
+                            onClick={() => {
+                                handleOpenDeleteConfirmDialog(params.row.id);
+                            }}
+                            sx={{ width: '100px', textTransform: 'none', cursor: 'pointer' }}
+                        />
                         <EditIcon
+                            color="primary"
                             onClick={(event) => {
                                 event.stopPropagation(); // Prevent row selection
                                 console.log(params.row); // Debug: Log the row data
@@ -276,6 +285,7 @@ export default function PointOptionManagement() {
                             p: 2,
                             marginRight: 128,
                             marginBottom: 5,
+                            textTransform: 'none',
                         }}
                         onClick={handleOpenCreateDialog}
                     >
@@ -304,8 +314,11 @@ export default function PointOptionManagement() {
                             </DialogContentText>
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={handleCloseDeleteConfirmDialog}>Cancel</Button>
+                            <Button sx={{ textTransform: 'none' }} onClick={handleCloseDeleteConfirmDialog}>
+                                Cancel
+                            </Button>
                             <Button
+                                sx={{ textTransform: 'none' }}
                                 onClick={handleDeletePointOption}
                                 variant="contained"
                                 color="error"
@@ -350,8 +363,11 @@ export default function PointOptionManagement() {
                             />
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={handleCloseEditDialog}>Cancel</Button>
+                            <Button sx={{ textTransform: 'none' }} onClick={handleCloseEditDialog}>
+                                Cancel
+                            </Button>
                             <Button
+                                sx={{ textTransform: 'none' }}
                                 onClick={handleUpdatePointOption}
                                 variant="contained"
                                 color="primary"

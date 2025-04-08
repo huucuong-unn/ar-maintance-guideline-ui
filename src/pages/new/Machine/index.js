@@ -516,6 +516,7 @@ export default function MachinesManagement() {
                                     color: '#051D40',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleOpenCreateMachineDialog}
                         >
@@ -553,10 +554,11 @@ export default function MachinesManagement() {
                                         color: 'white',
                                     },
                                     p: 2,
+                                    textTransform: 'none',
                                 }}
                                 onClick={handleSearch}
                             >
-                                Search
+                                Filter
                             </Button>
                         </Box>
                     </Box>
@@ -584,7 +586,6 @@ export default function MachinesManagement() {
                             }
                             sx={{ border: 'none' }}
                             getRowId={(row) => row.id}
-                            slots={{ toolbar: GridToolbar }}
                         />
                     </Paper>
                 </Box>
@@ -645,7 +646,7 @@ export default function MachinesManagement() {
                                     <Button
                                         variant="contained"
                                         color="secondary"
-                                        sx={{ mt: 2 }}
+                                        sx={{ mt: 2, textTransform: 'none' }}
                                         onClick={() =>
                                             setTempHeaders([...tempHeaders, { keyHeader: '', valueOfKey: '' }])
                                         }
@@ -679,15 +680,15 @@ export default function MachinesManagement() {
                                                 setTempHeaders(updatedHeaders);
                                             }}
                                         />
-                                        <Button
-                                            variant="contained"
+
+                                        <IconButton
                                             color="error"
                                             onClick={() => {
                                                 setTempHeaders(tempHeaders.filter((_, i) => i !== index));
                                             }}
                                         >
-                                            Remove
-                                        </Button>
+                                            <DeleteIcon />
+                                        </IconButton>
                                     </Box>
                                 ))}
 
@@ -696,6 +697,7 @@ export default function MachinesManagement() {
                                     <Button
                                         variant="contained"
                                         color="secondary"
+                                        sx={{ textTransform: 'none' }}
                                         onClick={async () => {
                                             try {
                                                 const response = await fetch(tempApiUrl, {
@@ -771,8 +773,11 @@ export default function MachinesManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCreateMachineDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateMachineDialog}>
+                            Cancel
+                        </Button>
                         <Button
+                            sx={{ textTransform: 'none' }}
                             variant="contained"
                             color="primary"
                             onClick={handleCreateMachine}
@@ -854,7 +859,11 @@ export default function MachinesManagement() {
                                             </IconButton>
                                         </Box>
                                     ))}
-                                    <Button onClick={handleAddHeader} startIcon={<AddIcon />} sx={{ mt: 1 }}>
+                                    <Button
+                                        onClick={handleAddHeader}
+                                        startIcon={<AddIcon />}
+                                        sx={{ textTransform: 'none' }}
+                                    >
                                         Add Header
                                     </Button>
                                     {/* Test API Button */}
@@ -862,7 +871,7 @@ export default function MachinesManagement() {
                                         onClick={handleTestApiUrl}
                                         variant="contained"
                                         color="primary"
-                                        sx={{ mt: 2, width: '100%' }}
+                                        sx={{ mt: 2, width: '100%', textTransform: 'none' }}
                                     >
                                         Test API
                                     </Button>
@@ -911,7 +920,7 @@ export default function MachinesManagement() {
                             <Button
                                 variant="contained"
                                 color="secondary"
-                                sx={{ mb: 2 }}
+                                sx={{ mb: 2, textTransform: 'none' }}
                                 onClick={() => setShowQrCodes((prev) => !prev)}
                             >
                                 {showQrCodes ? 'Hide QR Codes' : 'Show QR Codes'}
@@ -977,10 +986,13 @@ export default function MachinesManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseUpdateMachineDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseUpdateMachineDialog}>
+                            Cancel
+                        </Button>
                         <Button
                             variant="contained"
                             color="primary"
+                            sx={{ textTransform: 'none' }}
                             onClick={handleUpdateMachine}
                             disabled={isLoadingUpdateMachine}
                         >
@@ -989,9 +1001,10 @@ export default function MachinesManagement() {
                         <Button
                             variant="contained"
                             color="error"
+                            sx={{ textTransform: 'none' }}
                             onClick={() => setOpenConfirmDeleteMachineTypeDialog(true)}
                         >
-                            Delete Machine
+                            Delete
                         </Button>
                     </DialogActions>
                 </Dialog>

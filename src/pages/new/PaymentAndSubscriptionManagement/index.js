@@ -123,9 +123,10 @@ export default function PaymentAndSubscriptionManagement() {
         }
     };
 
+    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
     const columns = [
         { field: 'orderCode', headerName: 'Order Code', width: 200 },
-        { field: 'companyName', headerName: 'Company Name', width: 200 },
         { field: 'email', headerName: 'User Email', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'amount', headerName: 'Amount', width: 200 },
@@ -157,10 +158,9 @@ export default function PaymentAndSubscriptionManagement() {
                         sx={{
                             color,
                             fontWeight: 'bold',
-                            textTransform: 'uppercase',
                         }}
                     >
-                        {params.value}
+                        {formatStatus(params.value)}
                     </Box>
                 );
             },
@@ -301,10 +301,11 @@ export default function PaymentAndSubscriptionManagement() {
                                     color: 'white',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleSearch}
                         >
-                            Search
+                            Filter
                         </Button>
                     </Box>
 

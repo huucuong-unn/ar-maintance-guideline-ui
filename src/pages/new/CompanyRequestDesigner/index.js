@@ -49,6 +49,8 @@ export default function CompanyRequestDesigner() {
     };
     const [isCreating, setIsCreating] = useState(false);
 
+    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
     // Table columns
     const columns = [
         {
@@ -64,7 +66,12 @@ export default function CompanyRequestDesigner() {
                 let color = 'black';
                 if (params.value === 'ACTIVE') color = 'green';
                 else if (params.value === 'INACTIVE') color = 'orange';
-                return <Box sx={{ color, fontWeight: 'bold', textTransform: 'uppercase' }}>{params.value || '-'}</Box>;
+                else if (params.value === 'DRAFTED') color = '#9c27b0';
+                else if (params.value === 'PROCESSING') color = 'blue';
+                else if (params.value === 'PENDING') color = 'orange';
+                else if (params.value === 'APPROVED') color = 'green';
+                else if (params.value === 'CANCEL') color = 'red';
+                return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value) || '-'}</Box>;
             },
         },
         {
@@ -82,7 +89,7 @@ export default function CompanyRequestDesigner() {
                 // If not the designer, return a message or null
                 if (designerEmail && !isDesigner) {
                     return (
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0 }}>
                             No Actions Available
                         </Typography>
                     );
@@ -95,7 +102,7 @@ export default function CompanyRequestDesigner() {
                                 variant="contained"
                                 size="small"
                                 color="success"
-                                sx={{ width: '100px' }}
+                                sx={{ width: '100px', textTransform: 'none' }}
                                 onClick={() => handleOpenApproveDialog(params.row.requestId)}
                             >
                                 Approve
@@ -107,7 +114,7 @@ export default function CompanyRequestDesigner() {
                                 <Button
                                     variant="contained"
                                     component="label"
-                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                 >
                                     Upload
                                     <input
@@ -127,7 +134,7 @@ export default function CompanyRequestDesigner() {
                                 <Button
                                     variant="contained"
                                     component="label"
-                                    sx={{ width: '100px', bgcolor: 'red' }}
+                                    sx={{ width: '100px', bgcolor: 'red', textTransform: 'none' }}
                                     onClick={(e) => handleOpenCancelConfirm(params.row.requestId)}
                                 >
                                     Cancel
@@ -137,13 +144,13 @@ export default function CompanyRequestDesigner() {
 
                         {currentStatus === 'DRAFTED' && (
                             <>
-                                <Button variant="contained" component="label" disabled>
+                                <Button sx={{ textTransform: 'none' }} variant="contained" component="label" disabled>
                                     Waiting for approval
                                 </Button>
                                 <Button
                                     variant="contained"
                                     component="label"
-                                    sx={{ width: '140px', bgcolor: 'blue', color: 'white' }}
+                                    sx={{ width: '140px', bgcolor: 'blue', color: 'white', textTransform: 'none' }}
                                 >
                                     Reupload
                                     <input
@@ -169,7 +176,7 @@ export default function CompanyRequestDesigner() {
                                     variant="contained"
                                     component="label"
                                     disabled
-                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                 >
                                     Done
                                 </Button>
@@ -416,10 +423,11 @@ export default function CompanyRequestDesigner() {
                                     color: 'white',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleSearch}
                         >
-                            Search
+                            Filter
                         </Button>
                     </Box>
 
@@ -458,8 +466,15 @@ export default function CompanyRequestDesigner() {
                         <DialogContentText>Are you sure you want to approve this request?</DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseApproveDialog}>Cancel</Button>
-                        <Button onClick={handleConfirmApprove} variant="contained" color="success">
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseApproveDialog}>
+                            Cancel
+                        </Button>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleConfirmApprove}
+                            variant="contained"
+                            color="success"
+                        >
                             Approve
                         </Button>
                     </DialogActions>
@@ -472,8 +487,15 @@ export default function CompanyRequestDesigner() {
                         <DialogContentText>Are you sure you want to approve this request?</DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseApproveDialog}>Cancel</Button>
-                        <Button onClick={handleConfirmApprove} variant="contained" color="success">
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseApproveDialog}>
+                            Cancel
+                        </Button>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleConfirmApprove}
+                            variant="contained"
+                            color="success"
+                        >
                             {isLoading ? <CircularProgress /> : 'Approve'}
                         </Button>
                     </DialogActions>
@@ -509,7 +531,7 @@ export default function CompanyRequestDesigner() {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseCreateDialog} disabled={isCreating}>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog} disabled={isCreating}>
                         Cancel
                     </Button>
                     {/* <Button onClick={handleCreateModel} disabled={isCreating}>
@@ -526,8 +548,15 @@ export default function CompanyRequestDesigner() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseCancelConfirm}>No</Button>
-                    <Button onClick={handleConfirmCancel} variant="contained" color="error">
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseCancelConfirm}>
+                        No
+                    </Button>
+                    <Button
+                        sx={{ textTransform: 'none' }}
+                        onClick={handleConfirmCancel}
+                        variant="contained"
+                        color="error"
+                    >
                         {isLoading ? <CircularProgress /> : 'Yes, Cancel'}
                     </Button>
                 </DialogActions>

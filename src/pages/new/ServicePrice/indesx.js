@@ -21,6 +21,8 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ServicePriceAPI from '~/API/ServicePriceAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import storageService from '~/components/StorageService/storageService';
 
 function Copyright(props) {
@@ -111,26 +113,38 @@ export default function ServicePriceManagement() {
         {
             field: 'action',
             headerName: 'Action',
-            width: 400,
+            width: 200,
             renderCell: (params) => {
                 return (
-                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
-                        <Button
+                    <Box sx={{ display: 'flex', height: '100%', alignItems: 'center' }}>
+                        {/* <Button
                             variant="contained"
                             size="small"
                             onClick={() => handleOpenEditDialog(params.row)}
-                            sx={{ width: '100px' }}
+                            sx={{ width: '100px', textTransform: 'none' }}
                         >
                             Edit
-                        </Button>
-                        <Button
+                        </Button> */}
+                        <DeleteIcon
+                            color="error"
+                            onClick={() => handleOpenDeleteConfirm(params.row.id)}
+                            sx={{ width: '100px', textTransform: 'none', cursor: 'pointer' }}
+                        />
+
+                        <EditIcon
+                            color="primary"
+                            sx={{ cursor: 'pointer' }}
+                            onClick={() => handleOpenEditDialog(params.row)}
+                        />
+                        {/* <Button
                             color="error"
                             variant="contained"
                             size="small"
                             onClick={() => handleOpenDeleteConfirm(params.row.id)}
+                            sx={{ textTransform: 'none' }}
                         >
                             Delete
-                        </Button>
+                        </Button> */}
                     </Box>
                 );
             },
@@ -280,6 +294,7 @@ export default function ServicePriceManagement() {
                                     color: '#051D40',
                                 },
                                 p: 2,
+                                textTransform: 'none',
                             }}
                             onClick={handleOpenCreateDialog}
                         >
@@ -345,12 +360,15 @@ export default function ServicePriceManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog}>
+                            Cancel
+                        </Button>
                         <Button
                             onClick={handleCreateServicePrice}
                             variant="contained"
                             color="primary"
                             disabled={!newServicePrice.name || !newServicePrice.price}
+                            sx={{ textTransform: 'none' }}
                         >
                             Create
                         </Button>
@@ -384,8 +402,11 @@ export default function ServicePriceManagement() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseEditDialog}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseEditDialog}>
+                            Cancel
+                        </Button>
                         <Button
+                            sx={{ textTransform: 'none' }}
                             onClick={handleUpdateServicePrice}
                             variant="contained"
                             color="primary"
@@ -410,8 +431,11 @@ export default function ServicePriceManagement() {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenDeleteConfirmDialog(false)}>Cancel</Button>
+                        <Button sx={{ textTransform: 'none' }} onClick={() => setOpenDeleteConfirmDialog(false)}>
+                            Cancel
+                        </Button>
                         <Button
+                            sx={{ textTransform: 'none' }}
                             onClick={() => {
                                 handleDelete(selectedServicePriceId);
                                 setOpenDeleteConfirmDialog(false);

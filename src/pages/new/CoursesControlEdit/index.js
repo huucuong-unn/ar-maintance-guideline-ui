@@ -20,11 +20,22 @@ import {
     MenuItem,
     Modal,
     Tab,
+    Card,
+    Grid,
+    CardContent,
     TextField,
     Typography,
+    Chip,
+    Paper,
 } from '@mui/material';
 import axios from 'axios';
 import { CirclePlus, File, MoreVerticalIcon } from 'lucide-react';
+import QrCodeIcon from '@mui/icons-material/QrCode';
+import DeviceHubIcon from '@mui/icons-material/DeviceHub';
+import MemoryIcon from '@mui/icons-material/Memory';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -34,6 +45,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import CourseAPI from '~/API/CourseAPI';
 import InstructionAPI from '~/API/InstructionAPI';
 import InstructionDetailAPI from '~/API/InstructionDetailAPI';
+import MachineAPI from '~/API/MachineAPI';
+import MachineTypeAPI from '~/API/MachineTypeAPI';
 import ModelAPI from '~/API/ModelAPI';
 import AssignEmployee from '~/components/AssignEmployee';
 import ModelEditor from '~/components/ModelEditor';
@@ -588,6 +601,69 @@ export default function CoursesControlEdit() {
         setAnchorElMap((prev) => ({ ...prev, [id]: null }));
     };
     // ----------------------------------------------------------------------
+    const [machinesOfGuideline, setMachinesOfGuideline] = useState([]);
+    const [machineTypeOfGuideline, setMachineTypeOfGuideline] = useState({});
+    const [openQrMachineId, setOpenQrMachineId] = useState(null);
+
+    const handleOpenQrCodes = (machineId) => {
+        setOpenQrMachineId(machineId);
+    };
+
+    const handleCloseQrCodes = () => {
+        setOpenQrMachineId(null);
+    };
+
+    useEffect(() => {
+        fetchMachineOfGuideline();
+        fetchMachineTypeByGuidelineCode();
+    }, [course]);
+
+    const fetchMachineOfGuideline = async () => {
+        try {
+            const response = await MachineAPI.getByGuidelineId(courseId);
+            console.log(response);
+
+            const data = response?.result || [];
+            setMachinesOfGuideline(data);
+        } catch (error) {
+            console.error('Failed to fetch machine:', error);
+        }
+    };
+
+    const fetchMachineTypeByGuidelineCode = async () => {
+        try {
+            const response = await MachineTypeAPI.getByGuidelineCode(course.courseCode);
+            console.log(response);
+
+            const data = response?.result || {};
+            setMachineTypeOfGuideline(data);
+        } catch (error) {
+            console.error('Failed to fetch machine type:', error);
+        }
+    };
+
+    const downloadQR = (url, filename) => {
+        fetch(url)
+            .then((response) => response.blob())
+            .then((blob) => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+            })
+            .catch((error) => {
+                console.error('Error downloading QR code:', error);
+            });
+    };
+
+    useEffect(() => {
+        console.log(machineTypeOfGuideline);
+    }, [machineTypeOfGuideline]);
+
     return (
         <Box sx={{ minHeight: '100vh', padding: 4 }}>
             {/* -------------------- Guideline Banner (Image + Title) -------------------- */}
@@ -626,7 +702,11 @@ export default function CoursesControlEdit() {
 
                     {/* Action Buttons */}
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        <Button variant="contained" sx={{ padding: '12px 20px' }} onClick={() => navigate(-1)}>
+                        <Button
+                            variant="contained"
+                            sx={{ padding: '12px 20px', textTransform: 'none' }}
+                            onClick={() => navigate(-1)}
+                        >
                             {course?.status != 'ACTIVE' ? 'Save Draft' : 'Back'}
                         </Button>
                         <Button
@@ -636,6 +716,7 @@ export default function CoursesControlEdit() {
                                 padding: '12px 20px',
                                 backgroundColor:
                                     course?.status === 'INACTIVE' || course?.status === 'DRAFTED' ? 'green' : 'red',
+                                textTransform: 'none',
                                 ':hover': {
                                     opacity: 0.9,
                                     backgroundColor:
@@ -658,7 +739,7 @@ export default function CoursesControlEdit() {
                             disabled={isPaid}
                             variant="contained"
                             color="error"
-                            sx={{ padding: '12px 20px' }}
+                            sx={{ padding: '12px 20px', textTransform: 'none' }}
                             onClick={handleOpenDeleteConfirm}
                         >
                             Delete this guideline
@@ -704,11 +785,361 @@ export default function CoursesControlEdit() {
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
+                        <Tab label="Machine" value="3" />
                         <Tab label="3D Model Viewer" value="1" />
                         <Tab label="Instruction" value="2" />
                         {/* <Tab label="Assign" value="4" /> */}
                     </TabList>
                 </Box>
+
+                <TabPanel value="3">
+                    <Box sx={{ flexGrow: 1, p: 3 }}>
+                        {/* Machine Type Information */}
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                mb: 4,
+                                background: '#ffffff',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    background: 'primary.main',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <DeviceHubIcon sx={{ mr: 2, color: 'black' }} />
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                    Machine Type Details
+                                </Typography>
+                            </Box>
+
+                            <CardContent sx={{ py: 2.5 }}>
+                                <Grid container spacing={2} alignItems="center">
+                                    <Grid item xs={12} sm={4}>
+                                        <Typography
+                                            sx={{ fontWeight: 'medium', color: 'text.secondary', fontSize: '0.95rem' }}
+                                        >
+                                            Machine Type Name
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={12} sm={8}>
+                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                                            {machineTypeOfGuideline?.machineTypeName || 'N/A'}
+                                        </Typography>
+                                    </Grid>
+
+                                    {machineTypeOfGuideline?.machineTypeAttributeResponses?.length > 0 && (
+                                        <>
+                                            <Grid item xs={12} sm={4}>
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        color: 'text.secondary',
+                                                        fontSize: '0.95rem',
+                                                    }}
+                                                >
+                                                    Attributes
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={12} sm={8}>
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                                    {machineTypeOfGuideline.machineTypeAttributeResponses.map(
+                                                        (attr, index) => (
+                                                            <Chip
+                                                                key={index}
+                                                                label={`${attr.attributeName}: ${attr.valueAttribute}`}
+                                                                size="small"
+                                                                sx={{
+                                                                    borderRadius: '6px',
+                                                                    py: 0.5,
+                                                                    fontWeight: 500,
+                                                                    backgroundColor: 'rgba(0, 120, 210, 0.08)',
+                                                                    border: '1px solid rgba(0, 120, 210, 0.2)',
+                                                                    color: 'primary.dark',
+                                                                    '&:hover': {
+                                                                        backgroundColor: 'rgba(0, 120, 210, 0.12)',
+                                                                    },
+                                                                }}
+                                                            />
+                                                        ),
+                                                    )}
+                                                </Box>
+                                            </Grid>
+                                        </>
+                                    )}
+                                </Grid>
+                            </CardContent>
+                        </Paper>
+
+                        {/* Machines List Section */}
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                background: '#ffffff',
+                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                                    background: 'primary.main',
+                                    color: 'white',
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <QrCodeIcon sx={{ mr: 1.5, color: 'white' }} />
+                                    <Typography variant="h6" fontWeight="bold" color="white">
+                                        Machines
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body2" color="white" sx={{ opacity: 0.9 }}>
+                                    {machinesOfGuideline?.length || 0} machines found
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ p: 2 }}>
+                                {machinesOfGuideline?.length ? (
+                                    machinesOfGuideline.map((machine) => (
+                                        <Accordion
+                                            key={machine.id}
+                                            sx={{
+                                                mb: 1.5,
+                                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                                borderRadius: '8px',
+                                                '&:before': { display: 'none' },
+                                                overflow: 'hidden',
+                                                boxShadow: 'none',
+                                                '&:hover': {
+                                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                                                },
+                                            }}
+                                        >
+                                            <AccordionSummary
+                                                expandIcon={<ExpandMoreIcon color="primary" />}
+                                                aria-controls={`machine-${machine.id}-content`}
+                                                id={`machine-${machine.id}-header`}
+                                                sx={{
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                                                    '&.Mui-expanded': {
+                                                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                                                    },
+                                                }}
+                                            >
+                                                <Grid container alignItems="center" spacing={2}>
+                                                    <Grid item xs={10} sm={11} md={10}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <MemoryIcon
+                                                                sx={{ mr: 1.5, color: 'primary.main', opacity: 0.8 }}
+                                                            />
+                                                            <Typography fontWeight={500}>
+                                                                {machine.machineName}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+                                                    <Grid item xs={2} sm={1} md={2}>
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            startIcon={<QrCodeIcon />}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenQrCodes(machine.id);
+                                                            }}
+                                                            size="small"
+                                                            sx={{
+                                                                borderRadius: '6px',
+                                                                whiteSpace: 'nowrap',
+                                                                textTransform: 'none',
+                                                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                                                                '&:hover': {
+                                                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.15)',
+                                                                },
+                                                            }}
+                                                        >
+                                                            Show QR
+                                                        </Button>
+                                                    </Grid>
+                                                </Grid>
+                                            </AccordionSummary>
+                                            <AccordionDetails sx={{ p: 2.5, backgroundColor: 'rgba(0, 0, 0, 0.01)' }}>
+                                                <Grid container spacing={2}>
+                                                    <Grid item xs={12} sm={6}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <VpnKeyIcon
+                                                                sx={{
+                                                                    mr: 1,
+                                                                    fontSize: '1rem',
+                                                                    color: 'text.secondary',
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="text.secondary"
+                                                                sx={{ mr: 1 }}
+                                                            >
+                                                                Machine Code:
+                                                            </Typography>
+                                                            <Typography variant="body2" fontWeight="medium">
+                                                                {machine.machineCode}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+                                                </Grid>
+                                            </AccordionDetails>
+                                        </Accordion>
+                                    ))
+                                ) : (
+                                    <Box sx={{ py: 4, textAlign: 'center' }}>
+                                        <Typography color="text.secondary">
+                                            No machines available for this guideline
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </Paper>
+
+                        {/* QR Code Dialog */}
+                        {machinesOfGuideline?.map((machine) => (
+                            <Dialog
+                                key={machine.id}
+                                open={openQrMachineId === machine.id}
+                                onClose={handleCloseQrCodes}
+                                maxWidth="md"
+                                fullWidth
+                                PaperProps={{
+                                    sx: {
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                    },
+                                }}
+                            >
+                                <DialogTitle
+                                    sx={{
+                                        backgroundColor: 'primary.main',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <QrCodeIcon sx={{ mr: 1.5 }} />
+                                        QR Codes for {machine.machineName}
+                                    </Box>
+                                    <IconButton
+                                        edge="end"
+                                        color="inherit"
+                                        onClick={handleCloseQrCodes}
+                                        aria-label="close"
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                </DialogTitle>
+                                <DialogContent sx={{ p: 3 }}>
+                                    {machine.machineQrsResponses?.length > 0 ? (
+                                        <Grid container spacing={3}>
+                                            {machine.machineQrsResponses?.map((qr) => (
+                                                <Grid item xs={12} sm={6} md={4} key={qr.machineQrId}>
+                                                    <Card
+                                                        sx={{
+                                                            textAlign: 'center',
+                                                            p: 2,
+                                                            height: '100%',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            borderRadius: '8px',
+                                                            transition: 'all 0.3s ease',
+                                                            '&:hover': {
+                                                                transform: 'translateY(-4px)',
+                                                                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                p: 2,
+                                                                flex: 1,
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={getImage(qr.qrUrl)}
+                                                                alt={`QR for ${qr.guidelineName}`}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    maxWidth: '180px',
+                                                                    height: 'auto',
+                                                                    marginBottom: '16px',
+                                                                    border: '1px solid rgba(0, 0, 0, 0.08)',
+                                                                    borderRadius: '8px',
+                                                                    padding: '8px',
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                variant="subtitle1"
+                                                                fontWeight="medium"
+                                                                sx={{ mb: 1 }}
+                                                            >
+                                                                {qr.guidelineName}
+                                                            </Typography>
+                                                            <Button
+                                                                variant="outlined"
+                                                                size="small"
+                                                                startIcon={<DownloadIcon />}
+                                                                onClick={() =>
+                                                                    downloadQR(
+                                                                        qr.qrUrl,
+                                                                        `${machine.machineName}-${qr.guidelineName}.png`,
+                                                                    )
+                                                                }
+                                                                sx={{ mt: 'auto', textTransform: 'none' }}
+                                                            >
+                                                                Download
+                                                            </Button>
+                                                        </Box>
+                                                    </Card>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    ) : (
+                                        <Box sx={{ py: 4, textAlign: 'center' }}>
+                                            <Typography color="text.secondary">
+                                                No QR codes available for this machine
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </DialogContent>
+                                <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(0, 0, 0, 0.08)' }}>
+                                    <Button
+                                        onClick={handleCloseQrCodes}
+                                        color="primary"
+                                        variant="contained"
+                                        sx={{ borderRadius: '6px', textTransform: 'none' }}
+                                    >
+                                        Close
+                                    </Button>
+                                </DialogActions>
+                            </Dialog>
+                        ))}
+                    </Box>
+                </TabPanel>
 
                 {/* ---------- Tab 2: 3D Model Viewer / Editor ---------- */}
                 <TabPanel value="1">
@@ -983,10 +1414,10 @@ export default function CoursesControlEdit() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseAddSectionDialog} disabled={isCreating}>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseAddSectionDialog} disabled={isCreating}>
                         Cancel
                     </Button>
-                    <Button onClick={handleCreateInstruction} disabled={isCreating}>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCreateInstruction} disabled={isCreating}>
                         {isCreating ? <CircularProgress size={24} /> : 'Create'}
                     </Button>
                 </DialogActions>
@@ -1019,10 +1450,18 @@ export default function CoursesControlEdit() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseUpdateInstructionDialog} disabled={isUpdatingForInstruction}>
+                    <Button
+                        sx={{ textTransform: 'none' }}
+                        onClick={handleCloseUpdateInstructionDialog}
+                        disabled={isUpdatingForInstruction}
+                    >
                         Cancel
                     </Button>
-                    <Button onClick={handleUpdateInstruction} disabled={isUpdatingForInstruction}>
+                    <Button
+                        sx={{ textTransform: 'none' }}
+                        onClick={handleUpdateInstruction}
+                        disabled={isUpdatingForInstruction}
+                    >
                         {isUpdatingForInstruction ? <CircularProgress size={24} /> : 'Update'}
                     </Button>
                 </DialogActions>
@@ -1041,8 +1480,13 @@ export default function CoursesControlEdit() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDeleteInstructionDialog}>Cancel</Button>
-                    <Button sx={{ backgroundColor: 'red', color: 'white' }} onClick={handleDeleteInstruction}>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseDeleteInstructionDialog}>
+                        Cancel
+                    </Button>
+                    <Button
+                        sx={{ backgroundColor: 'red', color: 'white', textTransform: 'none' }}
+                        onClick={handleDeleteInstruction}
+                    >
                         Delete
                     </Button>
                 </DialogActions>
@@ -1056,9 +1500,6 @@ export default function CoursesControlEdit() {
                         <DialogContentText sx={{ mb: 2 }}>
                             Please fill out the form below to create a new instruction detail.
                         </DialogContentText>
-                        <Button onClick={handleCloseAddLessonDialog} disabled={isCreatingLesson}>
-                            Cancel
-                        </Button>
                     </div>
 
                     {/* The ModelEditor can handle the creation of the detail with position data */}
@@ -1076,6 +1517,18 @@ export default function CoursesControlEdit() {
                         />
                     )}
                 </DialogContent>
+
+                <DialogActions>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        sx={{ textTransform: 'none' }}
+                        onClick={handleCloseAddLessonDialog}
+                        disabled={isCreatingLesson}
+                    >
+                        Cancel
+                    </Button>
+                </DialogActions>
             </Dialog>
 
             {/* -------------------- Update Instruction Detail Dialog -------------------- */}
@@ -1099,7 +1552,13 @@ export default function CoursesControlEdit() {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseUpdateLessonDialog} disabled={isUpdatingForInstructionDetail}>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        sx={{ textTransform: 'none' }}
+                        onClick={handleCloseUpdateLessonDialog}
+                        disabled={isUpdatingForInstructionDetail}
+                    >
                         Cancel
                     </Button>
                 </DialogActions>
@@ -1118,10 +1577,12 @@ export default function CoursesControlEdit() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDeleteSectionDialog}>Cancel</Button>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseDeleteSectionDialog}>
+                        Cancel
+                    </Button>
                     <Button
                         disabled={course?.status === 'ARCHIVED'}
-                        sx={{ backgroundColor: 'red', color: 'white' }}
+                        sx={{ backgroundColor: 'red', color: 'white', textTransform: 'none' }}
                         onClick={handleDeleteSection}
                     >
                         Delete
@@ -1159,8 +1620,13 @@ export default function CoursesControlEdit() {
                     </TextField>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseSwapOrderIntructionDetail}>Cancel</Button>
-                    <Button sx={{ backgroundColor: 'blue', color: 'white' }} onClick={handleClickSaveSwapOrder}>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseSwapOrderIntructionDetail}>
+                        Cancel
+                    </Button>
+                    <Button
+                        sx={{ backgroundColor: 'blue', color: 'white', textTransform: 'none' }}
+                        onClick={handleClickSaveSwapOrder}
+                    >
                         Save
                     </Button>
                 </DialogActions>
@@ -1196,9 +1662,11 @@ export default function CoursesControlEdit() {
                     </TextField>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseSwapOrderIntruction}>Cancel</Button>
+                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseSwapOrderIntruction}>
+                        Cancel
+                    </Button>
                     <Button
-                        sx={{ backgroundColor: 'blue', color: 'white' }}
+                        sx={{ backgroundColor: 'blue', color: 'white', textTransform: 'none' }}
                         onClick={handleClickSaveSwapOrderForInstruction}
                     >
                         Save
