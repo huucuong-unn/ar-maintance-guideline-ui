@@ -987,7 +987,9 @@ export default function SimplifiedModelViewer({
                     <CollapsibleCard title="Transform Controls" darkMode={darkMode} defaultExpanded={true}>
                         <Stack spacing={2} sx={{ mb: 3 }}>
                             {/* Start Update Model Guideline */}
-                            {(action === 'UpdateModelGuideline' || action === 'CreateModel') &&
+                            {(action === 'UpdateModelGuideline' ||
+                                action === 'CreateModel' ||
+                                action === 'UpdateModelRequest') &&
                                 action !== 'UpdateInstructionDetail' && (
                                     <>
                                         {/* Name */}

@@ -17,6 +17,11 @@ import {
     Card,
     CardContent,
     Divider,
+    Chip,
+    Tooltip,
+    InputAdornment,
+    Tabs,
+    Tab,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { toast } from 'react-toastify';
@@ -31,6 +36,30 @@ import MachineTypeAttributeAPI from '~/API/MachineTypeAttributeAPI';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import DevicesIcon from '@mui/icons-material/Devices';
+import CategoryIcon from '@mui/icons-material/Category';
+import NewReleasesIcon from '@mui/icons-material/NewReleases';
+import BusinessIcon from '@mui/icons-material/Business';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import DeviceHubIcon from '@mui/icons-material/DeviceHub';
+import QrCodeIcon from '@mui/icons-material/QrCode';
+import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
+import TitleIcon from '@mui/icons-material/Title';
+import CodeIcon from '@mui/icons-material/Code';
+import TuneIcon from '@mui/icons-material/Tune';
+import ApiIcon from '@mui/icons-material/Api';
+import LinkIcon from '@mui/icons-material/Link';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SaveIcon from '@mui/icons-material/Save';
+import InfoIcon from '@mui/icons-material/Info';
+import DownloadIcon from '@mui/icons-material/Download';
+import WarningIcon from '@mui/icons-material/Warning';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+
 import { getImage } from '~/Constant';
 import axios from 'axios';
 
@@ -59,6 +88,52 @@ export default function MachinesManagement() {
     const [total, setTotal] = useState(0);
     const [keyword, setKeyword] = useState('');
     const [selectedMachineType, setSelectedMachineType] = useState(null);
+
+    const NoDataIcon = () => {
+        return (
+            <Box component="svg" viewBox="0 0 24 24" sx={{ width: 64, height: 64, opacity: 0.5 }}>
+                <path
+                    fill="currentColor"
+                    d="M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z"
+                />
+            </Box>
+        );
+    };
+
+    const downloadQrCode = (url, machineName, qrName) => {
+        // Trong thực tế, điều này sẽ tải xuống hình ảnh QR từ URL
+        alert(`Downloading QR code for ${machineName}: ${qrName}`);
+    };
+
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [machineToDelete, setMachineToDelete] = useState(null);
+    const [openQrDialog, setOpenQrDialog] = useState(false);
+    const [selectedMachineForQr, setSelectedMachineForQr] = useState(null);
+    const [qrCodes, setQrCodes] = useState([]);
+
+    const handleViewQrCodes = async (machineId) => {
+        try {
+            // Tìm machine từ danh sách hiện tại
+            const machine = rows.find((m) => m.id === machineId);
+            setSelectedMachineForQr(machine);
+            console.log(machineId);
+
+            // Gọi API để lấy QR codes (giả định là có API này)
+            const response = await MachineAPI.getMachineQRByMachineId(machineId);
+            setQrCodes(response?.result || []);
+
+            setOpenQrDialog(true);
+        } catch (error) {
+            console.error('Failed to fetch QR codes:', error);
+            // Hiển thị thông báo lỗi
+        }
+    };
+
+    const handleCloseQrDialog = () => {
+        setOpenQrDialog(false);
+        setSelectedMachineForQr(null);
+        setQrCodes([]);
+    };
 
     const columns = [
         { field: 'machineName', headerName: 'Name', width: 300 },
@@ -490,525 +565,1466 @@ export default function MachinesManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 4 }}>
-                    <Typography
-                        component="h1"
-                        variant="h4"
-                        sx={{
-                            fontWeight: '900',
-                            fontSize: '46px',
-                            color: '#051D40',
-                            my: 5,
-                        }}
-                    >
-                        Machines Management
-                    </Typography>
-
-                    {/* Nút Create Machine */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-                        <Button
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#051D40',
-                                color: 'white',
-                                '&:hover': {
-                                    bgcolor: '#02F18D',
-                                    color: '#051D40',
-                                },
-                                p: 2,
-                                textTransform: 'none',
-                            }}
-                            onClick={handleOpenCreateMachineDialog}
-                        >
-                            {isLoadingCreateMachine ? <CircularProgress /> : 'Create Machine'}
-                        </Button>
-
-                        {/* Search và Filter Machines */}
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <TextField
-                                label="Search by Name or Code"
-                                variant="outlined"
-                                size="medium"
-                                value={keyword}
-                                onChange={(e) => setKeyword(e.target.value)}
-                                sx={{ mr: 2 }}
-                            />
-                            <Autocomplete
-                                options={machineTypes}
-                                getOptionLabel={(option) => option.name}
-                                value={selectedMachineType}
-                                onChange={(event, newValue) => setSelectedMachineType(newValue)}
-                                sx={{ width: 300, mr: 2 }}
-                                renderInput={(params) => (
-                                    <TextField {...params} label="Machine Type" variant="outlined" />
-                                )}
-                            />
-                            <Button
-                                variant="contained"
-                                size="large"
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 3 }}>
+                    {/* Header with Dashboard Stats */}
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12}>
+                            <Box
                                 sx={{
-                                    bgcolor: '#1976d2',
-                                    color: 'white',
-                                    '&:hover': {
-                                        bgcolor: '#115293',
-                                        color: 'white',
-                                    },
-                                    p: 2,
-                                    textTransform: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    mb: 1,
                                 }}
-                                onClick={handleSearch}
                             >
-                                Filter
-                            </Button>
-                        </Box>
-                    </Box>
+                                <Typography
+                                    component="h1"
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: '800',
+                                        fontSize: { xs: '28px', md: '36px', lg: '42px' },
+                                        color: '#051D40',
+                                    }}
+                                >
+                                    Machines Management
+                                </Typography>
 
-                    <Paper
-                        sx={{
-                            height: 500,
-                            width: '100%',
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            borderRadius: 2,
-                            overflow: 'hidden',
-                        }}
-                    >
-                        <DataGrid
-                            rows={rows}
-                            columns={columns}
-                            rowCount={total}
-                            paginationMode="server"
-                            paginationModel={paginationModel}
-                            onPaginationModelChange={(newModel) =>
-                                setPaginationModel((prev) => ({
-                                    ...prev,
-                                    page: newModel.page,
-                                }))
-                            }
-                            sx={{ border: 'none' }}
-                            getRowId={(row) => row.id}
-                        />
-                    </Paper>
-                </Box>
-
-                <Box sx={{ mt: 'auto' }}>
-                    <Copyright />
-                </Box>
-
-                {/* Create Machine Dialog */}
-                <Dialog open={openCreateMachineDialog} onClose={handleCloseCreateMachineDialog} maxWidth="md" fullWidth>
-                    <DialogTitle>Create New Machine</DialogTitle>
-                    <DialogContent sx={{ minHeight: '80vh' }}>
-                        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-                            <TextField
-                                label="Machine Name"
-                                name="machineName"
-                                fullWidth
-                                variant="outlined"
-                                onChange={(event) => {
-                                    setCreateMachineRequest((prev) => ({
-                                        ...prev,
-                                        machineName: event.target.value,
-                                    }));
-                                }}
-                            />
-
-                            {/* Machine Code Input */}
-                            <TextField
-                                label="Machine Code"
-                                name="machineCode"
-                                fullWidth
-                                variant="outlined"
-                                value={createMachineRequest.machineCode}
-                                onChange={(event) => {
-                                    setCreateMachineRequest((prev) => ({
-                                        ...prev,
-                                        machineCode: event.target.value,
-                                    }));
-                                }}
-                                sx={{ mt: 2 }}
-                            />
-
-                            <Box sx={{ mt: 2, p: 2, border: '1px solid #ddd', borderRadius: 2, width: '100%' }}>
-                                <Typography variant="h6">API Configuration</Typography>
-
-                                {/* API URL */}
-                                <TextField
-                                    label="API URL"
-                                    fullWidth
-                                    variant="outlined"
-                                    value={tempApiUrl}
-                                    onChange={(event) => setTempApiUrl(event.target.value)}
-                                    sx={{ mt: 2 }}
-                                />
-
-                                {/* Add Header Button */}
-                                {tempApiUrl && (
+                                <Box>
                                     <Button
                                         variant="contained"
-                                        color="secondary"
-                                        sx={{ mt: 2, textTransform: 'none' }}
-                                        onClick={() =>
-                                            setTempHeaders([...tempHeaders, { keyHeader: '', valueOfKey: '' }])
-                                        }
-                                    >
-                                        Add Header
-                                    </Button>
-                                )}
-
-                                {/* Header Inputs */}
-                                {tempHeaders.map((header, index) => (
-                                    <Box key={index} sx={{ display: 'flex', gap: 2, mt: 2, width: '100%' }}>
-                                        <TextField
-                                            label="Header Key"
-                                            fullWidth
-                                            variant="outlined"
-                                            value={header.keyHeader}
-                                            onChange={(e) => {
-                                                const updatedHeaders = [...tempHeaders];
-                                                updatedHeaders[index].keyHeader = e.target.value;
-                                                setTempHeaders(updatedHeaders);
-                                            }}
-                                        />
-                                        <TextField
-                                            label="Header Value"
-                                            fullWidth
-                                            variant="outlined"
-                                            value={header.valueOfKey}
-                                            onChange={(e) => {
-                                                const updatedHeaders = [...tempHeaders];
-                                                updatedHeaders[index].valueOfKey = e.target.value;
-                                                setTempHeaders(updatedHeaders);
-                                            }}
-                                        />
-
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => {
-                                                setTempHeaders(tempHeaders.filter((_, i) => i !== index));
-                                            }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-
-                                {/* Save & Test Buttons */}
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        sx={{ textTransform: 'none' }}
-                                        onClick={async () => {
-                                            try {
-                                                const response = await fetch(tempApiUrl, {
-                                                    method: 'GET',
-                                                    headers: Object.fromEntries(
-                                                        tempHeaders.map((h) => [h.keyHeader, h.valueOfKey]),
-                                                    ),
-                                                });
-                                                const data = await response.json();
-                                                setResponseMessage(JSON.stringify(data, null, 2));
-                                            } catch (error) {
-                                                setResponseMessage('Failed to fetch API');
-                                            }
+                                        startIcon={<AddIcon />}
+                                        sx={{
+                                            bgcolor: '#051D40',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#02F18D',
+                                                color: '#051D40',
+                                            },
+                                            px: 3,
+                                            py: 1.2,
+                                            textTransform: 'none',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 12px rgba(5, 29, 64, 0.15)',
+                                            fontWeight: 'medium',
                                         }}
+                                        onClick={handleOpenCreateMachineDialog}
+                                        disabled={isLoadingCreateMachine}
                                     >
-                                        Test
+                                        {isLoadingCreateMachine ? (
+                                            <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
+                                        ) : (
+                                            'Create Machine'
+                                        )}
                                     </Button>
                                 </Box>
+                            </Box>
+
+                            {/* Stats Cards */}
+                            <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                                            border: '1px solid #90CAF9',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Machines
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#1565C0" sx={{ mt: 1 }}>
+                                            {total || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <DevicesIcon
+                                                sx={{ color: '#1565C0', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Available Machines
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
+                                            border: '1px solid #A5D6A7',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Machine Types
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#2E7D32" sx={{ mt: 1 }}>
+                                            {machineTypes?.length || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <CategoryIcon
+                                                sx={{ color: '#2E7D32', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Different Types
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                {/* <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                                            border: '1px solid #FFCC80',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Recently Added
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#E65100" sx={{ mt: 1 }}>
+                                            {rows.filter((machine) => {
+                                                // This is a placeholder - you would need to add created date to your machine data
+                                                // and implement proper "recent" logic
+                                                return true;
+                                            }).length || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <NewReleasesIcon
+                                                sx={{ color: '#E65100', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Last 30 days
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid> */}
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
+                                            border: '1px solid #9FA8DA',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Company
+                                        </Typography>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color="#303F9F"
+                                            sx={{
+                                                mt: 1,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {userInfo?.company?.companyName || 'N/A'}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <BusinessIcon
+                                                sx={{ color: '#303F9F', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Company Infor
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    {/* Search and Filters */}
+                    <Paper
+                        elevation={1}
+                        sx={{
+                            p: 3,
+                            mb: 3,
+                            borderRadius: '12px',
+                            backgroundColor: 'white',
+                        }}
+                    >
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#051D40' }}>
+                            Search & Filters
+                        </Typography>
+
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    label="Search Machines"
+                                    variant="outlined"
+                                    value={keyword}
+                                    onChange={(e) => setKeyword(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    placeholder="Enter machine name or code"
+                                    size="medium"
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Autocomplete
+                                    fullWidth
+                                    options={machineTypes || []}
+                                    getOptionLabel={(option) => option.name}
+                                    value={selectedMachineType}
+                                    onChange={(event, newValue) => setSelectedMachineType(newValue)}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Machine Type"
+                                            variant="outlined"
+                                            placeholder="Select machine type"
+                                        />
+                                    )}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<FilterListIcon />}
+                                        onClick={handleSearch}
+                                        sx={{
+                                            bgcolor: '#1976d2',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#115293',
+                                            },
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Apply Filters
+                                    </Button>
+
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<RefreshIcon />}
+                                        onClick={() => {
+                                            setKeyword('');
+                                            setSelectedMachineType(null);
+                                            setPaginationModel({ page: 0, pageSize: 5 });
+                                            fetchMachines();
+                                        }}
+                                        sx={{
+                                            borderColor: '#1976d2',
+                                            color: '#1976d2',
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    {/* DataGrid with enhanced styling */}
+                    <Paper
+                        elevation={2}
+                        sx={{
+                            width: '100%',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            mb: 4,
+                            '& .MuiDataGrid-root': {
+                                border: 'none',
+                            },
+                            '& .MuiDataGrid-cell': {
+                                borderColor: 'rgba(224, 224, 224, 1)',
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: '#F5F7FA',
+                                borderBottom: 'none',
+                            },
+                            '& .MuiDataGrid-columnHeaderTitle': {
+                                fontWeight: 'bold',
+                            },
+                        }}
+                    >
+                        {rows.length > 0 ? (
+                            <DataGrid
+                                rows={rows}
+                                columns={[
+                                    {
+                                        field: 'machineName',
+                                        headerName: 'Machine Name',
+                                        flex: 1.5,
+                                        minWidth: 200,
+                                        renderCell: (params) => (
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center', // Try 'start' instead
+                                                    height: '100%', // Ensure full height
+                                                }}
+                                            >
+                                                <DeviceHubIcon
+                                                    sx={{
+                                                        color: '#051D40',
+                                                        mr: 1.5,
+                                                        opacity: 0.7,
+                                                        alignSelf: 'center', // Center the icon vertically
+                                                    }}
+                                                />
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        height: '100%',
+                                                    }}
+                                                >
+                                                    {params.value}
+                                                </Typography>
+                                            </Box>
+                                        ),
+                                    },
+                                    {
+                                        field: 'machineCode',
+                                        headerName: 'Code',
+                                        flex: 1,
+                                        minWidth: 150,
+                                        renderCell: (params) => (
+                                            <Chip
+                                                label={params.value}
+                                                size="small"
+                                                sx={{
+                                                    bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                                    color: '#1976d2',
+                                                    fontWeight: 'medium',
+                                                    borderRadius: '4px',
+                                                }}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        field: 'machineType',
+                                        headerName: 'Machine Type',
+                                        flex: 1,
+                                        minWidth: 180,
+                                    },
+                                    {
+                                        field: 'qrCodes',
+                                        headerName: 'QR Codes',
+                                        flex: 0.8,
+                                        minWidth: 120,
+                                        renderCell: (params) => {
+                                            const qrCount = params.row.qrCodesCount || 0;
+                                            return (
+                                                <Chip
+                                                    icon={<QrCodeIcon />}
+                                                    label={qrCount}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor:
+                                                            qrCount > 0
+                                                                ? 'rgba(46, 125, 50, 0.08)'
+                                                                : 'rgba(211, 47, 47, 0.08)',
+                                                        color: qrCount > 0 ? '#2E7D32' : '#D32F2F',
+                                                        fontWeight: 'medium',
+                                                    }}
+                                                />
+                                            );
+                                        },
+                                    },
+                                    {
+                                        field: 'action',
+                                        headerName: 'Actions',
+                                        flex: 1,
+                                        minWidth: 160,
+                                        renderCell: (params) => (
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    height: '100%',
+                                                    justifyContent: 'flex-start',
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <Tooltip title="Edit Machine">
+                                                    <IconButton
+                                                        color="primary"
+                                                        size="small"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            handleOpenUpdateMachineModal(params.row.id);
+                                                        }}
+                                                        sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                                            '&:hover': {
+                                                                bgcolor: 'rgba(25, 118, 210, 0.15)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+
+                                                <Tooltip title="View QR Codes">
+                                                    <IconButton
+                                                        color="secondary"
+                                                        size="small"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            handleViewQrCodes(params.row.id);
+                                                        }}
+                                                        sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            bgcolor: 'rgba(156, 39, 176, 0.08)',
+                                                            '&:hover': {
+                                                                bgcolor: 'rgba(156, 39, 176, 0.15)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <QrCodeIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        ),
+                                    },
+                                ]}
+                                rowCount={total}
+                                paginationMode="server"
+                                paginationModel={paginationModel}
+                                onPaginationModelChange={(newModel) =>
+                                    setPaginationModel((prev) => ({
+                                        ...prev,
+                                        page: newModel.page,
+                                    }))
+                                }
+                                disableRowSelectionOnClick
+                                getRowId={(row) => row.id}
+                                sx={{
+                                    '& .MuiDataGrid-row:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                    },
+                                }}
+                            />
+                        ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 6 }}>
+                                <NoDataIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary">
+                                    No machines found
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                    Try adjusting your search filters or create a new machine
+                                </Typography>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    sx={{ mt: 3 }}
+                                    onClick={handleOpenCreateMachineDialog}
+                                >
+                                    Create Machine
+                                </Button>
+                            </Box>
+                        )}
+                    </Paper>
+
+                    <Box sx={{ mt: 'auto' }}>
+                        <Copyright />
+                    </Box>
+                </Box>
+                {/* Create Machine Dialog */}
+                {/* Create Machine Dialog */}
+                <Dialog
+                    open={openCreateMachineDialog}
+                    onClose={handleCloseCreateMachineDialog}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                        },
+                    }}
+                >
+                    <DialogTitle
+                        sx={{
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            p: 2,
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <AddIcon sx={{ mr: 1.5 }} />
+                            Create New Machine
+                        </Box>
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={handleCloseCreateMachineDialog}
+                            aria-label="close"
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
+
+                    <DialogContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <Paper
+                                elevation={0}
+                                sx={{ p: 3, border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '8px' }}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    fontWeight="bold"
+                                    sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center' }}
+                                >
+                                    <SettingsIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                    Basic Information
+                                </Typography>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Machine Name"
+                                            name="machineName"
+                                            fullWidth
+                                            variant="outlined"
+                                            value={createMachineRequest.machineName}
+                                            onChange={(event) => {
+                                                setCreateMachineRequest((prev) => ({
+                                                    ...prev,
+                                                    machineName: event.target.value,
+                                                }));
+                                            }}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <TitleIcon fontSize="small" color="action" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                            helperText="Enter a name between 5-100 characters"
+                                        />
+                                    </Grid>
+
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Machine Code"
+                                            name="machineCode"
+                                            fullWidth
+                                            variant="outlined"
+                                            value={createMachineRequest.machineCode}
+                                            onChange={(event) => {
+                                                setCreateMachineRequest((prev) => ({
+                                                    ...prev,
+                                                    machineCode: event.target.value,
+                                                }));
+                                            }}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <CodeIcon fontSize="small" color="action" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                            helperText="Unique identifier for this machine"
+                                        />
+                                    </Grid>
+
+                                    <Grid item xs={12}>
+                                        <Autocomplete
+                                            disablePortal
+                                            options={machineTypes}
+                                            getOptionLabel={(option) => option.name}
+                                            fullWidth
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label="Machine Type"
+                                                    InputProps={{
+                                                        ...params.InputProps,
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <CategoryIcon fontSize="small" color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                    helperText="Select machine type to load its attributes"
+                                                />
+                                            )}
+                                            onChange={(event, newValue) => {
+                                                setCurrentMachineType(newValue ? newValue.id : '');
+                                                setCreateMachineRequest((prev) => ({
+                                                    ...prev,
+                                                    modelTypeId: newValue ? newValue.id : '',
+                                                }));
+                                            }}
+                                            onInputChange={(event, value) => {
+                                                if (!value) {
+                                                    setCurrentMachineType('');
+                                                    setMachineTypeAttributes([]);
+                                                    setCreateMachineRequest((prev) => ({
+                                                        ...prev,
+                                                        modelTypeId: '',
+                                                        machineTypeValueCreationRequest: [],
+                                                    }));
+                                                }
+                                            }}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Paper>
+
+                            {machineTypeAttributes.length > 0 && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{ p: 3, border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '8px' }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                        sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        <TuneIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                        Machine Type Attributes
+                                    </Typography>
+
+                                    <Grid container spacing={2}>
+                                        {machineTypeAttributes.map((attribute) => (
+                                            <Grid item xs={12} sm={6} key={attribute.id}>
+                                                <TextField
+                                                    label={attribute.attributeName}
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    value={attribute.valueAttribute}
+                                                    disabled
+                                                />
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Paper>
+                            )}
+
+                            <Paper
+                                elevation={0}
+                                sx={{ p: 3, border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '8px' }}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    fontWeight="bold"
+                                    sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center' }}
+                                >
+                                    <ApiIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                    API Configuration
+                                </Typography>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            label="API URL"
+                                            fullWidth
+                                            variant="outlined"
+                                            value={tempApiUrl}
+                                            onChange={(event) => setTempApiUrl(event.target.value)}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <LinkIcon fontSize="small" color="action" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                            helperText="Enter API URL (must start with http:// or https://)"
+                                        />
+                                    </Grid>
+
+                                    {tempApiUrl && (
+                                        <Grid item xs={12}>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                <Typography variant="subtitle1" fontWeight="medium">
+                                                    Headers
+                                                </Typography>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="secondary"
+                                                    startIcon={<AddIcon />}
+                                                    size="small"
+                                                    onClick={() =>
+                                                        setTempHeaders([
+                                                            ...tempHeaders,
+                                                            { keyHeader: '', valueOfKey: '' },
+                                                        ])
+                                                    }
+                                                    sx={{ textTransform: 'none' }}
+                                                >
+                                                    Add Header
+                                                </Button>
+                                            </Box>
+
+                                            {tempHeaders.map((header, index) => (
+                                                <Box
+                                                    key={index}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        gap: 2,
+                                                        mb: 2,
+                                                        p: 2,
+                                                        borderRadius: '8px',
+                                                        border: '1px dashed rgba(0, 0, 0, 0.12)',
+                                                        bgcolor: 'rgba(0, 0, 0, 0.01)',
+                                                    }}
+                                                >
+                                                    <TextField
+                                                        label="Header Key"
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        size="small"
+                                                        value={header.keyHeader}
+                                                        onChange={(e) => {
+                                                            const updatedHeaders = [...tempHeaders];
+                                                            updatedHeaders[index].keyHeader = e.target.value;
+                                                            setTempHeaders(updatedHeaders);
+                                                        }}
+                                                    />
+                                                    <TextField
+                                                        label="Header Value"
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        size="small"
+                                                        value={header.valueOfKey}
+                                                        onChange={(e) => {
+                                                            const updatedHeaders = [...tempHeaders];
+                                                            updatedHeaders[index].valueOfKey = e.target.value;
+                                                            setTempHeaders(updatedHeaders);
+                                                        }}
+                                                    />
+                                                    <IconButton
+                                                        color="error"
+                                                        size="small"
+                                                        sx={{ mt: 0.5 }}
+                                                        onClick={() => {
+                                                            setTempHeaders(tempHeaders.filter((_, i) => i !== index));
+                                                        }}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            ))}
+
+                                            <Button
+                                                variant="contained"
+                                                startIcon={<PlayArrowIcon />}
+                                                sx={{ mt: 1, textTransform: 'none' }}
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(tempApiUrl, {
+                                                            method: 'GET',
+                                                            headers: Object.fromEntries(
+                                                                tempHeaders.map((h) => [h.keyHeader, h.valueOfKey]),
+                                                            ),
+                                                        });
+                                                        const data = await response.json();
+                                                        setResponseMessage(JSON.stringify(data, null, 2));
+                                                    } catch (error) {
+                                                        setResponseMessage('Failed to fetch API: ' + error.message);
+                                                    }
+                                                }}
+                                            >
+                                                Test API
+                                            </Button>
+                                        </Grid>
+                                    )}
+                                </Grid>
 
                                 {/* Response Display */}
                                 {responseMessage && (
                                     <Box
                                         sx={{
-                                            mt: 2,
+                                            mt: 3,
                                             p: 2,
                                             border: '1px solid #ddd',
-                                            borderRadius: 2,
+                                            borderRadius: '8px',
                                             bgcolor: '#f5f5f5',
+                                            maxHeight: '200px',
+                                            overflow: 'auto',
+                                            fontFamily: 'monospace',
                                         }}
                                     >
-                                        <Typography variant="subtitle1">Response:</Typography>
-                                        <pre style={{ whiteSpace: 'pre-wrap' }}>{responseMessage}</pre>
+                                        <Typography
+                                            variant="subtitle2"
+                                            sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
+                                        >
+                                            API Response:
+                                        </Typography>
+                                        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{responseMessage}</pre>
                                     </Box>
                                 )}
-                            </Box>
-
-                            <Autocomplete
-                                disablePortal
-                                options={machineTypes}
-                                getOptionLabel={(option) => option.name}
-                                sx={{ width: 300 }}
-                                renderInput={(params) => <TextField {...params} label="Machine Types" />}
-                                onChange={(event, newValue) => {
-                                    setCurrentMachineType(newValue ? newValue.id : '');
-                                    setCreateMachineRequest((prev) => ({
-                                        ...prev,
-                                        modelTypeId: newValue ? newValue.id : '',
-                                    }));
-                                }}
-                                onInputChange={(event, value) => {
-                                    if (!value) {
-                                        setCurrentMachineType('');
-                                        setMachineTypeAttributes([]);
-                                        setCreateMachineRequest((prev) => ({
-                                            ...prev,
-                                            modelTypeId: '',
-                                            machineTypeValueCreationRequest: [],
-                                        }));
-                                    }
-                                }}
-                            />
-
-                            {machineTypeAttributes.map((attribute) => (
-                                <TextField
-                                    key={attribute.id}
-                                    label={attribute.attributeName}
-                                    fullWidth
-                                    variant="outlined"
-                                    value={attribute.valueAttribute}
-                                    disabled
-                                />
-                            ))}
+                            </Paper>
                         </Box>
                     </DialogContent>
-                    <DialogActions>
-                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateMachineDialog}>
+
+                    <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid rgba(0, 0, 0, 0.08)' }}>
+                        <Button
+                            sx={{ textTransform: 'none' }}
+                            onClick={handleCloseCreateMachineDialog}
+                            startIcon={<CancelIcon />}
+                        >
                             Cancel
                         </Button>
                         <Button
-                            sx={{ textTransform: 'none' }}
+                            sx={{ textTransform: 'none', px: 3 }}
                             variant="contained"
                             color="primary"
                             onClick={handleCreateMachine}
                             disabled={isLoadingCreateMachine}
+                            startIcon={isLoadingCreateMachine ? <CircularProgress size={20} /> : <SaveIcon />}
                         >
-                            {isLoadingCreateMachine ? <CircularProgress /> : ' Create'}
+                            {isLoadingCreateMachine ? 'Creating...' : 'Create Machine'}
                         </Button>
                     </DialogActions>
                 </Dialog>
-
                 {/* Update Machine Dialog */}
-                <Dialog open={openUpdateMachineDialog} onClose={handleCloseUpdateMachineDialog} maxWidth="md" fullWidth>
-                    <DialogTitle>Machine Detail</DialogTitle>
-                    <DialogContent sx={{ minHeight: '80vh' }}>
-                        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-                            {/* Machine Name */}
-                            <TextField
-                                label="Machine Name"
-                                fullWidth
-                                variant="outlined"
-                                value={updateMachineRequest.machineName || ''}
-                                onChange={(event) =>
-                                    setUpdateMachineRequest((prev) => ({
-                                        ...prev,
-                                        machineName: event.target.value,
-                                    }))
-                                }
-                            />
+                <Dialog
+                    open={openUpdateMachineDialog}
+                    onClose={handleCloseUpdateMachineDialog}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                        },
+                    }}
+                >
+                    <DialogTitle
+                        sx={{
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            p: 2,
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <InfoIcon sx={{ mr: 1.5 }} />
+                            {machineById?.machineName
+                                ? `Machine Details: ${machineById.machineName}`
+                                : 'Machine Details'}
+                        </Box>
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={handleCloseUpdateMachineDialog}
+                            aria-label="close"
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
 
-                            <Card
-                                sx={{
-                                    width: '100%',
-                                    borderRadius: 3, // Bo góc mềm mại
-                                    boxShadow: 3, // Tạo hiệu ứng bóng
-                                    padding: 2, // Khoảng cách bên trong
-                                    border: '1px solid #ddd', // Viền nhẹ
-                                }}
-                            >
-                                <CardContent>
-                                    <Typography
-                                        variant="h6"
-                                        gutterBottom
-                                        sx={{ fontWeight: 'bold', color: 'primary.main' }}
-                                    >
-                                        API Configuration
-                                    </Typography>
-                                    <Divider sx={{ mb: 2 }} /> {/* Đường kẻ ngăn cách */}
-                                    <TextField
-                                        label="API URL"
-                                        fullWidth
-                                        value={updateMachineRequest.apiUrl}
-                                        onChange={(e) =>
-                                            setUpdateMachineRequest({ ...updateMachineRequest, apiUrl: e.target.value })
-                                        }
-                                        margin="normal"
-                                    />
-                                    {/* Header Key - Value */}
-                                    <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold', mb: 2 }}>
-                                        Headers
-                                    </Typography>
-                                    {updateMachineRequest.headerRequests.map((header, index) => (
-                                        <Box display="flex" alignItems="center" gap={2} key={index} marginBottom={1}>
-                                            <TextField
-                                                label="Header Key"
-                                                value={header.keyHeader}
-                                                onChange={(e) => handleChangeHeader(index, 'keyHeader', e.target.value)}
-                                                sx={{ flex: 1 }}
-                                            />
-                                            <TextField
-                                                label="Header Value"
-                                                value={header.valueOfKey}
-                                                onChange={(e) =>
-                                                    handleChangeHeader(index, 'valueOfKey', e.target.value)
-                                                }
-                                                sx={{ flex: 2 }}
-                                            />
-                                            <IconButton onClick={() => handleRemoveHeader(index)} color="error">
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Box>
-                                    ))}
-                                    <Button
-                                        onClick={handleAddHeader}
-                                        startIcon={<AddIcon />}
-                                        sx={{ textTransform: 'none' }}
-                                    >
-                                        Add Header
-                                    </Button>
-                                    {/* Test API Button */}
-                                    <Button
-                                        onClick={handleTestApiUrl}
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{ mt: 2, width: '100%', textTransform: 'none' }}
-                                    >
-                                        Test API
-                                    </Button>
-                                    {/* Response Display */}
-                                    {testResponse && (
-                                        <Box mt={2} p={2} bgcolor="grey.100" borderRadius={2}>
-                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                Response:
-                                            </Typography>
-                                            <pre style={{ whiteSpace: 'pre-wrap' }}>{testResponse}</pre>
-                                        </Box>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Machine Attributes */}
-                            {updateMachineRequest.machineTypeValueModifyRequests?.map((attr, index) => (
-                                <TextField
-                                    key={attr.machineTypeValueId}
-                                    label={
-                                        machineById.machineTypeValueResponses?.[index]?.machineTypeAttributeName ||
-                                        'Attribute'
-                                    }
-                                    disabled={true}
-                                    fullWidth
-                                    InputProps={{ readOnly: true }}
-                                    variant="outlined"
-                                    value={attr.valueAttribute || ''}
-                                    onChange={(event) => {
-                                        const updatedAttributes = [
-                                            ...updateMachineRequest.machineTypeValueModifyRequests,
-                                        ];
-                                        updatedAttributes[index] = {
-                                            ...updatedAttributes[index],
-                                            valueAttribute: event.target.value,
-                                        };
-                                        setUpdateMachineRequest((prev) => ({
-                                            ...prev,
-                                            machineTypeValueModifyRequests: updatedAttributes,
-                                        }));
-                                    }}
-                                />
-                            ))}
-
-                            {/* Toggle QR Code Button */}
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                sx={{ mb: 2, textTransform: 'none' }}
-                                onClick={() => setShowQrCodes((prev) => !prev)}
-                            >
-                                {showQrCodes ? 'Hide QR Codes' : 'Show QR Codes'}
-                            </Button>
-
-                            {/* QR Codes List */}
-                            {showQrCodes && machineById.machineQrsResponses?.length > 0 && (
+                    <DialogContent sx={{ p: 3 }}>
+                        {/* Tabs Navigation - Sửa lỗi offsetHeight bằng cách dùng Box thay vì Tabs */}
+                        <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
+                            <Box sx={{ display: 'flex' }}>
                                 <Box
+                                    onClick={() => setShowQrCodes(false)}
                                     sx={{
+                                        px: 3,
+                                        py: 1.5,
+                                        cursor: 'pointer',
+                                        borderBottom: !showQrCodes ? 2 : 0,
+                                        borderColor: 'primary.main',
+                                        color: !showQrCodes ? 'primary.main' : 'text.secondary',
+                                        fontWeight: !showQrCodes ? 'medium' : 'normal',
                                         display: 'flex',
-                                        flexDirection: 'column',
                                         alignItems: 'center',
-                                        mt: 3,
-                                        width: '100%',
+                                        mr: 2,
                                     }}
                                 >
-                                    <Typography variant="h6" gutterBottom>
-                                        QR Codes
-                                    </Typography>
-                                    <Grid container spacing={0} rowSpacing={4} justifyContent="center">
-                                        {machineById.machineQrsResponses.map((qr) => (
-                                            <Grid item xs={6} sm={4} key={qr.machineQrId}>
+                                    <SettingsIcon sx={{ mr: 1, fontSize: '1.2rem' }} />
+                                    Machine Settings
+                                </Box>
+                                <Box
+                                    onClick={() => setShowQrCodes(true)}
+                                    sx={{
+                                        px: 3,
+                                        py: 1.5,
+                                        cursor: 'pointer',
+                                        borderBottom: showQrCodes ? 2 : 0,
+                                        borderColor: 'primary.main',
+                                        color: showQrCodes ? 'primary.main' : 'text.secondary',
+                                        fontWeight: showQrCodes ? 'medium' : 'normal',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <QrCodeIcon sx={{ mr: 1, fontSize: '1.2rem' }} />
+                                    QR Codes
+                                </Box>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            {/* Machine Settings Content */}
+                            {!showQrCodes && (
+                                <>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 3,
+                                            border: '1px solid rgba(0, 0, 0, 0.08)',
+                                            borderRadius: '8px',
+                                            mb: 3,
+                                        }}
+                                    >
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center' }}
+                                        >
+                                            <DeviceHubIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                            Basic Information
+                                        </Typography>
+
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    label="Machine Name"
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    value={updateMachineRequest.machineName || ''}
+                                                    onChange={(event) =>
+                                                        setUpdateMachineRequest((prev) => ({
+                                                            ...prev,
+                                                            machineName: event.target.value,
+                                                        }))
+                                                    }
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <TitleIcon fontSize="small" color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                    helperText="Enter a name between 5-100 characters"
+                                                />
+                                            </Grid>
+
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    label="Machine Code"
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    value={machineById.machineCode || ''}
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <CodeIcon fontSize="small" color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                        readOnly: true,
+                                                    }}
+                                                    disabled
+                                                    helperText="Machine code cannot be changed"
+                                                />
+                                            </Grid>
+
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    label="Machine Type"
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    value={machineById.machineType || ''}
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <CategoryIcon fontSize="small" color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                        readOnly: true,
+                                                    }}
+                                                    disabled
+                                                    helperText="Machine type cannot be changed"
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </Paper>
+
+                                    {updateMachineRequest.machineTypeValueModifyRequests?.length > 0 && (
+                                        <Paper
+                                            elevation={0}
+                                            sx={{
+                                                p: 3,
+                                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                                borderRadius: '8px',
+                                                mb: 3,
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight="bold"
+                                                sx={{
+                                                    mb: 2,
+                                                    color: 'primary.main',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                <TuneIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                                Machine Type Attributes
+                                            </Typography>
+
+                                            <Grid container spacing={2}>
+                                                {updateMachineRequest.machineTypeValueModifyRequests?.map(
+                                                    (attr, index) => (
+                                                        <Grid
+                                                            item
+                                                            xs={12}
+                                                            sm={6}
+                                                            key={`attr-${index}-${attr.machineTypeValueId || index}`}
+                                                        >
+                                                            <TextField
+                                                                label={
+                                                                    machineById.machineTypeValueResponses?.[index]
+                                                                        ?.machineTypeAttributeName || 'Attribute'
+                                                                }
+                                                                disabled={true}
+                                                                fullWidth
+                                                                InputProps={{ readOnly: true }}
+                                                                variant="outlined"
+                                                                value={attr.valueAttribute || ''}
+                                                            />
+                                                        </Grid>
+                                                    ),
+                                                )}
+                                            </Grid>
+                                        </Paper>
+                                    )}
+
+                                    <Paper
+                                        elevation={0}
+                                        sx={{ p: 3, border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '8px' }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                mb: 2,
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight="bold"
+                                                sx={{ color: 'primary.main', display: 'flex', alignItems: 'center' }}
+                                            >
+                                                <ApiIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                                API Configuration
+                                            </Typography>
+
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                startIcon={<PlayArrowIcon />}
+                                                onClick={handleTestApiUrl}
+                                                sx={{ textTransform: 'none' }}
+                                                disabled={!updateMachineRequest.apiUrl}
+                                            >
+                                                Test API
+                                            </Button>
+                                        </Box>
+
+                                        <Grid container spacing={3}>
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    label="API URL"
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    value={updateMachineRequest.apiUrl || ''}
+                                                    onChange={(e) =>
+                                                        setUpdateMachineRequest({
+                                                            ...updateMachineRequest,
+                                                            apiUrl: e.target.value,
+                                                        })
+                                                    }
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <LinkIcon fontSize="small" color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                    helperText="API URL must start with http:// or https://"
+                                                />
+                                            </Grid>
+
+                                            <Grid item xs={12}>
                                                 <Box
                                                     sx={{
                                                         display: 'flex',
-                                                        flexDirection: 'column',
+                                                        justifyContent: 'space-between',
                                                         alignItems: 'center',
+                                                        mb: 2,
                                                     }}
                                                 >
-                                                    <img
-                                                        src={getImage(qr.qrUrl)}
-                                                        alt="QR Code"
-                                                        style={{
-                                                            width: 150,
-                                                            height: 150,
-                                                            display: 'block',
-                                                            border: '1px solid #ddd',
-                                                            borderRadius: 8,
-                                                        }}
-                                                    />
-                                                    <Typography variant="body2" sx={{ mt: 1, fontWeight: 'bold' }}>
-                                                        {qr.guidelineName}
+                                                    <Typography variant="subtitle1" fontWeight="medium">
+                                                        Headers
                                                     </Typography>
                                                     <Button
-                                                        variant="contained"
+                                                        variant="outlined"
                                                         color="primary"
-                                                        sx={{ mt: 1, fontSize: '0.8rem', padding: '5px 10px' }}
-                                                        onClick={() =>
-                                                            handleDownloadQrCode(
-                                                                qr.qrUrl,
-                                                                `${qr.guidelineName}_QRCode.png`,
-                                                            )
-                                                        }
+                                                        startIcon={<AddIcon />}
+                                                        size="small"
+                                                        onClick={handleAddHeader}
+                                                        sx={{ textTransform: 'none' }}
                                                     >
-                                                        Download
+                                                        Add Header
                                                     </Button>
                                                 </Box>
+
+                                                {updateMachineRequest.headerRequests &&
+                                                    updateMachineRequest.headerRequests.map((header, index) => (
+                                                        <Box
+                                                            key={`header-${index}`}
+                                                            sx={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 2,
+                                                                mb: 2,
+                                                                p: 2,
+                                                                borderRadius: '8px',
+                                                                border: '1px dashed rgba(0, 0, 0, 0.12)',
+                                                                bgcolor: 'rgba(0, 0, 0, 0.01)',
+                                                            }}
+                                                        >
+                                                            <TextField
+                                                                label="Header Key"
+                                                                value={header.keyHeader || ''}
+                                                                onChange={(e) =>
+                                                                    handleChangeHeader(
+                                                                        index,
+                                                                        'keyHeader',
+                                                                        e.target.value,
+                                                                    )
+                                                                }
+                                                                sx={{ flex: 1 }}
+                                                                size="small"
+                                                            />
+                                                            <TextField
+                                                                label="Header Value"
+                                                                value={header.valueOfKey || ''}
+                                                                onChange={(e) =>
+                                                                    handleChangeHeader(
+                                                                        index,
+                                                                        'valueOfKey',
+                                                                        e.target.value,
+                                                                    )
+                                                                }
+                                                                sx={{ flex: 2 }}
+                                                                size="small"
+                                                            />
+                                                            <IconButton
+                                                                onClick={() => handleRemoveHeader(index)}
+                                                                color="error"
+                                                                size="small"
+                                                            >
+                                                                <DeleteIcon />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))}
                                             </Grid>
-                                        ))}
-                                    </Grid>
-                                </Box>
+                                        </Grid>
+
+                                        {/* Response Display */}
+                                        {testResponse && (
+                                            <Box
+                                                sx={{
+                                                    mt: 3,
+                                                    p: 2,
+                                                    border: '1px solid #ddd',
+                                                    borderRadius: '8px',
+                                                    bgcolor: '#f8f9fa',
+                                                    maxHeight: '200px',
+                                                    overflow: 'auto',
+                                                    fontFamily: 'monospace',
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
+                                                >
+                                                    API Response:
+                                                </Typography>
+                                                <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{testResponse}</pre>
+                                            </Box>
+                                        )}
+                                    </Paper>
+                                </>
+                            )}
+
+                            {/* QR Codes Tab Content */}
+                            {showQrCodes && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{ p: 3, border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '8px' }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                        sx={{ mb: 3, color: 'primary.main', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        <QrCodeIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
+                                        QR Codes
+                                    </Typography>
+
+                                    {machineById.machineQrsResponses && machineById.machineQrsResponses.length > 0 ? (
+                                        <Grid container spacing={3} justifyContent="center">
+                                            {machineById.machineQrsResponses.map((qr, index) => (
+                                                <Grid
+                                                    item
+                                                    xs={12}
+                                                    sm={6}
+                                                    md={4}
+                                                    key={`qr-${index}-${qr.machineQrId || index}`}
+                                                >
+                                                    <Card
+                                                        sx={{
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            p: 2,
+                                                            height: '100%',
+                                                            borderRadius: '12px',
+                                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                                                            transition: 'all 0.3s ease',
+                                                            '&:hover': {
+                                                                transform: 'translateY(-4px)',
+                                                                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: '100%',
+                                                                padding: '12px',
+                                                                borderRadius: '8px',
+                                                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                                                display: 'flex',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
+                                                                backgroundColor: 'white',
+                                                                mb: 2,
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={getImage(qr.qrUrl)}
+                                                                alt={`QR for ${qr.guidelineName || 'Guideline'}`}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    maxWidth: '150px',
+                                                                    height: 'auto',
+                                                                }}
+                                                            />
+                                                        </Box>
+
+                                                        <Typography
+                                                            variant="subtitle1"
+                                                            align="center"
+                                                            sx={{
+                                                                mb: 2,
+                                                                fontWeight: 'bold',
+                                                                color: 'primary.dark',
+                                                            }}
+                                                        >
+                                                            {qr.guidelineName || 'Guideline QR'}
+                                                        </Typography>
+
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            startIcon={<DownloadIcon />}
+                                                            size="small"
+                                                            sx={{ mt: 'auto', textTransform: 'none' }}
+                                                            onClick={() =>
+                                                                handleDownloadQrCode(
+                                                                    qr.qrUrl,
+                                                                    `${qr.guidelineName || 'Guideline'}_QRCode.png`,
+                                                                )
+                                                            }
+                                                        >
+                                                            Download
+                                                        </Button>
+                                                    </Card>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    ) : (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                py: 4,
+                                            }}
+                                        >
+                                            <Box sx={{ mb: 2, opacity: 0.5 }}>
+                                                <QrCodeIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
+                                            </Box>
+                                            <Typography variant="h6" color="text.secondary">
+                                                No QR Codes Available
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ mt: 1, textAlign: 'center' }}
+                                            >
+                                                This machine doesn't have any QR codes assigned yet.
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Paper>
                             )}
                         </Box>
                     </DialogContent>
-                    <DialogActions>
-                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseUpdateMachineDialog}>
+
+                    <DialogActions
+                        sx={{
+                            px: 3,
+                            py: 2,
+                            borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={() => setOpenConfirmDeleteMachineTypeDialog(true)}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Delete Machine
+                        </Button>
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                sx={{ textTransform: 'none' }}
+                                onClick={handleCloseUpdateMachineDialog}
+                                startIcon={<CancelIcon />}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                sx={{ textTransform: 'none', px: 3 }}
+                                variant="contained"
+                                color="primary"
+                                onClick={handleUpdateMachine}
+                                disabled={isLoadingUpdateMachine}
+                                startIcon={isLoadingUpdateMachine ? <CircularProgress size={20} /> : <SaveIcon />}
+                            >
+                                {isLoadingUpdateMachine ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Dialog>
+                {/* Delete Confirmation Dialog */}
+                <Dialog
+                    open={openConfirmDeleteMachineTypeDialog}
+                    onClose={() => setOpenConfirmDeleteMachineTypeDialog(false)}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                        },
+                    }}
+                >
+                    <DialogTitle
+                        sx={{
+                            backgroundColor: '#FFEBEE',
+                            color: '#D32F2F',
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <WarningIcon sx={{ mr: 1.5 }} />
+                        Confirm Delete Machine
+                    </DialogTitle>
+
+                    <DialogContent sx={{ pt: 3, pb: 1 }}>
+                        <Typography>
+                            Are you sure you want to delete the machine <strong>{machineById.machineName}</strong>?
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                            This action cannot be undone. All data associated with this machine, including QR codes,
+                            will be permanently removed.
+                        </Typography>
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button
+                            onClick={() => setOpenConfirmDeleteMachineTypeDialog(false)}
+                            color="primary"
+                            sx={{ textTransform: 'none' }}
+                        >
                             Cancel
                         </Button>
                         <Button
-                            variant="contained"
-                            color="primary"
-                            sx={{ textTransform: 'none' }}
-                            onClick={handleUpdateMachine}
-                            disabled={isLoadingUpdateMachine}
-                        >
-                            {isLoadingUpdateMachine ? <CircularProgress /> : ' Save Changes'}
-                        </Button>
-                        <Button
-                            variant="contained"
+                            onClick={handleDeleteMachine}
                             color="error"
-                            sx={{ textTransform: 'none' }}
-                            onClick={() => setOpenConfirmDeleteMachineTypeDialog(true)}
+                            variant="contained"
+                            sx={{ borderRadius: '6px', textTransform: 'none' }}
+                            startIcon={<DeleteForeverIcon />}
                         >
-                            Delete
+                            Delete Permanently
                         </Button>
                     </DialogActions>
                 </Dialog>
-
                 <Dialog
                     open={openConfirmDeleteMachineTypeDialog}
                     onClose={() => setOpenConfirmDeleteMachineTypeDialog(false)}
@@ -1023,6 +2039,132 @@ export default function MachinesManagement() {
                         <Button onClick={() => setOpenConfirmDeleteMachineTypeDialog(false)}>Cancel</Button>
                         <Button variant="contained" color="error" onClick={handleDeleteMachine}>
                             Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={openQrDialog}
+                    onClose={handleCloseQrDialog}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                        },
+                    }}
+                >
+                    <DialogTitle
+                        sx={{
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <QrCodeIcon sx={{ mr: 1.5 }} />
+                            QR Codes for {selectedMachineForQr?.machineName || 'Machine'}
+                        </Box>
+                        <IconButton edge="end" color="inherit" onClick={handleCloseQrDialog} aria-label="close">
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
+
+                    <DialogContent sx={{ p: 3 }}>
+                        {qrCodes?.length > 0 ? (
+                            <Grid container spacing={3}>
+                                {qrCodes.map((qr) => (
+                                    <Grid item xs={12} sm={6} md={4} key={qr.id}>
+                                        <Card
+                                            sx={{
+                                                textAlign: 'center',
+                                                p: 2,
+                                                height: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                borderRadius: '8px',
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-4px)',
+                                                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    p: 2,
+                                                    flex: 1,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        width: '180px',
+                                                        height: '180px',
+                                                        border: '1px solid rgba(0, 0, 0, 0.08)',
+                                                        borderRadius: '8px',
+                                                        p: 1,
+                                                        mb: 2,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        background: '#f5f5f5',
+                                                    }}
+                                                >
+                                                    {/* <QrCodeIcon sx={{ fontSize: 120, color: 'rgba(0, 0, 0, 0.4)' }} /> */}
+                                                    <img
+                                                        src={getImage(qr.qrUrl)}
+                                                        alt={`QR for ${qr.guidelineName || 'Guideline'}`}
+                                                        style={{
+                                                            width: '100%',
+                                                            maxWidth: '150px',
+                                                            height: 'auto',
+                                                        }}
+                                                    />
+                                                </Box>
+                                                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 1 }}>
+                                                    {qr.guidelineName}
+                                                </Typography>
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    startIcon={<DownloadIcon />}
+                                                    onClick={() =>
+                                                        downloadQrCode(
+                                                            qr.url,
+                                                            selectedMachineForQr?.machineName,
+                                                            qr.guidelineName,
+                                                        )
+                                                    }
+                                                    sx={{ mt: 'auto', textTransform: 'none' }}
+                                                >
+                                                    Download
+                                                </Button>
+                                            </Box>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        ) : (
+                            <Box sx={{ py: 4, textAlign: 'center' }}>
+                                <Typography color="text.secondary">No QR codes available for this machine</Typography>
+                            </Box>
+                        )}
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(0, 0, 0, 0.08)' }}>
+                        <Button
+                            onClick={handleCloseQrDialog}
+                            color="primary"
+                            variant="contained"
+                            sx={{ borderRadius: '6px', textTransform: 'none' }}
+                        >
+                            Close
                         </Button>
                     </DialogActions>
                 </Dialog>

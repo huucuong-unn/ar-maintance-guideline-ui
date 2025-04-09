@@ -614,7 +614,7 @@ export default function CompanyRequestManagement() {
                         <>
                             {openEditor && (
                                 <ModelEditor
-                                    action={'UpdateModelGuideline'}
+                                    action={'UpdateModelRequest'}
                                     modelId={openModelId}
                                     handleCloseModal={handleCloseEditor}
                                     requestId={requestId}

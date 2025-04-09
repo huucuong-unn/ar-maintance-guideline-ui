@@ -13,6 +13,9 @@ import {
     TextField,
     Typography,
     Autocomplete,
+    InputAdornment,
+    Chip,
+    Tooltip,
 } from '@mui/material';
 import { IconButton } from '@mui/material';
 import { Delete } from '@mui/icons-material';
@@ -27,6 +30,14 @@ import storageService from '~/components/StorageService/storageService';
 import ModelTypeAPI from '~/API/ModelTypeAPI';
 import MachineTypeAttributeAPI from '~/API/MachineTypeAttributeAPI';
 import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import CategoryIcon from '@mui/icons-material/Category';
+import DevicesIcon from '@mui/icons-material/Devices';
+import TuneIcon from '@mui/icons-material/Tune';
+import BusinessIcon from '@mui/icons-material/Business';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import MachineTypeAPI from '~/API/MachineTypeAPI';
 import { DeleteIcon } from 'lucide-react';
 
@@ -367,80 +378,397 @@ export default function MachineTypeManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 4 }}>
-                    <Typography
-                        component="h1"
-                        variant="h4"
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 3 }}>
+                    {/* Header with Dashboard Stats */}
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    mb: 1,
+                                }}
+                            >
+                                <Typography
+                                    component="h1"
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: '800',
+                                        fontSize: { xs: '28px', md: '36px', lg: '42px' },
+                                        color: '#051D40',
+                                    }}
+                                >
+                                    Machine Types Management
+                                </Typography>
+
+                                <Box>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        sx={{
+                                            bgcolor: '#051D40',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#02F18D',
+                                                color: '#051D40',
+                                            },
+                                            px: 3,
+                                            py: 1.2,
+                                            textTransform: 'none',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 12px rgba(5, 29, 64, 0.15)',
+                                            fontWeight: 'medium',
+                                        }}
+                                        onClick={handleOpenCreateMachineTypeDialog}
+                                    >
+                                        Create Machine Type
+                                    </Button>
+                                </Box>
+                            </Box>
+
+                            {/* Stats Cards */}
+                            <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                                            border: '1px solid #90CAF9',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Machine Types
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#1565C0" sx={{ mt: 1 }}>
+                                            {total || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <CategoryIcon
+                                                sx={{ color: '#1565C0', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Available Types
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
+                                            border: '1px solid #A5D6A7',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Machine
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#2E7D32" sx={{ mt: 1 }}>
+                                            {rows[0]?.numOfMachineUsing || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <DevicesIcon
+                                                sx={{ color: '#2E7D32', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Machines Using Types
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
+                                            border: '1px solid #9FA8DA',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Company
+                                        </Typography>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color="#303F9F"
+                                            sx={{
+                                                mt: 1,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {userInfo?.company?.companyName || 'N/A'}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <BusinessIcon
+                                                sx={{ color: '#303F9F', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Company Infor
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    {/* Search and Filters */}
+                    <Paper
+                        elevation={1}
                         sx={{
-                            fontWeight: '900',
-                            fontSize: '46px',
-                            color: '#051D40',
-                            my: 5,
+                            p: 3,
+                            mb: 3,
+                            borderRadius: '12px',
+                            backgroundColor: 'white',
                         }}
                     >
-                        Machines Type Management
-                    </Typography>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#051D40' }}>
+                            Search & Filters
+                        </Typography>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-                        <Button
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#051D40',
-                                color: 'white',
-                                '&:hover': {
-                                    bgcolor: '#02F18D',
-                                    color: '#051D40',
-                                },
-                                p: 2,
-                                mr: 2,
-                                textTransform: 'none',
-                            }}
-                            onClick={handleOpenCreateMachineTypeDialog}
-                        >
-                            Create Machine Type
-                        </Button>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={8}>
+                                <TextField
+                                    fullWidth
+                                    label="Search Machine Type"
+                                    variant="outlined"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    placeholder="Enter machine type name"
+                                    size="medium"
+                                />
+                            </Grid>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <TextField
-                                label="Search Machine Type Name"
-                                variant="outlined"
-                                size="medium"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                sx={{ mr: 2, width: 300 }}
-                            />
-                            <Button
-                                variant="contained"
-                                size="large"
-                                sx={{
-                                    bgcolor: '#1976d2',
-                                    color: 'white',
-                                    '&:hover': {
-                                        bgcolor: '#115293',
-                                        color: 'white',
-                                    },
-                                    p: 2,
-                                    textTransform: 'none',
-                                }}
-                                onClick={handleSearch}
-                            >
-                                Filter
-                            </Button>
-                        </Box>
-                    </Box>
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<FilterListIcon />}
+                                        onClick={handleSearch}
+                                        sx={{
+                                            bgcolor: '#1976d2',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#115293',
+                                            },
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Apply Filter
+                                    </Button>
 
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<RefreshIcon />}
+                                        onClick={() => {
+                                            setSearchTerm('');
+                                            setPaginationModel({ page: 0, pageSize: 5 });
+                                            // Call the search function with empty search term
+                                            handleSearch();
+                                        }}
+                                        sx={{
+                                            borderColor: '#1976d2',
+                                            color: '#1976d2',
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    {/* DataGrid with enhanced styling */}
                     <Paper
+                        elevation={2}
                         sx={{
-                            height: 500,
                             width: '100%',
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            borderRadius: 2,
+                            borderRadius: '12px',
                             overflow: 'hidden',
+                            mb: 4,
+                            '& .MuiDataGrid-root': {
+                                border: 'none',
+                            },
+                            '& .MuiDataGrid-cell': {
+                                borderColor: 'rgba(224, 224, 224, 1)',
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: '#F5F7FA',
+                                borderBottom: 'none',
+                            },
+                            '& .MuiDataGrid-columnHeaderTitle': {
+                                fontWeight: 'bold',
+                            },
                         }}
                     >
                         <DataGrid
                             rows={rows}
-                            columns={columns}
+                            columns={[
+                                {
+                                    field: 'machineTypeName',
+                                    headerName: 'Machine Type',
+                                    flex: 1.5,
+                                    minWidth: 200,
+                                    renderCell: (params) => (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center', // Try 'start' instead
+                                                height: '100%', // Ensure full height
+                                            }}
+                                        >
+                                            <CategoryIcon
+                                                sx={{
+                                                    color: '#051D40',
+                                                    mr: 1.5,
+                                                    opacity: 0.7,
+                                                    alignSelf: 'center', // Center the icon vertically
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    height: '100%',
+                                                }}
+                                            >
+                                                {params.value}
+                                            </Typography>
+                                        </Box>
+                                    ),
+                                },
+                                {
+                                    field: 'numOfAttribute',
+                                    headerName: 'Attributes',
+                                    flex: 0.8,
+                                    minWidth: 120,
+                                    renderCell: (params) => (
+                                        <Chip
+                                            label={params.row.numOfAttribute || 0}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                                color: '#1976d2',
+                                                fontWeight: 'medium',
+                                                borderRadius: '4px',
+                                            }}
+                                        />
+                                    ),
+                                },
+                                {
+                                    field: 'numOfMachine',
+                                    headerName: 'Machines',
+                                    flex: 0.8,
+                                    minWidth: 120,
+                                    renderCell: (params) => {
+                                        const count = params.row.numOfMachine || 0;
+                                        return (
+                                            <Chip
+                                                icon={<DevicesIcon />}
+                                                label={count}
+                                                size="small"
+                                                sx={{
+                                                    bgcolor:
+                                                        count > 0
+                                                            ? 'rgba(46, 125, 50, 0.08)'
+                                                            : 'rgba(211, 47, 47, 0.08)',
+                                                    color: count > 0 ? '#2E7D32' : '#D32F2F',
+                                                    fontWeight: 'medium',
+                                                }}
+                                            />
+                                        );
+                                    },
+                                },
+                                // {
+                                //     field: 'createdDate',
+                                //     headerName: 'Created Date',
+                                //     flex: 1,
+                                //     minWidth: 180,
+                                //     valueFormatter: (params) => {
+                                //         if (!params.value) return 'N/A';
+                                //         return new Date(params.value).toLocaleDateString('en-US', {
+                                //             year: 'numeric',
+                                //             month: 'short',
+                                //             day: 'numeric',
+                                //         });
+                                //     },
+                                // },
+                                {
+                                    field: 'action',
+                                    headerName: 'Actions',
+                                    flex: 1,
+                                    minWidth: 160,
+                                    renderCell: (params) => (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: '100%',
+                                                justifyContent: 'flex-start',
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <Tooltip title="Edit Machine Type">
+                                                <IconButton
+                                                    color="primary"
+                                                    size="small"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        handleOpenUpdateMachineTypeModal(params.row.machineTypeId);
+                                                    }}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(25, 118, 210, 0.15)',
+                                                        },
+                                                    }}
+                                                >
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    ),
+                                },
+                            ]}
                             rowCount={total}
                             paginationMode="server"
                             paginationModel={paginationModel}
@@ -450,8 +778,14 @@ export default function MachineTypeManagement() {
                                     page: newModel.page,
                                 }))
                             }
-                            sx={{ border: 'none' }}
+                            disableRowSelectionOnClick
+                            autoHeight
                             getRowId={(row) => row.machineTypeId}
+                            sx={{
+                                '& .MuiDataGrid-row:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                },
+                            }}
                         />
                     </Paper>
 

@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Paper, Typography, TextField, Autocomplete } from '@mui/material';
+import { Box, Button, Grid, Paper, Typography, TextField, Autocomplete, InputAdornment, Chip } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { format } from 'date-fns';
@@ -11,6 +11,16 @@ import SubscriptionAPI from '~/API/SubscriptionAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import PackagesDialog from '~/components/PackagesDialog';
 import storageService from '~/components/StorageService/storageService';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import ErrorIcon from '@mui/icons-material/Error';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import EventIcon from '@mui/icons-material/Event';
 
 function Copyright(props) {
     return (
@@ -130,7 +140,7 @@ export default function PaymentAndSubscriptionManagement() {
         { field: 'email', headerName: 'User Email', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'amount', headerName: 'Amount', width: 200 },
-        { field: 'point', headerName: 'Point', width: 200 },
+        { field: 'point', headerName: 'Point', width: 100 },
         { field: 'createdDate', headerName: 'Create At', width: 200 },
         {
             field: 'status',
@@ -254,67 +264,454 @@ export default function PaymentAndSubscriptionManagement() {
                     alignItems: 'center',
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%' }}>
-                    <Typography
-                        component="h1"
-                        variant="h4"
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 3 }}>
+                    {/* Header with Dashboard Stats */}
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    mb: 2,
+                                }}
+                            >
+                                <Typography
+                                    component="h1"
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: '800',
+                                        fontSize: { xs: '28px', md: '36px', lg: '42px' },
+                                        color: '#051D40',
+                                    }}
+                                >
+                                    Payment History
+                                </Typography>
+                            </Box>
+
+                            {/* Stats Cards */}
+                            <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                                            border: '1px solid #90CAF9',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Transactions
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#1565C0" sx={{ mt: 1 }}>
+                                            {total || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <ReceiptIcon
+                                                sx={{ color: '#1565C0', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                All Time
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
+                                            border: '1px solid #A5D6A7',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Completed Payments
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#2E7D32" sx={{ mt: 1 }}>
+                                            {rows[0]?.numsOfPaidTransaction || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <CheckCircleIcon
+                                                sx={{ color: '#2E7D32', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Successful
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                                            border: '1px solid #FFCC80',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Pending Payments
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#E65100" sx={{ mt: 1 }}>
+                                            {rows[0]?.numsOfPendingTransaction || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <HourglassEmptyIcon
+                                                sx={{ color: '#E65100', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Awaiting Confirmation
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%)',
+                                            border: '1px solid #EF9A9A',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Failed Transactions
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#C62828" sx={{ mt: 1 }}>
+                                            {rows[0]?.numsOfFailedTransaction || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <ErrorIcon
+                                                sx={{ color: '#C62828', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Require Attention
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    {/* Search and Filters */}
+                    <Paper
+                        elevation={1}
                         sx={{
-                            fontWeight: '900',
-                            fontSize: '46px',
-                            color: '#051D40',
-                            my: 5,
+                            p: 3,
+                            mb: 3,
+                            borderRadius: '12px',
+                            backgroundColor: 'white',
                         }}
                     >
-                        Payment History
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'right', gap: 2, mb: 3 }}>
-                        {/* Search Order Code (chỉ nhập số) */}
-                        <TextField
-                            label="Order Code"
-                            variant="outlined"
-                            size="medium"
-                            type="number"
-                            value={searchParams.orderCode}
-                            onChange={(e) => setSearchParams((prev) => ({ ...prev, orderCode: e.target.value }))}
-                        />
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#051D40' }}>
+                            Search & Filters
+                        </Typography>
 
-                        {/* Search Status */}
-                        <Autocomplete
-                            options={['PENDING', 'PAID', 'FAILED']}
-                            size="medium"
-                            sx={{ width: 200 }}
-                            renderInput={(params) => <TextField {...params} label="Status" />}
-                            value={searchParams.status || null}
-                            onChange={(event, newValue) =>
-                                setSearchParams((prev) => ({ ...prev, status: newValue || '' }))
-                            }
-                        />
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    label="Order Code"
+                                    variant="outlined"
+                                    type="number"
+                                    value={searchParams.orderCode}
+                                    onChange={(e) =>
+                                        setSearchParams((prev) => ({ ...prev, orderCode: e.target.value }))
+                                    }
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <ReceiptLongIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    placeholder="Enter order code"
+                                    size="medium"
+                                />
+                            </Grid>
 
-                        {/* Nút Search */}
-                        <Button
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#1976d2',
-                                color: 'white',
-                                '&:hover': {
-                                    bgcolor: '#115293',
-                                    color: 'white',
-                                },
-                                p: 2,
-                                textTransform: 'none',
-                            }}
-                            onClick={handleSearch}
-                        >
-                            Filter
-                        </Button>
-                    </Box>
+                            <Grid item xs={12} md={4}>
+                                <Autocomplete
+                                    fullWidth
+                                    options={['PENDING', 'PAID', 'FAILED']}
+                                    value={searchParams.status || null}
+                                    onChange={(event, newValue) =>
+                                        setSearchParams((prev) => ({ ...prev, status: newValue || '' }))
+                                    }
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Payment Status"
+                                            variant="outlined"
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <PaymentsIcon color="action" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                    renderOption={(props, option) => (
+                                        <li {...props}>
+                                            {option === 'PAID' && (
+                                                <CheckCircleIcon
+                                                    fontSize="small"
+                                                    sx={{ color: 'success.main', mr: 1 }}
+                                                />
+                                            )}
+                                            {option === 'PENDING' && (
+                                                <HourglassEmptyIcon
+                                                    fontSize="small"
+                                                    sx={{ color: 'warning.main', mr: 1 }}
+                                                />
+                                            )}
+                                            {option === 'FAILED' && (
+                                                <ErrorIcon fontSize="small" sx={{ color: 'error.main', mr: 1 }} />
+                                            )}
+                                            {option}
+                                        </li>
+                                    )}
+                                />
+                            </Grid>
 
-                    <Paper sx={{ height: 420, width: '100%' }}>
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<FilterListIcon />}
+                                        onClick={handleSearch}
+                                        sx={{
+                                            bgcolor: '#1976d2',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#115293',
+                                            },
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Apply Filters
+                                    </Button>
+
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<RefreshIcon />}
+                                        onClick={() => {
+                                            setSearchParams({ orderCode: '', status: '' });
+                                            setPaginationModel({ page: 0, pageSize: 5 });
+                                            handleSearch();
+                                        }}
+                                        sx={{
+                                            borderColor: '#1976d2',
+                                            color: '#1976d2',
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    {/* DataGrid with enhanced styling */}
+                    <Paper
+                        elevation={2}
+                        sx={{
+                            width: '100%',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            mb: 4,
+                            '& .MuiDataGrid-root': {
+                                border: 'none',
+                            },
+                            '& .MuiDataGrid-cell': {
+                                borderColor: 'rgba(224, 224, 224, 1)',
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: '#F5F7FA',
+                                borderBottom: 'none',
+                            },
+                            '& .MuiDataGrid-columnHeaderTitle': {
+                                fontWeight: 'bold',
+                            },
+                        }}
+                    >
                         <DataGrid
                             rows={rows}
-                            columns={columns}
+                            columns={columns.map((column) => {
+                                // Thêm định dạng tốt hơn cho cột Status
+                                if (column.field === 'status') {
+                                    return {
+                                        ...column,
+                                        renderCell: (params) => {
+                                            const status = params.value;
+                                            let chipProps = {
+                                                label: status,
+                                                size: 'small',
+                                                sx: {
+                                                    borderRadius: '16px',
+                                                    fontWeight: 'medium',
+                                                },
+                                            };
+
+                                            switch (status) {
+                                                case 'PAID':
+                                                    chipProps = {
+                                                        ...chipProps,
+                                                        icon: <CheckCircleIcon />,
+                                                        color: 'success',
+                                                        variant: 'outlined',
+                                                    };
+                                                    break;
+                                                case 'PENDING':
+                                                    chipProps = {
+                                                        ...chipProps,
+                                                        icon: <HourglassEmptyIcon />,
+                                                        color: 'warning',
+                                                        variant: 'outlined',
+                                                    };
+                                                    break;
+                                                case 'FAILED':
+                                                    chipProps = {
+                                                        ...chipProps,
+                                                        icon: <ErrorIcon />,
+                                                        color: 'error',
+                                                        variant: 'outlined',
+                                                    };
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+
+                                            return <Chip {...chipProps} />;
+                                        },
+                                    };
+                                }
+
+                                // Thêm định dạng cho cột số tiền (nếu có)
+                                if (column.field === 'amount' || column.field === 'totalAmount') {
+                                    return {
+                                        ...column,
+                                        renderCell: (params) => (
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center', // Try 'start' instead
+                                                    height: '100%', // Ensure full height
+                                                }}
+                                            >
+                                                <AttachMoneyIcon
+                                                    // sx={{ color: 'success.main', mr: 0.5, fontSize: '1rem' }}
+                                                    sx={{
+                                                        color: 'success.main',
+                                                        opacity: 0.7,
+                                                        alignSelf: 'center',
+                                                        mr: 0.5,
+                                                        fontSize: '1rem',
+                                                    }}
+                                                />
+                                                <Typography fontWeight="medium">
+                                                    {typeof params.value === 'number'
+                                                        ? params.value.toLocaleString('en-US', {
+                                                              minimumFractionDigits: 0,
+                                                              maximumFractionDigits: 2,
+                                                          })
+                                                        : params.value}
+                                                </Typography>
+                                            </Box>
+                                        ),
+                                    };
+                                }
+
+                                // Định dạng cho cột ngày (nếu có)
+                                if (column.field === 'createdDate' || column.field === 'paymentDate') {
+                                    return {
+                                        ...column,
+                                        renderCell: (params) => (
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center', // Try 'start' instead
+                                                    height: '100%', // Ensure full height
+                                                }}
+                                            >
+                                                <EventIcon
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        opacity: 0.7,
+                                                        alignSelf: 'center',
+                                                        mr: 0.5,
+                                                        fontSize: '1rem',
+                                                    }}
+                                                />
+                                                <Typography variant="body2">{params.value}</Typography>
+                                            </Box>
+                                        ),
+                                    };
+                                }
+
+                                // Định dạng cho cột Order Code (nếu có)
+                                if (column.field === 'orderCode') {
+                                    return {
+                                        ...column,
+                                        renderCell: (params) => (
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center', // Try 'start' instead
+                                                    height: '100%', // Ensure full height
+                                                }}
+                                            >
+                                                <ReceiptLongIcon
+                                                    sx={{
+                                                        color: '#051D40',
+                                                        opacity: 0.7,
+                                                        alignSelf: 'center',
+                                                        mr: 0.5,
+                                                        fontSize: '1rem',
+                                                    }}
+                                                />
+                                                <Typography fontWeight="medium">#{params.value}</Typography>
+                                            </Box>
+                                        ),
+                                    };
+                                }
+
+                                return column;
+                            })}
                             rowCount={total}
                             paginationMode="server"
+                            pageSizeOptions={[5, 10, 25, 50]}
                             paginationModel={paginationModel}
                             onPaginationModelChange={(newModel) => {
                                 setPaginationModel((prev) => ({
@@ -322,15 +719,19 @@ export default function PaymentAndSubscriptionManagement() {
                                     page: newModel.page,
                                 }));
                             }}
-                            sx={{
-                                border: 'none',
-                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                            }}
+                            disableRowSelectionOnClick
+                            autoHeight
                             getRowId={(row) => row.id}
+                            sx={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                '& .MuiDataGrid-row:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                },
+                            }}
                         />
                     </Paper>
 
-                    <Copyright sx={{ mt: 5 }} />
+                    <Copyright sx={{ mt: 3 }} />
                 </Box>
             </Grid>
         </ThemeProvider>

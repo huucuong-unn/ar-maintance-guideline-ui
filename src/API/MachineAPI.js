@@ -21,6 +21,9 @@ const MachineAPI = {
     getByGuidelineId(id) {
         return axiosClient.get(`/v1/machine/guideline/${id}`);
     },
+    getMachineQRByMachineId(id) {
+        return axiosClient.get(`/v1/machine-qr/machine/${id}`);
+    },
     create(data) {
         return axiosClient.post('/v1/machine', data);
     },
