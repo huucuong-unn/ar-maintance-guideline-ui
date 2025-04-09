@@ -36,4 +36,4 @@ export const formatDateTime = (dateString) => {
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
-export const host = process.env.REACT_APP_BACKEND_APP_HOST_LOCAL;
+export const host = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
