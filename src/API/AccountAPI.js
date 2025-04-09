@@ -123,6 +123,9 @@ const AccountAPI = {
     deleteStaff(id) {
         return axiosClient.delete(`/v1/user/${id}`);
     },
+    getCountEmployeeActive(companyId) {
+        return axiosClient.get(`/v1/employee/company/${companyId}`);
+    },
 };
 
 export default AccountAPI;
