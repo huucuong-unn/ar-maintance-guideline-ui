@@ -669,7 +669,7 @@ export default function CoursesControlEdit() {
     const handleDownloadDocumentFile = (name, documentFile) => {
         try {
             // File ID cứng cho mục đích test
-            const hardcodedFileId = '2e0e9247-4c73-41bf-93e0-0a7962905c6e.pdf';
+            const hardcodedFileId = '63340fec-6305-49b7-a41b-aebcee136f36.pdf';
 
             const fileId = documentFile || hardcodedFileId;
 
