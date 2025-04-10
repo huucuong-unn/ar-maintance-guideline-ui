@@ -89,14 +89,14 @@ export default function WalletHistory() {
                                     height: '100%', // Ensure full height
                                 }}
                             >
-                                <AttachMoneyIcon
+                                {/* <AttachMoneyIcon
                                     sx={{
                                         color: isCredit ? 'success.main' : 'error.main',
                                         mr: 0.5,
                                         fontSize: '1rem',
                                         alignSelf: 'center',
                                     }}
-                                />
+                                /> */}
                                 <Typography className={isCredit ? 'transaction-credit' : 'transaction-debit'}>
                                     {typeof params.value === 'number'
                                         ? params.value.toLocaleString('en-US', {
