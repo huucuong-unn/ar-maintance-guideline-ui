@@ -797,6 +797,10 @@ export default function SimplifiedModelViewer({
         fetchInstructionDetail();
     }, [currentInstructionDetailId]);
 
+    useEffect(() => {
+        console.log(formData);
+    }, [formData]);
+
     const handleUpdateInstructionDetail = async () => {
         if (!currentInstructionDetailId) {
             console.error('Instruction Detail ID is required for update.');
@@ -806,6 +810,7 @@ export default function SimplifiedModelViewer({
         // Trim spaces
         // const trimmedName = formData.instructionDetailName.trim();
         // const trimmedDescription = formData.instructionDetailDescription.trim();
+        console.log(formData.instructionDetailName);
         const trimmedName = (formData.instructionDetailName ?? '').trim();
         const trimmedDescription = (formData.instructionDetailDescription ?? '').trim();
 
