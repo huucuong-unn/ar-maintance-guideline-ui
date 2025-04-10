@@ -2135,10 +2135,14 @@ export default function MachinesManagement() {
                                                     size="small"
                                                     startIcon={<DownloadIcon />}
                                                     onClick={() =>
-                                                        downloadQrCode(
-                                                            qr.url,
-                                                            selectedMachineForQr?.machineName,
-                                                            qr.guidelineName,
+                                                        // downloadQrCode(
+                                                        //     qr.url,
+                                                        //     selectedMachineForQr?.machineName,
+                                                        //     qr.guidelineName,
+                                                        // )
+                                                        handleDownloadQrCode(
+                                                            qr.qrUrl,
+                                                            `${qr.guidelineName || 'Guideline'}_QRCode.png`,
                                                         )
                                                     }
                                                     sx={{ mt: 'auto', textTransform: 'none' }}
