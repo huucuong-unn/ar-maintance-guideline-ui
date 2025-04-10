@@ -650,6 +650,24 @@ export default function SimplifiedModelViewer({
         }
     }, [action]);
 
+    const handleUploadModelRequest = async () => {
+        setIsLoading(true);
+
+        console.log('modelFile3DToCreate', modelFile3DToCreate);
+
+        const formDataToCreate = new FormData();
+        formDataToCreate.append('id', requestId);
+        formDataToCreate.append('status', 'DELIVERED');
+        formDataToCreate.append('modelFile', modelFile3DToCreate);
+
+        const response = await CompanyRequestAPI.updateRequestRevision(requestId, formDataToCreate);
+        toast.success('Model created successfully!', { position: 'top-right' });
+        setIsLoading(false);
+
+        handleCloseModal();
+        resetFormData();
+    };
+
     const handleCreateModel = async () => {
         // Trim spaces
         const trimmedName = formData.name.trim();
@@ -1425,7 +1443,6 @@ export default function SimplifiedModelViewer({
                                     ))}
                                 </Stack>
 
-                                {/* Scale */}
                                 <Typography
                                     variant="subtitle1"
                                     gutterBottom
@@ -1453,7 +1470,7 @@ export default function SimplifiedModelViewer({
                                         },
                                     }}
                                 />
-                                {action !== 'UpdateModelGuideline' && (
+                                {action !== 'UpdateModelGuideline' && action !== 'UploadModelRequest' && (
                                     <Button
                                         variant="contained"
                                         color="primary"
@@ -1474,9 +1491,20 @@ export default function SimplifiedModelViewer({
                                         )}
                                     </Button>
                                 )}
+                                {action === 'UploadModelRequest' && (
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ width: '100%', textTransform: 'none' }}
+                                        onClick={handleUploadModelRequest}
+                                        disabled={isLoading || isLoadingUpdateModelGuideline}
+                                    >
+                                        {isLoading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Upload'}
+                                    </Button>
+                                )}
                             </>
                         )}
-                        {action == 'UpdateInstructionDetail' && (
+                        {action === 'UpdateInstructionDetail' && (
                             <>
                                 <TextField
                                     label="Instruction Detail Name"

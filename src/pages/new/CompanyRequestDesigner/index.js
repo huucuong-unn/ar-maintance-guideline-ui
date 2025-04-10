@@ -117,7 +117,7 @@ export default function CompanyRequestDesigner() {
                                 <Button
                                     variant="contained"
                                     component="label"
-                                    sx={{ width: '100px', bgcolor: 'orange' }}
+                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                     onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
                                 >
                                     Chat

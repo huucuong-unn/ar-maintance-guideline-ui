@@ -38,6 +38,7 @@ import AdminDashboard from '~/pages/new/DashboardManagement';
 import CompanyDashboard from '~/pages/new/DashboardManagement/companyDashboard';
 import PointOptionManagement from '~/pages/new/PointOptionManagement';
 import CompanyRequestSection from '~/pages/new/CompanyRequestSection';
+import RequestRevisionList from '~/components/Chat/RequestRevisionList';
 
 const publicRoutes = [
     //new
@@ -52,7 +53,7 @@ const publicRoutes = [
     { path: '/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },
     { path: '/company/waiting', component: CompanyWaiting, layout: null },
-    { path: `/company-request-section/:requestId`, component: CompanyRequestSection, layout: null },
+    { path: `/company-request-section/:requestId`, component: CompanyRequestSection, layout: AdminLayout },
 ];
 
 const adminRoutes = [
@@ -102,6 +103,11 @@ const designerRoutes = [
         path: '/designer/company-request-management',
         component: CompanyRequestDesigner,
         layout: AdminLayout,
+    },
+    {
+        path: '/request-revision/list',
+        component: RequestRevisionList,
+        layout: null,
     },
 ];
 

@@ -25,6 +25,18 @@ import CardMachine from '~/components/CardMachine'; // The updated CardMachine
 import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+// Add these imports at the top of your file
+
+// Add these imports at the top of your file
+import { useRef } from 'react';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import DeleteIcon from '@mui/icons-material/Delete';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import IconButton from '@mui/material/IconButton';
 
 function Copyright(props) {
     return (
@@ -45,6 +57,23 @@ export default function CompanyRequestManagement() {
     // --------------------- FIRST DIALOG (Select Machine) ---------------------
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [machines, setMachines] = useState([]);
+
+    const [revisionFiles, setRevisionFiles] = useState([]);
+    const fileInputRef = useRef(null);
+
+    // Add these functions to handle file uploads
+    const handleFileChange = (event) => {
+        const newFiles = Array.from(event.target.files);
+        setRevisionFiles([...revisionFiles, ...newFiles]);
+    };
+
+    const handleRemoveFile = (indexToRemove) => {
+        setRevisionFiles(revisionFiles.filter((_, index) => index !== indexToRemove));
+    };
+
+    const handleClickUpload = () => {
+        fileInputRef.current.click();
+    };
 
     // 2) When a user selects a machine card
     const [selectedMachine, setSelectedMachine] = useState(null);
@@ -97,7 +126,7 @@ export default function CompanyRequestManagement() {
                             <Button
                                 variant="contained"
                                 component="label"
-                                sx={{ width: '100px', bgcolor: 'orange' }}
+                                sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
                                 onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
                             >
                                 Chat
@@ -185,6 +214,19 @@ export default function CompanyRequestManagement() {
         pageSize: 5,
     });
     const [total, setTotal] = useState(0);
+
+    // const [revisionFiles, setRevisionFiles] = useState([]);
+
+    // // Then add this function to handle file uploads
+    // const handleFileChange = (event) => {
+    //     const files = Array.from(event.target.files);
+    //     setRevisionFiles((prevFiles) => [...prevFiles, ...files]);
+    // };
+
+    // // Add this function to remove a file from the list
+    // const handleRemoveFile = (fileToRemove) => {
+    //     setRevisionFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    // };
 
     // Fetch existing requests
     const fetchData = async () => {
@@ -276,22 +318,33 @@ export default function CompanyRequestManagement() {
 
         try {
             setIsLoading(true);
-            const payload = {
-                companyId: userInfo?.company?.id,
-                machineTypeId: selectedMachine?.machineTypeId, // the chosen machine
-                requestSubject,
-                requestDescription,
-                requesterId: userInfo?.id,
-            };
-            // Call your API
-            const response = await CompanyRequestAPI.createRequest(payload);
+
+            // Create FormData for file uploads
+            const formData = new FormData();
+
+            // Flattened fields
+            formData.append('companyId', userInfo?.company?.id);
+            formData.append('machineTypeId', selectedMachine?.machineTypeId);
+            formData.append('requestSubject', requestSubject);
+            formData.append('requestDescription', requestDescription);
+            formData.append('requesterId', userInfo?.id);
+
+            // This part is key!
+            revisionFiles.forEach((file) => {
+                formData.append('requestRevision.revisionFiles', file); // Note the nested path
+            });
+
+            // Call your API - you might need to adjust your API call to handle FormData
+            const response = await CompanyRequestAPI.createRequest(formData);
+
             if (response?.result) {
-                // Optionally show success
                 toast.success('Request created successfully!');
                 fetchData(); // refresh the table
+                setRevisionFiles([]); // Reset files after successful submission
             }
         } catch (error) {
             console.error('Failed to create request:', error);
+            toast.error('Failed to create request. Please try again.');
         } finally {
             setIsLoading(false);
             handleCloseMachineDialog();
@@ -568,15 +621,68 @@ export default function CompanyRequestManagement() {
                             value={requestDescription}
                             onChange={(e) => setRequestDescription(e.target.value)}
                         />
+
                         <TextField
                             disabled
                             margin="normal"
                             label="Machine Type"
                             fullWidth
-                            multiline
-                            rows={3}
                             value={selectedMachine?.machineTypeName}
                         />
+
+                        {/* File Upload Section */}
+                        <Box sx={{ mt: 3, mb: 2 }}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Revision Files (Optional)
+                            </Typography>
+
+                            <input
+                                type="file"
+                                multiple
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleFileChange}
+                            />
+
+                            <Button
+                                variant="outlined"
+                                startIcon={<CloudUploadIcon />}
+                                onClick={handleClickUpload}
+                                sx={{ mb: 2 }}
+                            >
+                                Upload Files
+                            </Button>
+
+                            {/* Display selected files */}
+                            {revisionFiles.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="subtitle2" gutterBottom>
+                                        Selected Files:
+                                    </Typography>
+                                    <List>
+                                        {revisionFiles.map((file, index) => (
+                                            <ListItem
+                                                key={index}
+                                                secondaryAction={
+                                                    <IconButton edge="end" onClick={() => handleRemoveFile(index)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                }
+                                                sx={{ py: 0.5 }}
+                                            >
+                                                <ListItemIcon>
+                                                    <AttachFileIcon />
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={file.name}
+                                                    secondary={`${(file.size / 1024).toFixed(2)} KB`}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </Box>
+                            )}
+                        </Box>
                     </DialogContent>
                     <DialogActions>
                         <Button sx={{ textTransform: 'none' }} onClick={handleCloseMachineDialog}>
@@ -588,42 +694,9 @@ export default function CompanyRequestManagement() {
                             disabled={isLoading}
                             variant="contained"
                         >
-                            {isLoading ? <CircularProgress /> : 'Create'}
+                            {isLoading ? <CircularProgress size={24} /> : 'Create'}
                         </Button>
                     </DialogActions>
-                </Dialog>
-                {/* Create Model Dialog */}
-                <Dialog open={openEditor} onClose={handleCloseEditor} fullWidth maxWidth="xl">
-                    <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        Model Review
-                        <Box>
-                            <Button sx={{ textTransform: 'none' }} onClick={handleCloseEditor}>
-                                Cancel
-                            </Button>
-                            <Button
-                                sx={{ textTransform: 'none' }}
-                                onClick={handleApprove}
-                                disabled={isLoading || disableApprove}
-                                variant="contained"
-                            >
-                                {isLoading ? <CircularProgress size={24} /> : 'Approve'}
-                            </Button>
-                        </Box>
-                    </DialogTitle>
-                    <DialogActions sx={{ marginRight: '20px' }}></DialogActions>
-                    <DialogContent sx={{ minHeight: '80vh' }}>
-                        <>
-                            {openEditor && (
-                                <ModelEditor
-                                    action={'UpdateModelGuideline'}
-                                    modelId={openModelId}
-                                    handleCloseModal={handleCloseEditor}
-                                    requestId={requestId}
-                                    setDisableApprove={setDisableApprove}
-                                />
-                            )}
-                        </>
-                    </DialogContent>
                 </Dialog>
 
                 <Dialog open={openCancelConfirmDialog} onClose={handleCloseCancelConfirm} fullWidth maxWidth="xs">

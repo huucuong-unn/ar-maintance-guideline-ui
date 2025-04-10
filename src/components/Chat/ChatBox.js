@@ -23,7 +23,10 @@ import { Client } from '@stomp/stompjs';
 import ChatBoxAPI from '~/API/ChatBoxAPI';
 import storageService from '~/components/StorageService/storageService';
 import SockJS from 'sockjs-client';
-
+import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip } from '@mui/material';
+import CompanyRequestAPI from '~/API/CompanyRequestAPI';
+import { X } from 'lucide-react'; // Import X icon directly
+import RequestRevisionList from './RequestRevisionList'; // Import the RequestRevisionList component
 // Create a custom theme
 const theme = createTheme({
     palette: {
@@ -46,7 +49,42 @@ const ChatBox = ({ requestId }) => {
     const [messageInput, setMessageInput] = useState('');
     const messagesEndRef = useRef(null);
     const stompClientRef = useRef(null);
+    const [revisionRequests, setRevisionRequests] = useState([]);
+    const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
 
+    // Add these functions inside the ChatBox component
+    const fetchRevisionRequests = async () => {
+        try {
+            console.log('revisionRequests', 'hello');
+
+            const response = await CompanyRequestAPI.getRequestRevisionAllByCompanyRequestId(requestId);
+            setRevisionRequests(response || []);
+        } catch (error) {
+            console.error('Failed to fetch revision requests:', error);
+        }
+    };
+
+    const handleOpenRevisionModal = () => {
+        fetchRevisionRequests();
+        setIsRevisionModalOpen(true);
+    };
+
+    const handleCloseRevisionModal = () => {
+        setIsRevisionModalOpen(false);
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'PENDING':
+                return 'warning';
+            case 'COMPLETED':
+                return 'success';
+            case 'REJECTED':
+                return 'error';
+            default:
+                return 'default';
+        }
+    };
     // Scroll to the bottom of the chat
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -204,13 +242,7 @@ const ChatBox = ({ requestId }) => {
                             </Box>
                         </Box>
                         <Box>
-                            <IconButton>
-                                <PhoneIcon />
-                            </IconButton>
-                            <IconButton>
-                                <VideocamIcon />
-                            </IconButton>
-                            <IconButton>
+                            <IconButton onClick={handleOpenRevisionModal}>
                                 <InfoIcon />
                             </IconButton>
                         </Box>
@@ -329,6 +361,47 @@ const ChatBox = ({ requestId }) => {
                     </Box>
                 </Paper>
             </Box>
+
+            <Modal
+                open={isRevisionModalOpen}
+                onClose={handleCloseRevisionModal}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <Box sx={{ width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflow: 'auto' }}>
+                    <Paper
+                        sx={{
+                            position: 'relative',
+                            bgcolor: 'background.paper',
+                            borderRadius: 2,
+                            p: 0,
+                        }}
+                    >
+                        <IconButton
+                            sx={{
+                                position: 'absolute',
+                                right: 8,
+                                top: 8,
+                                color: 'grey.500',
+                                bgcolor: 'white',
+                                '&:hover': { bgcolor: 'grey.100' },
+                                zIndex: 10,
+                            }}
+                            onClick={handleCloseRevisionModal}
+                        >
+                            <X size={20} />
+                        </IconButton>
+
+                        <RequestRevisionList
+                            revisionRequests={revisionRequests}
+                            fetchRevisionRequests={fetchRevisionRequests}
+                        />
+                    </Paper>
+                </Box>
+            </Modal>
         </ThemeProvider>
     );
 };
