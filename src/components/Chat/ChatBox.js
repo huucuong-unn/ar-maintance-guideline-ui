@@ -98,7 +98,7 @@ const ChatBox = ({ requestId }) => {
     useEffect(() => {
         // Establish WebSocket connection
         const socket = new Client({
-            webSocketFactory: () => new SockJS(`http://${host}/ws`),
+            webSocketFactory: () => new SockJS(`${host}/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
 
