@@ -877,13 +877,20 @@ export default function CoursesControlEdit() {
                                 <Grid container spacing={2} alignItems="center">
                                     <Grid item xs={12} sm={4}>
                                         <Typography
-                                            sx={{ fontWeight: 'medium', color: 'text.secondary', fontSize: '0.95rem' }}
+                                            sx={{
+                                                fontWeight: 'medium',
+                                                color: 'text.secondary',
+                                                fontSize: '0.95rem',
+                                            }}
                                         >
                                             Machine Type Name
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={12} sm={8}>
-                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                                        <Typography
+                                            variant="body1"
+                                            sx={{ fontWeight: 'bold', color: 'text.primary', textAlign: 'left' }}
+                                        >
                                             {machineTypeOfGuideline?.machineTypeName || 'N/A'}
                                         </Typography>
                                     </Grid>
