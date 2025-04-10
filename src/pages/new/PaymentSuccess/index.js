@@ -84,8 +84,7 @@ export default function PaymentSuccess() {
                             mt: 2,
                         }}
                         onClick={() => {
-                            fetchUser();
-                            window.location.href = '/company/payment/history';
+                            navigate('/company/payment/history');
                         }}
                     >
                         Back to Home

@@ -89,6 +89,10 @@ export default function CompanyRequestDesigner() {
                 // Check if the current user is the designer of the request
                 const isDesigner = currentUserEmail === designerEmail;
 
+                console.log(designerEmail);
+                console.log(currentUserEmail);
+                console.log(isDesigner);
+
                 // If not the designer, return a message or null
                 if (designerEmail && !isDesigner) {
                     return (
@@ -232,8 +236,8 @@ export default function CompanyRequestDesigner() {
                 page: pageParam,
                 size: sizeParam,
                 status: searchStatus,
-                companyName: searchCompanyName,
-                designerEmail: searchDesignerEmail,
+                companyName: searchCompanyName || undefined,
+                designerEmail: userInfo?.email,
             };
             setIsLoading(true);
             const response = await CompanyRequestAPI.getAllCompanyRequests(params);
@@ -246,6 +250,10 @@ export default function CompanyRequestDesigner() {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        console.log(userInfo.email);
+    }, [userInfo.email]);
 
     useEffect(() => {
         fetchData();

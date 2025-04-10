@@ -17,6 +17,8 @@ import {
     TextField,
     Typography,
     Autocomplete,
+    InputAdornment,
+    Chip,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -31,6 +33,24 @@ import WalletAPI from '~/API/WalletAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import storageService from '~/components/StorageService/storageService';
 import { useWallet } from '~/WalletContext';
+import BusinessIcon from '@mui/icons-material/Business';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CancelIcon from '@mui/icons-material/Cancel';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+import GroupIcon from '@mui/icons-material/Group';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import StarsIcon from '@mui/icons-material/Stars';
+import PhoneIcon from '@mui/icons-material/Phone';
+import EmailIcon from '@mui/icons-material/Email';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import WorkIcon from '@mui/icons-material/Work';
+import EventIcon from '@mui/icons-material/Event';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import LockResetIcon from '@mui/icons-material/LockReset';
 
 function Copyright(props) {
     return (
@@ -88,6 +108,7 @@ export default function EmployeesManagement() {
         points: 1,
     });
     const [passwordError, setPasswordError] = useState('');
+    const [pssError, setPssError] = useState('');
 
     // --- State for confirm status change dialog ---
     const [openStatusConfirmDialog, setOpenStatusConfirmDialog] = useState(false);
@@ -123,6 +144,7 @@ export default function EmployeesManagement() {
         });
         setPasswordError('');
         setFullNameError(''); // Reset full name error
+        setPssError('');
     };
     const handleCloseAllocationPointDialog = () => {
         setOpenAllocationPointDialog(false);
@@ -160,6 +182,10 @@ export default function EmployeesManagement() {
                 setPasswordError('');
             }
         }
+
+        if (name === 'password' && value.length < 8) {
+            setPasswordError('Password must be at least 8 characters');
+        }
     };
 
     const handleInputChangeForPoint = (e) => {
@@ -179,10 +205,10 @@ export default function EmployeesManagement() {
             return;
         }
 
-        if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword) {
+        if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword || !newEmployee.phone) {
             return;
         }
-        if (passwordError || fullNameError) {
+        if (passwordError || fullNameError || pssError) {
             return;
         }
         try {
@@ -194,6 +220,12 @@ export default function EmployeesManagement() {
             handleCloseCreateDialog();
             fetchData();
         } catch (error) {
+            if (error?.response?.data?.code === 9999) {
+                toast.success('Create employee successfully');
+                handleCloseCreateDialog();
+                fetchData();
+                return;
+            }
             console.error('Failed to create employee:', error);
             toast.error(`Create employee failed. ${error?.response?.data?.message}`);
         } finally {
@@ -388,6 +420,22 @@ export default function EmployeesManagement() {
         fetchData();
     }, [paginationModel]);
 
+    const [countEmployeeActive, setcountEmployeeActive] = useState(0);
+
+    const fetchCountEmployeeActive = async () => {
+        try {
+            const response = await AccountAPI.getCountEmployeeActive(userInfo?.company?.id);
+            const data = response?.result || 0;
+            setcountEmployeeActive(data);
+        } catch (error) {
+            console.error('Failed to fetch count:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCountEmployeeActive();
+    }, []);
+
     const handleSearch = () => {
         setSearchParams((prev) => ({ ...prev }));
         fetchData();
@@ -419,138 +467,634 @@ export default function EmployeesManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 4 }}>
-                    <Typography
-                        component="h1"
-                        variant="h4"
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 3 }}>
+                    {/* Header with Dashboard Stats */}
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    mb: 1,
+                                }}
+                            >
+                                <Typography
+                                    component="h1"
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: '800',
+                                        fontSize: { xs: '28px', md: '36px', lg: '42px' },
+                                        color: '#051D40',
+                                    }}
+                                >
+                                    Employees Management
+                                </Typography>
+
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<PersonAddIcon />}
+                                        sx={{
+                                            bgcolor: '#051D40',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#02F18D',
+                                                color: '#051D40',
+                                            },
+                                            px: 3,
+                                            py: 1.2,
+                                            textTransform: 'none',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 12px rgba(5, 29, 64, 0.15)',
+                                            fontWeight: 'medium',
+                                        }}
+                                        onClick={handleOpenCreateDialog}
+                                        disabled={isLoadingCreateEmployee}
+                                    >
+                                        {isLoadingCreateEmployee ? (
+                                            <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
+                                        ) : (
+                                            'Create Employee'
+                                        )}
+                                    </Button>
+
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<CardGiftcardIcon />}
+                                        sx={{
+                                            bgcolor: '#051D40',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#02F18D',
+                                                color: '#051D40',
+                                            },
+                                            px: 3,
+                                            py: 1.2,
+                                            textTransform: 'none',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 12px rgba(5, 29, 64, 0.15)',
+                                            fontWeight: 'medium',
+                                        }}
+                                        onClick={handleOpenAllocationPointDialog}
+                                        disabled={isLoadingAllocationPoint}
+                                    >
+                                        {isLoadingAllocationPoint ? (
+                                            <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
+                                        ) : (
+                                            'Allocate Points'
+                                        )}
+                                    </Button>
+                                </Box>
+                            </Box>
+
+                            {/* Stats Cards */}
+                            <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                                            border: '1px solid #90CAF9',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Employees
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#1565C0" sx={{ mt: 1 }}>
+                                            {total || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <GroupIcon
+                                                sx={{ color: '#1565C0', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Registered Personnel
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
+                                            border: '1px solid #A5D6A7',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Active Employees
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#2E7D32" sx={{ mt: 1 }}>
+                                            {countEmployeeActive}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <PeopleAltIcon
+                                                sx={{ color: '#2E7D32', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Currently Working
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                {/* <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                                            border: '1px solid #FFCC80',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Points
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#E65100" sx={{ mt: 1 }}>
+                                            {rows.reduce((sum, employee) => sum + (employee.points || 0), 0)}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <StarsIcon
+                                                sx={{ color: '#E65100', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Allocated Rewards
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid> */}
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
+                                            border: '1px solid #9FA8DA',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Company
+                                        </Typography>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color="#303F9F"
+                                            sx={{
+                                                mt: 1,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {userInfo?.company?.companyName || 'Your Company'}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <BusinessIcon
+                                                sx={{ color: '#303F9F', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Company Infor
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    {/* Search and Filters */}
+                    <Paper
+                        elevation={1}
                         sx={{
-                            fontWeight: '900',
-                            fontSize: '46px',
-                            color: '#051D40',
-                            mb: 4,
+                            p: 3,
+                            mb: 3,
+                            borderRadius: '12px',
+                            backgroundColor: 'white',
                         }}
                     >
-                        Employees Management
-                    </Typography>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#051D40' }}>
+                            Search & Filters
+                        </Typography>
 
-                    {/* Search and Filter Section */}
-                    <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'left', gap: 1 }}>
-                            <Button
-                                variant="contained"
-                                sx={{
-                                    bgcolor: '#051D40',
-                                    color: 'white',
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        bgcolor: '#02F18D',
-                                        color: '#051D40',
-                                    },
-                                    p: 2,
-                                }}
-                                onClick={handleOpenCreateDialog}
-                            >
-                                {isLoadingCreateEmployee ? <CircularProgress /> : ' Create Employee'}
-                            </Button>
-                            <Button
-                                variant="contained"
-                                sx={{
-                                    bgcolor: '#051D40',
-                                    color: 'white',
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        bgcolor: '#02F18D',
-                                        color: '#051D40',
-                                    },
-                                    p: 2,
-                                }}
-                                onClick={handleOpenAllocationPointDialog}
-                            >
-                                {isLoadingAllocationPoint ? <CircularProgress /> : ' Allocate Points'}
-                            </Button>
-                        </Box>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={3}>
+                                <TextField
+                                    fullWidth
+                                    label="Phone Number"
+                                    variant="outlined"
+                                    value={searchParams.phoneNumber}
+                                    onChange={(e) =>
+                                        setSearchParams((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                                    }
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <PhoneIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    placeholder="Search by phone number"
+                                    size="medium"
+                                />
+                            </Grid>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                            {/* Search Phone Number */}
-                            <TextField
-                                label="Phone Number"
-                                variant="outlined"
-                                size="medium"
-                                value={searchParams.phoneNumber}
-                                onChange={(e) => setSearchParams((prev) => ({ ...prev, phoneNumber: e.target.value }))}
-                            />
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    label="Email"
+                                    variant="outlined"
+                                    value={searchParams.email}
+                                    onChange={(e) => setSearchParams((prev) => ({ ...prev, email: e.target.value }))}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <EmailIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    placeholder="Search by email address"
+                                    size="medium"
+                                />
+                            </Grid>
 
-                            {/* Search Email */}
-                            <TextField
-                                label="Email"
-                                variant="outlined"
-                                size="medium"
-                                value={searchParams.email}
-                                onChange={(e) => setSearchParams((prev) => ({ ...prev, email: e.target.value }))}
-                            />
+                            <Grid item xs={12} md={2}>
+                                <Autocomplete
+                                    fullWidth
+                                    options={['ACTIVE', 'INACTIVE']}
+                                    value={searchParams.status || null}
+                                    onChange={(event, newValue) =>
+                                        setSearchParams((prev) => ({ ...prev, status: newValue || '' }))
+                                    }
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Status"
+                                            variant="outlined"
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <ManageAccountsIcon color="action" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </Grid>
 
-                            {/* Sort Status */}
-                            <Autocomplete
-                                options={['ACTIVE', 'INACTIVE']}
-                                size="medium"
-                                sx={{ width: 200 }}
-                                renderInput={(params) => <TextField {...params} label="Status" />}
-                                value={searchParams.status || null}
-                                onChange={(event, newValue) =>
-                                    setSearchParams((prev) => ({ ...prev, status: newValue || '' }))
-                                }
-                            />
+                            <Grid item xs={12} md={3}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<FilterListIcon />}
+                                        onClick={handleSearch}
+                                        sx={{
+                                            bgcolor: '#1976d2',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#115293',
+                                            },
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Apply Filters
+                                    </Button>
 
-                            {/* Nút Search */}
-                            <Button
-                                variant="contained"
-                                sx={{
-                                    bgcolor: '#1976d2',
-                                    color: 'white',
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        bgcolor: '#115293',
-                                        color: 'white',
-                                    },
-                                    p: 2,
-                                }}
-                                onClick={handleSearch}
-                            >
-                                Filter
-                            </Button>
-                        </Box>
-                    </Box>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<RefreshIcon />}
+                                        onClick={() => {
+                                            setSearchParams({ phoneNumber: '', email: '', status: '' });
+                                            setPaginationModel({ page: 0, pageSize: 5 });
+                                            handleSearch();
+                                        }}
+                                        sx={{
+                                            borderColor: '#1976d2',
+                                            color: '#1976d2',
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
 
-                    {/* Data Grid */}
+                    {/* DataGrid with enhanced styling */}
                     <Paper
+                        elevation={2}
                         sx={{
-                            height: 500,
                             width: '100%',
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            borderRadius: 2,
+                            borderRadius: '12px',
                             overflow: 'hidden',
+                            mb: 4,
+                            '& .MuiDataGrid-root': {
+                                border: 'none',
+                            },
+                            '& .MuiDataGrid-cell': {
+                                borderColor: 'rgba(224, 224, 224, 1)',
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: '#F5F7FA',
+                                borderBottom: 'none',
+                            },
+                            '& .MuiDataGrid-columnHeaderTitle': {
+                                fontWeight: 'bold',
+                            },
                         }}
                     >
                         <DataGrid
                             rows={rows}
-                            columns={columns}
+                            columns={[
+                                {
+                                    field: 'email',
+                                    headerName: 'Email',
+                                    flex: 1.5,
+                                    minWidth: 220,
+                                    renderCell: (params) => (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center', // Try 'start' instead
+                                                height: '100%', // Ensure full height
+                                            }}
+                                        >
+                                            <EmailIcon
+                                                sx={{
+                                                    color: 'action.active',
+                                                    mr: 1,
+                                                    fontSize: '1rem',
+                                                    opacity: 0.7,
+                                                    alignSelf: 'center', // Center the icon vertically
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    height: '100%',
+                                                }}
+                                                variant="body2"
+                                            >
+                                                {params.value}
+                                            </Typography>
+                                        </Box>
+                                    ),
+                                },
+                                {
+                                    field: 'phone',
+                                    headerName: 'Phone',
+                                    flex: 1,
+                                    minWidth: 150,
+                                    renderCell: (params) => (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center', // Try 'start' instead
+                                                height: '100%', // Ensure full height
+                                            }}
+                                        >
+                                            <PhoneIcon
+                                                sx={{
+                                                    color: 'action.active',
+                                                    mr: 1,
+                                                    fontSize: '1rem',
+                                                    opacity: 0.7,
+                                                    alignSelf: 'center', // Center the icon vertically
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    height: '100%',
+                                                }}
+                                                variant="body2"
+                                            >
+                                                {params.value}
+                                            </Typography>
+                                        </Box>
+                                    ),
+                                },
+                                {
+                                    field: 'points',
+                                    headerName: 'Points',
+                                    flex: 0.8,
+                                    minWidth: 100,
+                                    renderCell: (params) => (
+                                        <Chip
+                                            icon={<StarsIcon />}
+                                            label={params.value || 0}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: 'rgba(255, 193, 7, 0.1)',
+                                                color: '#FF8F00',
+                                                fontWeight: 'bold',
+                                                borderRadius: '16px',
+                                                border: '1px solid rgba(255, 193, 7, 0.2)',
+                                            }}
+                                        />
+                                    ),
+                                },
+                                {
+                                    field: 'roleName',
+                                    headerName: 'Role',
+                                    flex: 0.8,
+                                    minWidth: 120,
+                                    renderCell: (params) => (
+                                        <Chip
+                                            icon={<WorkIcon />}
+                                            label={params.value || 'Employee'}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: 'rgba(25, 118, 210, 0.1)',
+                                                color: '#1976d2',
+                                                fontWeight: 'medium',
+                                                borderRadius: '16px',
+                                                border: '1px solid rgba(25, 118, 210, 0.2)',
+                                            }}
+                                        />
+                                    ),
+                                },
+                                {
+                                    field: 'createdDate',
+                                    headerName: 'Created Date',
+                                    flex: 1,
+                                    minWidth: 150,
+                                    renderCell: (params) => (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center', // Try 'start' instead
+                                                height: '100%', // Ensure full height
+                                            }}
+                                        >
+                                            <EventIcon
+                                                sx={{
+                                                    color: 'action.active',
+                                                    mr: 1,
+                                                    fontSize: '1rem',
+                                                    opacity: 0.7,
+                                                    alignSelf: 'center', // Center the icon vertically
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    height: '100%',
+                                                }}
+                                                variant="body2"
+                                            >
+                                                {formatDate(params.value)}
+                                            </Typography>
+                                        </Box>
+                                    ),
+                                },
+                                {
+                                    field: 'status',
+                                    headerName: 'Status',
+                                    flex: 0.8,
+                                    minWidth: 120,
+                                    renderCell: (params) => {
+                                        const isActive = params.value === 'ACTIVE';
+                                        return (
+                                            <Chip
+                                                icon={isActive ? <CheckCircleIcon /> : <CancelIcon />}
+                                                label={formatStatus(params.value)}
+                                                size="small"
+                                                sx={{
+                                                    bgcolor: isActive
+                                                        ? 'rgba(46, 125, 50, 0.1)'
+                                                        : 'rgba(211, 47, 47, 0.1)',
+                                                    color: isActive ? '#2E7D32' : '#D32F2F',
+                                                    fontWeight: 'medium',
+                                                    borderRadius: '16px',
+                                                    border: isActive
+                                                        ? '1px solid rgba(46, 125, 50, 0.2)'
+                                                        : '1px solid rgba(211, 47, 47, 0.2)',
+                                                }}
+                                            />
+                                        );
+                                    },
+                                },
+                                {
+                                    field: 'action',
+                                    headerName: 'Actions',
+                                    flex: 1.2,
+                                    minWidth: 270,
+                                    renderCell: (params) => {
+                                        const currentStatus = params.row.status;
+                                        return (
+                                            <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                                                {currentStatus === 'ACTIVE' ? (
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        startIcon={<BlockIcon />}
+                                                        onClick={() => handleOpenStatusConfirm(params.row.id)}
+                                                        sx={{
+                                                            backgroundColor: 'orange',
+                                                            textTransform: 'none',
+                                                            '&:hover': {
+                                                                backgroundColor: 'darkorange',
+                                                            },
+                                                            borderRadius: '8px',
+                                                            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                                                        }}
+                                                    >
+                                                        Disable
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        variant="contained"
+                                                        color="success"
+                                                        size="small"
+                                                        startIcon={<CheckCircleOutlineIcon />}
+                                                        onClick={() => handleOpenStatusConfirm(params.row.id)}
+                                                        sx={{
+                                                            textTransform: 'none',
+                                                            borderRadius: '8px',
+                                                            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                                                        }}
+                                                    >
+                                                        Activate
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    startIcon={<LockResetIcon />}
+                                                    onClick={() => handleOpenResetPassword(params.row.id)}
+                                                    sx={{
+                                                        textTransform: 'none',
+                                                        borderRadius: '8px',
+                                                        borderColor: '#1976d2',
+                                                        color: '#1976d2',
+                                                        '&:hover': {
+                                                            borderColor: '#0d47a1',
+                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                        },
+                                                    }}
+                                                >
+                                                    Reset Password
+                                                </Button>
+                                            </Box>
+                                        );
+                                    },
+                                },
+                            ]}
                             rowCount={total}
                             paginationMode="server"
                             paginationModel={paginationModel}
-                            onPaginationModelChange={(newModel) =>
-                                setPaginationModel((prev) => ({
-                                    ...prev,
-                                    page: newModel.page,
-                                }))
-                            }
-                            sx={{ border: 'none' }}
+                            onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
+                            disableRowSelectionOnClick
+                            autoHeight
                             getRowId={(row) => row.id}
+                            sx={{
+                                '& .MuiDataGrid-row:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                },
+                            }}
                         />
                     </Paper>
-                </Box>
 
-                <Box sx={{ mt: 'auto' }}>
-                    <Copyright />
+                    <Box sx={{ mt: 'auto' }}>
+                        <Copyright />
+                    </Box>
                 </Box>
 
                 {/* Create Employee Dialog */}
@@ -590,6 +1134,8 @@ export default function EmployeesManagement() {
                                 type="password"
                                 value={newEmployee.password}
                                 onChange={handleInputChange}
+                                error={!!passwordError}
+                                helperText={passwordError}
                             />
 
                             <TextField
@@ -611,6 +1157,7 @@ export default function EmployeesManagement() {
                                 value={newEmployee.phone}
                                 onChange={handleInputChange}
                                 type="number"
+                                required
                             />
                             <TextField
                                 fullWidth
@@ -637,7 +1184,8 @@ export default function EmployeesManagement() {
                                 !newEmployee.password ||
                                 !newEmployee.confirmPassword ||
                                 !!passwordError ||
-                                !!fullNameError
+                                !!fullNameError ||
+                                !newEmployee.phone
                             }
                         >
                             {isLoadingCreateEmployee ? <CircularProgress /> : ' Create'}

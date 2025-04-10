@@ -26,6 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import * as yup from 'yup';
 import AccountAPI from '~/API/AccountAPI';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import ResetPasswordDialog from '~/components/ResetPassword';
 import storageService from '~/components/StorageService/storageService';
 import { useWallet } from '~/WalletContext';
 
@@ -106,7 +107,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                 if (code === 2711 && message === 'Create Company failed') {
                     toast.error('Company Name is already taken!');
                 } else {
-                    toast.error('Registration failed! Please try again.');
+                    toast.error(error.response.data.message);
                 }
             } else {
                 toast.error('An error occurred. Please check your network connection.');
@@ -238,11 +239,11 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                             mt: 3,
                             mb: 2,
                             bgcolor: '#051D40',
-                            borderRadius: '24px',
                             py: 1.5,
                             fontSize: '16px',
                             ':hover': { bgcolor: '#051D40', opacity: 0.8 },
                             position: 'relative',
+                            height: '52px',
                         }}
                     >
                         {isSubmitting ? (
@@ -293,6 +294,10 @@ export default function AccountsManagement() {
     // State for the Create Account dialog
     const [openCreateAccountDialog, setOpenCreateAccountDialog] = useState(false);
 
+    // State for Reset Password dialog
+    const [openResetPasswordDialog, setOpenResetPasswordDialog] = useState(false);
+    const [resetPasswordUser, setResetPasswordUser] = useState(null);
+
     const fetchData = async () => {
         try {
             const pageParam = paginationModel.page + 1;
@@ -337,6 +342,12 @@ export default function AccountsManagement() {
             console.error('Failed to update status:', error);
             toast.error('Failed to update status. ' + error?.response?.data?.message);
         }
+    };
+
+    // Xử lý mở dialog reset password
+    const handleOpenResetPasswordDialog = (user) => {
+        setResetPasswordUser(user);
+        setOpenResetPasswordDialog(true);
     };
 
     const columns = [
@@ -415,7 +426,7 @@ export default function AccountsManagement() {
                             variant="outlined"
                             size="small"
                             onClick={() => {
-                                // Open reset password dialog here
+                                handleOpenResetPasswordDialog(params.row);
                             }}
                             sx={{ textTransform: 'none' }}
                         >
@@ -545,6 +556,19 @@ export default function AccountsManagement() {
                         onClose={() => setOpenCreateAccountDialog(false)}
                         onSuccess={fetchData}
                     />
+
+                    {/* Reset Password Dialog */}
+                    {resetPasswordUser && (
+                        <ResetPasswordDialog
+                            open={openResetPasswordDialog}
+                            onClose={() => {
+                                setOpenResetPasswordDialog(false);
+                                setResetPasswordUser(null);
+                            }}
+                            userId={resetPasswordUser.id}
+                            userEmail={resetPasswordUser.email}
+                        />
+                    )}
                 </Box>
             </Grid>
         </ThemeProvider>
