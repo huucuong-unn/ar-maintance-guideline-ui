@@ -108,6 +108,7 @@ export default function EmployeesManagement() {
         points: 1,
     });
     const [passwordError, setPasswordError] = useState('');
+    const [pssError, setPssError] = useState('');
 
     // --- State for confirm status change dialog ---
     const [openStatusConfirmDialog, setOpenStatusConfirmDialog] = useState(false);
@@ -143,6 +144,7 @@ export default function EmployeesManagement() {
         });
         setPasswordError('');
         setFullNameError(''); // Reset full name error
+        setPssError('');
     };
     const handleCloseAllocationPointDialog = () => {
         setOpenAllocationPointDialog(false);
@@ -180,6 +182,10 @@ export default function EmployeesManagement() {
                 setPasswordError('');
             }
         }
+
+        if (name === 'password' && value.length < 8) {
+            setPasswordError('Password must be at least 8 characters');
+        }
     };
 
     const handleInputChangeForPoint = (e) => {
@@ -199,10 +205,10 @@ export default function EmployeesManagement() {
             return;
         }
 
-        if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword) {
+        if (!newEmployee.email || !newEmployee.password || !newEmployee.confirmPassword || !newEmployee.phone) {
             return;
         }
-        if (passwordError || fullNameError) {
+        if (passwordError || fullNameError || pssError) {
             return;
         }
         try {
@@ -214,6 +220,12 @@ export default function EmployeesManagement() {
             handleCloseCreateDialog();
             fetchData();
         } catch (error) {
+            if (error?.response?.data?.code === 9999) {
+                toast.success('Create employee successfully');
+                handleCloseCreateDialog();
+                fetchData();
+                return;
+            }
             console.error('Failed to create employee:', error);
             toast.error(`Create employee failed. ${error?.response?.data?.message}`);
         } finally {
@@ -1122,6 +1134,8 @@ export default function EmployeesManagement() {
                                 type="password"
                                 value={newEmployee.password}
                                 onChange={handleInputChange}
+                                error={!!passwordError}
+                                helperText={passwordError}
                             />
 
                             <TextField
@@ -1143,6 +1157,7 @@ export default function EmployeesManagement() {
                                 value={newEmployee.phone}
                                 onChange={handleInputChange}
                                 type="number"
+                                required
                             />
                             <TextField
                                 fullWidth
@@ -1169,7 +1184,8 @@ export default function EmployeesManagement() {
                                 !newEmployee.password ||
                                 !newEmployee.confirmPassword ||
                                 !!passwordError ||
-                                !!fullNameError
+                                !!fullNameError ||
+                                !newEmployee.phone
                             }
                         >
                             {isLoadingCreateEmployee ? <CircularProgress /> : ' Create'}
