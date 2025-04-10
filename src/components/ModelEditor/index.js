@@ -804,8 +804,10 @@ export default function SimplifiedModelViewer({
         }
 
         // Trim spaces
-        const trimmedName = formData.instructionDetailName.trim();
-        const trimmedDescription = formData.instructionDetailDescription.trim();
+        // const trimmedName = formData.instructionDetailName.trim();
+        // const trimmedDescription = formData.instructionDetailDescription.trim();
+        const trimmedName = (formData.instructionDetailName ?? '').trim();
+        const trimmedDescription = (formData.instructionDetailDescription ?? '').trim();
 
         if (trimmedName.length < 1 || trimmedName.length > 50) {
             return toast.error('Name must be between 1 and 50 characters.');
