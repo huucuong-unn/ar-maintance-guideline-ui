@@ -36,6 +36,7 @@ import storageService from '~/components/StorageService/storageService';
 import { toast } from 'react-toastify';
 import ModelEditor from '~/components/ModelEditor';
 import CloudUpload from '@mui/icons-material/CloudUpload';
+import { useWallet } from '~/WalletContext';
 
 // Modified to accept props with the new data structure
 const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) => {
@@ -47,7 +48,12 @@ const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) =
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
     const [openRejectDialog, setOpenRejectDialog] = useState(false);
+    const [openApproveDialog, setOpenApproveDialog] = useState(false);
+    const { currentPoints, fetchWallet } = useWallet();
     const [rejectRequestId, setRejectRequestId] = useState(null);
+    const [approveRequestId, setApproveRequestId] = useState(null);
+    const [modelName, setModelName] = useState('');
+    const [modelDescription, setModelDescription] = useState('');
 
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
@@ -64,6 +70,56 @@ const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) =
     const [isCreating, setIsCreating] = useState(false);
     const [openReviewDialog, setOpenReviewDialog] = useState(false);
     const [reviewRequestId, setReviewRequestId] = useState(null);
+
+    const handleApproveSubmit = async () => {
+        if (!modelName.trim()) {
+            toast.error('Please provide a model name.');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            // Create request object according to the DTO structure
+            const requestData = {
+                id: approveRequestId,
+                status: 'APPROVED',
+                modelName: modelName,
+                description: modelDescription,
+            };
+
+            // Call the API to update the request revision
+            await CompanyRequestAPI.updateRequestRevision(approveRequestId, requestData);
+
+            // Show success message
+            toast.success(`Model approved successfully!`);
+
+            // Close the dialog
+            handleCloseApproveDialog();
+
+            // Refresh the data
+            fetchRevisionRequests();
+        } catch (error) {
+            console.error('Error approving model:', error);
+            toast.error(`Failed to approve model: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleOpenApproveDialog = (requestId) => {
+        setApproveRequestId(requestId);
+        setModelName('');
+        setModelDescription('');
+        setOpenApproveDialog(true);
+    };
+
+    const handleCloseApproveDialog = () => {
+        setOpenApproveDialog(false);
+        setApproveRequestId(null);
+        setModelName('');
+        setModelDescription('');
+    };
 
     const handle3DFileSelect = (e, requestRevisionId) => {
         if (e.target.files[0]) {
@@ -188,6 +244,10 @@ const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) =
             let requestData = {};
 
             if (userRole === 'COMPANY' && requestStatus === 'PRICE PROPOSED') {
+                if (currentPoints < price[id]) {
+                    toast.error('Insufficient points to approve this price proposal.');
+                    return;
+                }
                 // For company user approving the price
                 requestData = {
                     id: id,
@@ -557,17 +617,11 @@ const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) =
                                                             ? 'bg-green-400 cursor-not-allowed'
                                                             : 'bg-green-600 hover:bg-green-700'
                                                     } text-white py-2 px-4 rounded-md transition duration-200`}
-                                                    onClick={() => handleApproveModel(request.id)}
+                                                    onClick={() => handleOpenApproveDialog(request.id)}
                                                     disabled={isSubmitting}
                                                 >
-                                                    {isSubmitting ? (
-                                                        <>Processing...</>
-                                                    ) : (
-                                                        <>
-                                                            <Check size={16} className="mr-2" />
-                                                            Approve Model
-                                                        </>
-                                                    )}
+                                                    <Check size={16} className="mr-2" />
+                                                    Approve Model
                                                 </button>
 
                                                 {/* Reject Model button */}
@@ -876,6 +930,53 @@ const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) =
                 </DialogActions>
             </Dialog>
 
+            {/* Approve Model Dialog */}
+            <Dialog open={openApproveDialog} onClose={handleCloseApproveDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Approve Model</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 2 }}>
+                        Please provide a name and description for this model.
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="model-name"
+                        label="Model Name"
+                        type="text"
+                        fullWidth
+                        value={modelName}
+                        onChange={(e) => setModelName(e.target.value)}
+                        variant="outlined"
+                        sx={{ mb: 2 }}
+                        required
+                    />
+                    <TextField
+                        margin="dense"
+                        id="model-description"
+                        label="Model Description"
+                        type="text"
+                        fullWidth
+                        multiline
+                        rows={4}
+                        value={modelDescription}
+                        onChange={(e) => setModelDescription(e.target.value)}
+                        variant="outlined"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseApproveDialog} sx={{ color: 'gray' }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleApproveSubmit}
+                        variant="contained"
+                        color="success"
+                        disabled={!modelName.trim() || isSubmitting}
+                    >
+                        {isSubmitting ? <CircularProgress size={24} /> : 'Approve'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
             {fullViewMode && <MediaOverlay />}
         </div>
     );
