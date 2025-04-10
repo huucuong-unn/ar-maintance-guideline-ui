@@ -63,6 +63,27 @@ export default function CoursesControlEdit() {
     const userInfo = storageService.getItem('userInfo')?.user || null;
     const { id: courseId } = useParams();
 
+    async function handleDownloadQrCode(qrCodeUrl, fileName) {
+        if (!qrCodeUrl) return;
+        try {
+            const response = await axios.get(getImage(qrCodeUrl), { responseType: 'blob' });
+            const blob = new Blob([response.data], { type: response.headers['content-type'] });
+            const downloadUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error downloading QR code:', error);
+            alert('Failed to download QR code. Please try again.');
+        }
+    }
+
     // -------------------- Tab State --------------------
     const [tabValue, setTabValue] = useState('1');
     const handleTabChange = (e, newValue) => setTabValue(newValue);
@@ -1139,9 +1160,16 @@ export default function CoursesControlEdit() {
                                                         size="small"
                                                         startIcon={<DownloadIcon />}
                                                         onClick={() =>
-                                                            downloadQR(
+                                                            // downloadQR(
+                                                            //     machine.machineQrsResponse.qrUrl,
+                                                            //     `${machine.machineName}-${machine.machineQrsResponse.guidelineName}.png`,
+                                                            // )
+                                                            handleDownloadQrCode(
                                                                 machine.machineQrsResponse.qrUrl,
-                                                                `${machine.machineName}-${machine.machineQrsResponse.guidelineName}.png`,
+                                                                `${
+                                                                    machine.machineQrsResponse.guidelineName ||
+                                                                    'Guideline'
+                                                                }_QRCode.png`,
                                                             )
                                                         }
                                                         sx={{ mt: 'auto', textTransform: 'none' }}
