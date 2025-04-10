@@ -37,20 +37,26 @@ import PointRequestManagement from '~/pages/new/PointRequestManagement';
 import AdminDashboard from '~/pages/new/DashboardManagement';
 import CompanyDashboard from '~/pages/new/DashboardManagement/companyDashboard';
 import PointOptionManagement from '~/pages/new/PointOptionManagement';
+import Contact from '~/pages/new/Contact';
 
 const publicRoutes = [
     //new
     // { path: '/admin/login', component: LoginAdmin, layout: null },
-    { path: '/', component: Homepage, layout: CompanyLogin },
+    { path: '/login', component: Homepage, layout: CompanyLogin },
     { path: '/payment/success', component: PaymentSuccess, layout: null },
     { path: '/payment/failed', component: PaymentFailed, layout: null },
     { path: '/not-authorized', component: NotAuthorized, layout: null },
     { path: '/test/test-page', component: ModelEditor, layout: null },
     { path: '/test/course-layout', component: CourseLearning, layout: null },
 
-    { path: '/login', component: CompanyLogin, layout: null },
+    // { path: '/login', component: CompanyLogin, layout: null },
     { path: '/company/register', component: CompanyRegister, layout: null },
     { path: '/company/waiting', component: CompanyWaiting, layout: null },
+    {
+        path: '/',
+        component: Contact,
+        layout: null,
+    },
 ];
 
 const adminRoutes = [
@@ -60,7 +66,7 @@ const adminRoutes = [
     { path: '/admin/account-management', component: AccountsManagement, layout: AdminLayout },
     { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
     { path: '/admin/service-price-management', component: ServicePriceManagement, layout: AdminLayout },
-    {path:'/admin/point-options-management',component: PointOptionManagement, layout:AdminLayout}
+    { path: '/admin/point-options-management', component: PointOptionManagement, layout: AdminLayout },
 ];
 
 const companyRoutes = [

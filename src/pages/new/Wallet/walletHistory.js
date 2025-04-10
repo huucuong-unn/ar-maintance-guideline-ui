@@ -341,9 +341,6 @@ export default function WalletHistory() {
                                     Wallet History
                                 </Typography>
                             </Box>
-
-                            {/* Stats Cards */}
-                            <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}></Grid>
                         </Grid>
                     </Grid>
 

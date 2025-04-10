@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import AccountAPI from '~/API/AccountAPI';
 import storageService from '~/components/StorageService/storageService';
 import { useWallet } from '~/WalletContext'; // Import the WalletContext
+import { Divider } from '@mui/material';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 
 function Copyright(props) {
     return (
@@ -177,6 +179,52 @@ export default function CompanyLogin() {
                                     >
                                         Login
                                     </Button>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 2 }}>
+                                        <Divider sx={{ flexGrow: 1 }} />
+                                        <Typography variant="body2" sx={{ mx: 2, color: 'text.secondary' }}>
+                                            or
+                                        </Typography>
+                                        <Divider sx={{ flexGrow: 1 }} />
+                                    </Box>
+
+                                    {/* Nút chuyển đến trang contact */}
+                                    <Button
+                                        component={Link}
+                                        to="/"
+                                        fullWidth
+                                        variant="outlined"
+                                        startIcon={<ContactSupportIcon />}
+                                        sx={{
+                                            borderRadius: '24px',
+                                            padding: '10px 0',
+                                            fontSize: '15px',
+                                            color: '#051D40',
+                                            borderColor: '#051D40',
+                                            ':hover': {
+                                                borderColor: '#051D40',
+                                                backgroundColor: 'rgba(5, 29, 64, 0.04)',
+                                            },
+                                        }}
+                                    >
+                                        Contact to Admin
+                                    </Button>
+
+                                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            You don't have account ?
+                                            <Link
+                                                to="/"
+                                                style={{
+                                                    marginLeft: '4px',
+                                                    color: '#051D40',
+                                                    textDecoration: 'none',
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                Contact for Register
+                                            </Link>
+                                        </Typography>
+                                    </Box>
                                     <Copyright sx={{ mt: 5 }} />
                                 </Box>
                             </Box>
