@@ -817,14 +817,14 @@ export default function CoursesControlEdit() {
             <TabContext value={tabValue}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <TabList onChange={handleTabChange} textColor="#051D40">
-                        <Tab label="Machine" value="3" />
-                        <Tab label="3D Model Viewer" value="1" />
-                        <Tab label="Instruction" value="2" />
+                        <Tab label="Machine" value="1" />
+                        <Tab label="3D Model Viewer" value="2" />
+                        <Tab label="Instruction" value="3" />
                         {/* <Tab label="Assign" value="4" /> */}
                     </TabList>
                 </Box>
 
-                <TabPanel value="3">
+                <TabPanel value="1">
                     <Box sx={{ flexGrow: 1, p: 3 }}>
                         {/* Machine Type Information */}
                         <Paper
@@ -1269,7 +1269,7 @@ export default function CoursesControlEdit() {
                 </TabPanel>
 
                 {/* ---------- Tab 2: 3D Model Viewer / Editor ---------- */}
-                <TabPanel value="1">
+                <TabPanel value="2">
                     <Box>
                         {model ? (
                             <Box sx={{ mt: 4 }}>
@@ -1282,7 +1282,7 @@ export default function CoursesControlEdit() {
                 </TabPanel>
 
                 {/* ---------- Tab 3: Instructions ---------- */}
-                <TabPanel value="2">
+                <TabPanel value="3">
                     <Box>
                         {isLoadingSections ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
