@@ -51,7 +51,7 @@ const ChatBox = ({ requestId }) => {
     const stompClientRef = useRef(null);
     const [revisionRequests, setRevisionRequests] = useState([]);
     const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
-    const host = process.env.REACT_APP_BACKEND_APP_HOST_DEPLOY;
+    const host = 'https://armaintance.ngrok.pro';
     // Add these functions inside the ChatBox component
     const fetchRevisionRequests = async () => {
         try {
@@ -98,7 +98,7 @@ const ChatBox = ({ requestId }) => {
     useEffect(() => {
         // Establish WebSocket connection
         const socket = new Client({
-            webSocketFactory: () => new SockJS(`${host}/ws`),
+            webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
             onConnect: () => {
                 console.log('WebSocket Connected');
 
