@@ -622,7 +622,7 @@ export default function CoursesControlEdit() {
 
     const fetchMachineOfGuideline = async () => {
         try {
-            const response = await MachineAPI.getByGuidelineId(courseId);
+            const response = await MachineAPI.getByGuidelineIdV2(courseId);
             console.log(response);
 
             const data = response?.result || [];
@@ -1082,82 +1082,84 @@ export default function CoursesControlEdit() {
                                     </IconButton>
                                 </DialogTitle>
                                 <DialogContent sx={{ p: 3 }}>
-                                    {machine.machineQrsResponses?.length > 0 ? (
-                                        <Grid container spacing={3}>
-                                            {machine.machineQrsResponses?.map((qr) => (
-                                                <Grid item xs={12} sm={6} md={4} key={qr.machineQrId}>
-                                                    <Card
-                                                        sx={{
-                                                            textAlign: 'center',
-                                                            p: 2,
-                                                            height: '100%',
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
+                                    {machine.machineQrsResponse ? (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                minHeight: '300px',
+                                                mt: 5,
+                                            }}
+                                        >
+                                            <Card
+                                                sx={{
+                                                    textAlign: 'center',
+                                                    p: 2,
+                                                    width: '100%',
+                                                    maxWidth: '360px',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    borderRadius: '8px',
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-4px)',
+                                                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                                                    },
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        p: 2,
+                                                        flex: 1,
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={getImage(machine.machineQrsResponse.qrUrl)}
+                                                        alt={`QR for ${machine.machineQrsResponse.guidelineName}`}
+                                                        style={{
+                                                            width: '100%',
+                                                            maxWidth: '180px',
+                                                            height: 'auto',
+                                                            marginBottom: '16px',
+                                                            border: '1px solid rgba(0, 0, 0, 0.08)',
                                                             borderRadius: '8px',
-                                                            transition: 'all 0.3s ease',
-                                                            '&:hover': {
-                                                                transform: 'translateY(-4px)',
-                                                                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-                                                            },
+                                                            padding: '8px',
                                                         }}
+                                                    />
+                                                    <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 1 }}>
+                                                        {machine.machineQrsResponse.guidelineName}
+                                                    </Typography>
+                                                    <Button
+                                                        variant="outlined"
+                                                        size="small"
+                                                        startIcon={<DownloadIcon />}
+                                                        onClick={() =>
+                                                            downloadQR(
+                                                                machine.machineQrsResponse.qrUrl,
+                                                                `${machine.machineName}-${machine.machineQrsResponse.guidelineName}.png`,
+                                                            )
+                                                        }
+                                                        sx={{ mt: 'auto', textTransform: 'none' }}
                                                     >
-                                                        <Box
-                                                            sx={{
-                                                                p: 2,
-                                                                flex: 1,
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                            }}
-                                                        >
-                                                            <img
-                                                                src={getImage(qr.qrUrl)}
-                                                                alt={`QR for ${qr.guidelineName}`}
-                                                                style={{
-                                                                    width: '100%',
-                                                                    maxWidth: '180px',
-                                                                    height: 'auto',
-                                                                    marginBottom: '16px',
-                                                                    border: '1px solid rgba(0, 0, 0, 0.08)',
-                                                                    borderRadius: '8px',
-                                                                    padding: '8px',
-                                                                }}
-                                                            />
-                                                            <Typography
-                                                                variant="subtitle1"
-                                                                fontWeight="medium"
-                                                                sx={{ mb: 1 }}
-                                                            >
-                                                                {qr.guidelineName}
-                                                            </Typography>
-                                                            <Button
-                                                                variant="outlined"
-                                                                size="small"
-                                                                startIcon={<DownloadIcon />}
-                                                                onClick={() =>
-                                                                    downloadQR(
-                                                                        qr.qrUrl,
-                                                                        `${machine.machineName}-${qr.guidelineName}.png`,
-                                                                    )
-                                                                }
-                                                                sx={{ mt: 'auto', textTransform: 'none' }}
-                                                            >
-                                                                Download
-                                                            </Button>
-                                                        </Box>
-                                                    </Card>
-                                                </Grid>
-                                            ))}
-                                        </Grid>
+                                                        Download
+                                                    </Button>
+                                                </Box>
+                                            </Card>
+                                        </Box>
                                     ) : (
                                         <Box sx={{ py: 4, textAlign: 'center' }}>
                                             <Typography color="text.secondary">
-                                                No QR codes available for this machine
+                                                No QR code available for this machine
                                             </Typography>
                                         </Box>
                                     )}
                                 </DialogContent>
+
                                 <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(0, 0, 0, 0.08)' }}>
                                     <Button
                                         onClick={handleCloseQrCodes}
