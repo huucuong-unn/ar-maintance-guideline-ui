@@ -106,7 +106,7 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                 if (code === 2711 && message === 'Create Company failed') {
                     toast.error('Company Name is already taken!');
                 } else {
-                    toast.error('Registration failed! Please try again.');
+                    toast.error(error.response.data.message);
                 }
             } else {
                 toast.error('An error occurred. Please check your network connection.');
@@ -238,11 +238,11 @@ function CreateAccountDialog({ open, onClose, onSuccess }) {
                             mt: 3,
                             mb: 2,
                             bgcolor: '#051D40',
-                            borderRadius: '24px',
                             py: 1.5,
                             fontSize: '16px',
                             ':hover': { bgcolor: '#051D40', opacity: 0.8 },
                             position: 'relative',
+                            height: '52px',
                         }}
                     >
                         {isSubmitting ? (
