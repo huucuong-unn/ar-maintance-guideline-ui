@@ -234,7 +234,7 @@ const ChatBox = ({ requestId }) => {
                             <Avatar alt="User Avatar" src="/api/placeholder/40/40" sx={{ mr: 2 }} />
                             <Box>
                                 <Typography variant="subtitle1" fontWeight="bold">
-                                    Chat with {requestId}
+                                    Chat with {username}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
                                     Online

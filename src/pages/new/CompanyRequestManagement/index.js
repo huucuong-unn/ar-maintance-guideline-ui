@@ -633,7 +633,7 @@ export default function CompanyRequestManagement() {
                         {/* File Upload Section */}
                         <Box sx={{ mt: 3, mb: 2 }}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Revision Files (Optional)
+                                Revision Files
                             </Typography>
 
                             <input

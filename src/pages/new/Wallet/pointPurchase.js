@@ -49,12 +49,9 @@ const PointPurchase = () => {
             if (response.data && response.data.checkoutUrl) {
                 window.location.href = response.data.checkoutUrl;
             } else {
-                alert('Failed to get checkout URL. Please try again.');
             }
-            alert(`Purchased ${totalPoints} points successfully!`);
         } catch (error) {
             console.error('Failed to complete purchase:', error);
-            alert('Failed to complete purchase. Please try again.');
         }
     };
 
