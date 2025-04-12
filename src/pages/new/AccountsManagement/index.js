@@ -713,8 +713,16 @@ export default function AccountsManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <SupervisorAccountIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Account Management
                                 </Typography>
 

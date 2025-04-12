@@ -59,6 +59,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import DownloadIcon from '@mui/icons-material/Download';
 import WarningIcon from '@mui/icons-material/Warning';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 
 import { getImage } from '~/Constant';
 import axios from 'axios';
@@ -584,8 +585,16 @@ export default function MachinesManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <PrecisionManufacturingIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Machines Management
                                 </Typography>
 

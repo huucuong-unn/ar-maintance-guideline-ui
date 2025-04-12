@@ -42,6 +42,7 @@ import EventIcon from '@mui/icons-material/Event';
 import InfoIcon from '@mui/icons-material/Info';
 import CategoryIcon from '@mui/icons-material/Category';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 
 function Copyright(props) {
     return (
@@ -513,8 +514,16 @@ export default function PointRequestManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <CurrencyExchangeIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Point Requests Management
                                 </Typography>
                             </Box>

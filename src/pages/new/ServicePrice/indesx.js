@@ -408,8 +408,16 @@ export default function ServicePriceManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <PriceChangeIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Service Price Management
                                 </Typography>
 

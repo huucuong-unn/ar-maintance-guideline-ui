@@ -50,6 +50,7 @@ import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
 import { getImage } from '~/Constant';
+import AdbIcon from '@mui/icons-material/Adb';
 
 function Copyright(props) {
     return (
@@ -541,8 +542,16 @@ export default function ModelsManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <AdbIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Models Management
                                 </Typography>
 

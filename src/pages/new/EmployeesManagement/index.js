@@ -51,6 +51,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LockResetIcon from '@mui/icons-material/LockReset';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
 function Copyright(props) {
     return (
@@ -486,8 +487,16 @@ export default function EmployeesManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <SupervisorAccountIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Employees Management
                                 </Typography>
 

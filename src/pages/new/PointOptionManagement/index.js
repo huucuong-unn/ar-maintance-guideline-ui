@@ -41,6 +41,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import ListIcon from '@mui/icons-material/List';
 
 function Copyright(props) {
     return (
@@ -452,8 +453,16 @@ export default function PointOptionManagement() {
                                         fontWeight: '800',
                                         fontSize: { xs: '28px', md: '36px', lg: '42px' },
                                         color: '#051D40',
+                                        display: 'flex',
+                                        alignItems: 'center', // để icon và chữ cùng hàng
                                     }}
                                 >
+                                    <ListIcon
+                                        sx={{
+                                            fontSize: 'inherit',
+                                            marginRight: 1,
+                                        }}
+                                    />
                                     Point Option Management
                                 </Typography>
 
