@@ -4,6 +4,18 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import EditIcon from '@mui/icons-material/Edit';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CategoryIcon from '@mui/icons-material/Category';
+import InfoIcon from '@mui/icons-material/Info';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import DescriptionIcon from '@mui/icons-material/Description';
+import CodeIcon from '@mui/icons-material/Code';
+import AddIcon from '@mui/icons-material/Add';
+import ScaleIcon from '@mui/icons-material/Scale';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import BlockIcon from '@mui/icons-material/Block';
 import {
     Box,
     Button,
@@ -22,9 +34,12 @@ import {
     TextField,
     Typography,
     Autocomplete,
+    InputAdornment,
+    Avatar,
+    CircularProgress,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -71,6 +86,7 @@ export default function ModelsManagement() {
     // Add these state variables at the top of the component
     const [openStatusConfirmDialog, setOpenStatusConfirmDialog] = useState(false);
     const [selectedModelId, setSelectedModelId] = useState(null);
+    const [statusAction, setStatusAction] = useState('');
 
     const [rows, setRows] = useState([]);
     const [typeSearch, setTypeSearch] = useState('');
@@ -83,7 +99,7 @@ export default function ModelsManagement() {
     });
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
-        pageSize: 5,
+        pageSize: 10,
     });
     const [total, setTotal] = useState(0);
 
@@ -95,6 +111,35 @@ export default function ModelsManagement() {
     const [imageFile, setImageFile] = useState(null);
     const [modelFile, setModelFile] = useState(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+    const [activeModelCount, setActiveModelCount] = useState(0);
+    const [inactiveModelCount, setInactiveModelCount] = useState(0);
+    const [modelTypeCount, setModelTypeCount] = useState(0);
+
+    const fetchModelCounts = async () => {
+        try {
+            // In a real app, these would be separate API calls to get counts
+            // For this example, we'll calculate from the existing data
+            const allModelsResponse = await ModelAPI.getByCompany(userInfo?.company?.id, {
+                page: 1,
+                size: 1000, // Get all for counting - in a real app, use an API endpoint for counts
+            });
+
+            const allModels = allModelsResponse?.result?.objectList || [];
+            const activeCount = allModels.filter((model) => model.status === 'ACTIVE').length;
+            const inactiveCount = allModels.filter((model) => model.status === 'INACTIVE').length;
+
+            setActiveModelCount(activeCount);
+            setInactiveModelCount(inactiveCount);
+
+            // Get machine type count
+            const machineTypesResponse = await ModelTypeAPI.getByCompanyId(userInfo?.company?.id);
+            setModelTypeCount(machineTypesResponse?.result?.length || 0);
+        } catch (error) {
+            console.error('Failed to fetch model counts:', error);
+        }
+    };
+
     const handleChangeStatus = async () => {
         if (!selectedModelId) return;
 
@@ -105,6 +150,7 @@ export default function ModelsManagement() {
             if (response?.result) {
                 toast.success('Model status changed successfully!', { position: 'top-right' });
                 fetchModels();
+                fetchModelCounts();
             }
         } catch (error) {
             console.error('Failed to change model status:', error);
@@ -127,22 +173,26 @@ export default function ModelsManagement() {
     const handleDeleteModel = async () => {
         setConfirmDeleteOpen(false);
         try {
-            console.log(selectedModel.id);
+            setIsLoading(true);
 
             const response = await ModelAPI.deleteById(selectedModel.id);
             if (response?.result) {
                 toast.success('Model deleted successfully!', { position: 'top-right' });
                 handleCloseModal();
                 fetchModels();
+                fetchModelCounts();
             }
         } catch (error) {
             console.error('Failed to delete model:', error);
             toast.error('Failed to delete model. Please try again.', { position: 'top-right' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleOpenStatusConfirm = (modelId) => {
+    const handleOpenStatusConfirm = (modelId, status) => {
         setSelectedModelId(modelId);
+        setStatusAction(status);
         setOpenStatusConfirmDialog(true);
     };
 
@@ -153,65 +203,126 @@ export default function ModelsManagement() {
         setUpdateOpenModal(false);
         setOpenCreateDialog(false);
         fetchModels();
+        fetchModelCounts();
     };
 
-    const formatStatus = (status) => status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-
+    const formatStatus = (status) => {
+        if (!status) return ''; // Hoặc giá trị mặc định khác như 'Unknown'
+        return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    };
     const columns = [
-        { field: 'name', headerName: 'Name', width: 350 },
-        { field: 'courseName', headerName: 'Guideline Name', width: 350 },
-        { field: 'modelTypeName', headerName: 'Machine Type', width: 250 },
-        // {
-        //     field: 'isUsed',
-        //     headerName: 'Is Used',
-        //     width: 100,
-        //     renderCell: (params) => (
-        //         <Chip
-        //             label={params.value ? 'Yes' : 'No'}
-        //             style={{
-        //                 backgroundColor: params.value ? 'green' : 'yellow',
-        //                 color: params.value ? 'white' : 'black',
-        //                 fontWeight: 'bold',
-        //             }}
-        //         />
-        //     ),
-        // },
+        {
+            field: 'name',
+            headerName: 'Model Name',
+            flex: 1.5,
+            minWidth: 200,
+            renderCell: (params) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
+                    <DescriptionIcon sx={{ color: 'action.active', fontSize: '1.1rem', opacity: 0.7 }} />
+                    <Typography variant="body2" fontWeight="medium">
+                        {params.value}
+                    </Typography>
+                </Box>
+            ),
+        },
+        {
+            field: 'courseName',
+            headerName: 'Guideline',
+            flex: 1.5,
+            minWidth: 200,
+            renderCell: (params) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
+                    <InfoIcon sx={{ color: 'action.active', fontSize: '1.1rem', opacity: 0.7 }} />
+                    <Typography variant="body2">{params.value || '-'}</Typography>
+                </Box>
+            ),
+        },
+        {
+            field: 'modelTypeName',
+            headerName: 'Machine Type',
+            flex: 1,
+            minWidth: 180,
+            renderCell: (params) => (
+                <Chip
+                    icon={<CategoryIcon />}
+                    label={params.value || '-'}
+                    size="small"
+                    sx={{
+                        bgcolor: 'rgba(25, 118, 210, 0.1)',
+                        color: '#1976d2',
+                        fontWeight: 'medium',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(25, 118, 210, 0.2)',
+                    }}
+                />
+            ),
+        },
         {
             field: 'status',
             headerName: 'Status',
-            width: 150,
+            width: 130,
             renderCell: (params) => {
-                let color = 'black';
-                switch (params.value) {
-                    case 'ACTIVE':
-                        color = 'green';
-                        break;
-                    case 'INACTIVE':
-                        color = 'orange';
-                        break;
-                    default:
-                        color = 'black';
-                }
-                return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value)}</Box>;
+                const isActive = params.value === 'ACTIVE';
+                return (
+                    <Chip
+                        icon={isActive ? <CheckCircleIcon /> : <CancelIcon />}
+                        label={formatStatus(params.value)}
+                        size="small"
+                        sx={{
+                            bgcolor: isActive ? 'rgba(46, 125, 50, 0.1)' : 'rgba(211, 47, 47, 0.1)',
+                            color: isActive ? '#2E7D32' : '#D32F2F',
+                            fontWeight: 'medium',
+                            borderRadius: '16px',
+                            border: isActive ? '1px solid rgba(46, 125, 50, 0.2)' : '1px solid rgba(211, 47, 47, 0.2)',
+                        }}
+                    />
+                );
             },
         },
         {
             field: 'action',
-            headerName: 'Action',
-            width: 150,
+            headerName: 'Actions',
+            width: 220,
             renderCell: (params) => {
                 const currentStatus = params.row.status;
                 return (
                     <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<VisibilityIcon />}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenModal(params.row.id);
+                            }}
+                            sx={{
+                                borderColor: '#1976d2',
+                                color: '#1976d2',
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                            }}
+                        >
+                            View
+                        </Button>
+
                         {currentStatus === 'ACTIVE' ? (
                             <Button
                                 variant="contained"
                                 size="small"
-                                onClick={() => {
-                                    handleOpenStatusConfirm(params.row.id);
-                                    setSelectedModelId(params.row.id);
+                                startIcon={<BlockIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenStatusConfirm(params.row.id, 'disable');
                                 }}
-                                sx={{ width: '100px', backgroundColor: 'orange', textTransform: 'none' }}
+                                sx={{
+                                    bgcolor: 'orange',
+                                    color: 'white',
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                    '&:hover': {
+                                        bgcolor: 'darkorange',
+                                    },
+                                }}
                             >
                                 Disable
                             </Button>
@@ -220,25 +331,19 @@ export default function ModelsManagement() {
                                 variant="contained"
                                 color="success"
                                 size="small"
-                                onClick={() => {
-                                    handleOpenStatusConfirm(params.row.id);
-                                    setSelectedModelId(params.row.id);
+                                startIcon={<LockOpenIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenStatusConfirm(params.row.id, 'activate');
                                 }}
-                                sx={{ width: '100px', textTransform: 'none' }}
+                                sx={{
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                }}
                             >
-                                Active
+                                Activate
                             </Button>
                         )}
-                        <EditIcon
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                handleOpenUpdateModal(params.row.id);
-                            }}
-                            sx={{ cursor: 'pointer' }}
-                        />
                     </Box>
                 );
             },
@@ -247,17 +352,22 @@ export default function ModelsManagement() {
 
     const handleOpenModal = async (id) => {
         try {
+            setIsLoading(true);
             const response = await ModelAPI.getById(id);
             const modelData = response?.result;
             setSelectedModel(modelData);
-            // setOpenModal(true);
+            setOpenModal(true);
         } catch (error) {
             console.error('Failed to fetch model details:', error);
+            toast.error('Failed to load model details', { position: 'top-right' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleOpenUpdateModal = async (id) => {
         try {
+            setIsLoading(true);
             setOpenModal(false);
             const response = await ModelAPI.getById(id);
             const modelData = response?.result;
@@ -266,6 +376,9 @@ export default function ModelsManagement() {
             setOpenEditor(true);
         } catch (error) {
             console.error('Failed to fetch model details:', error);
+            toast.error('Failed to load model for update', { position: 'top-right' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -300,12 +413,30 @@ export default function ModelsManagement() {
         }
     };
 
+    const resetFilters = () => {
+        setNameSearch('');
+        setCodeSearch('');
+        setSelectedMachineType(null);
+        setSearchParams({
+            nameSearch: '',
+            codeSearch: '',
+            machineTypeId: '',
+        });
+        // Reset pagination to first page
+        setPaginationModel({
+            ...paginationModel,
+            page: 0,
+        });
+    };
+
     useEffect(() => {
         fetchModels();
+        fetchModelCounts();
     }, [paginationModel, searchParams, isCreating]);
 
     const fetchModels = async () => {
         try {
+            setIsLoading(true);
             const pageParam = paginationModel.page + 1;
             const sizeParam = paginationModel.pageSize;
 
@@ -319,13 +450,12 @@ export default function ModelsManagement() {
             };
             const response = await ModelAPI.getByCompany(userInfo?.company?.id, params);
             const data = response?.result?.objectList || [];
-            console.log(data);
 
             setRows(data);
-
             setTotal(response?.result?.totalItems || 0);
         } catch (error) {
             console.error('Failed to fetch models:', error);
+            toast.error('Failed to load models data', { position: 'top-right' });
         } finally {
             setIsLoading(false);
         }
@@ -336,8 +466,6 @@ export default function ModelsManagement() {
             try {
                 const response = await ModelTypeAPI.getAllToSelect();
                 const data = response?.result?.objectList || [];
-                console.log(data);
-
                 setModelTypes(data);
             } catch (error) {
                 console.error('Failed to fetch models:', error);
@@ -394,333 +522,775 @@ export default function ModelsManagement() {
                     justifyContent: 'center',
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 4 }}>
-                    <Typography
-                        component="h1"
-                        variant="h4"
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: '5%', height: '100%', my: 3 }}>
+                    {/* Header with Dashboard Stats */}
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    mb: 1,
+                                }}
+                            >
+                                <Typography
+                                    component="h1"
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: '800',
+                                        fontSize: { xs: '28px', md: '36px', lg: '42px' },
+                                        color: '#051D40',
+                                    }}
+                                >
+                                    Models Management
+                                </Typography>
+
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        component="label"
+                                        startIcon={<AddIcon />}
+                                        sx={{
+                                            bgcolor: '#051D40',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#02F18D',
+                                                color: '#051D40',
+                                            },
+                                            px: 3,
+                                            py: 1.2,
+                                            textTransform: 'none',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 12px rgba(5, 29, 64, 0.15)',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Create New Model
+                                        <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
+                                    </Button>
+                                </Box>
+                            </Box>
+
+                            {/* Stats Cards */}
+                            <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                                            border: '1px solid #90CAF9',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Total Models
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#1565C0" sx={{ mt: 1 }}>
+                                            {total || 0}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <PrecisionManufacturingIcon
+                                                sx={{ color: '#1565C0', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                3D Model Assets
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
+                                            border: '1px solid #A5D6A7',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Active Models
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#2E7D32" sx={{ mt: 1 }}>
+                                            {activeModelCount}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <CheckCircleIcon
+                                                sx={{ color: '#2E7D32', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Currently Available
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                                            border: '1px solid #FFCC80',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Inactive Models
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#E65100" sx={{ mt: 1 }}>
+                                            {inactiveModelCount}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <CancelIcon
+                                                sx={{ color: '#E65100', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Disabled Content
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
+                                            border: '1px solid #9FA8DA',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            Machine Types
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold" color="#303F9F" sx={{ mt: 1 }}>
+                                            {modelTypeCount}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
+                                            <CategoryIcon
+                                                sx={{ color: '#303F9F', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Model Categories
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    {/* Search and Filters */}
+                    <Paper
+                        elevation={1}
                         sx={{
-                            fontWeight: '900',
-                            fontSize: '46px',
-                            color: '#051D40',
-                            mb: 4,
+                            p: 3,
+                            mb: 3,
+                            borderRadius: '12px',
+                            backgroundColor: 'white',
                         }}
                     >
-                        Models Management
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'right', alignItems: 'center', my: 4 }}>
-                        {/* <Button
-                            variant="contained"
-                            component="label"
-                            sx={{
-                                bgcolor: '#051D40',
-                                color: '#02F18D',
-                                '&:hover': {
-                                    bgcolor: '#02F18D',
-                                    color: '#051D40',
-                                },
-                                p: 2,
-                            }}
-                        >
-                            Create Model
-                            <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
-                        </Button> */}
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                gap: 2,
-                                flexWrap: 'wrap',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Autocomplete
-                                options={machineTypes}
-                                getOptionLabel={(option) => option.name}
-                                sx={{ width: 300 }}
-                                renderInput={(params) => <TextField {...params} label="Machine Types" />}
-                                onChange={(event, newValue) => {
-                                    setSelectedMachineType(newValue);
-                                }}
-                            />
-                            {/* Search by name */}
-                            <TextField
-                                variant="outlined"
-                                label="Search by Name"
-                                sx={{ width: '300px' }}
-                                value={nameSearch}
-                                onChange={(e) => setNameSearch(e.target.value)}
-                            />
-                            {/* <TextField
-                                variant="outlined"
-                                label="Search by Code"
-                                sx={{ width: '300px' }}
-                                value={codeSearch}
-                                onChange={(e) => setCodeSearch(e.target.value)}
-                            /> */}
-                            {/* Search button */}
-                            <Button
-                                variant="contained"
-                                onClick={() =>
-                                    setSearchParams({
-                                        nameSearch,
-                                        codeSearch,
-                                        typeSearch,
-                                        machineTypeId: selectedMachineType ? selectedMachineType.id : '',
-                                    })
-                                }
-                                sx={{ p: 2, textTransform: 'none' }}
-                            >
-                                Filter
-                            </Button>
-                        </Box>
-                    </Box>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#051D40' }}>
+                            Search & Filters
+                        </Typography>
 
-                    <Paper sx={{ height: 450, width: '100%' }}>
-                        {' '}
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    label="Model Name"
+                                    variant="outlined"
+                                    value={nameSearch}
+                                    onChange={(e) => setNameSearch(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <DescriptionIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    placeholder="Search by model name"
+                                    size="medium"
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Autocomplete
+                                    fullWidth
+                                    options={machineTypes}
+                                    getOptionLabel={(option) => option.name}
+                                    value={selectedMachineType}
+                                    onChange={(event, newValue) => {
+                                        setSelectedMachineType(newValue);
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Machine Type"
+                                            variant="outlined"
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <CategoryIcon color="action" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ display: 'flex', gap: 2, height: '100%' }}>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<FilterListIcon />}
+                                        onClick={() =>
+                                            setSearchParams({
+                                                nameSearch,
+                                                codeSearch,
+                                                typeSearch,
+                                                machineTypeId: selectedMachineType ? selectedMachineType.id : '',
+                                            })
+                                        }
+                                        sx={{
+                                            bgcolor: '#1976d2',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: '#115293',
+                                            },
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Apply Filters
+                                    </Button>
+
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<RefreshIcon />}
+                                        onClick={resetFilters}
+                                        sx={{
+                                            borderColor: '#1976d2',
+                                            color: '#1976d2',
+                                            py: 1.5,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontWeight: 'medium',
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    {/* DataGrid with enhanced styling */}
+                    <Paper
+                        elevation={2}
+                        sx={{
+                            width: '100%',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            mb: 4,
+                            flex: 1,
+                            '& .MuiDataGrid-root': {
+                                border: 'none',
+                            },
+                            '& .MuiDataGrid-cell': {
+                                borderColor: 'rgba(224, 224, 224, 1)',
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: '#F5F7FA',
+                                borderBottom: 'none',
+                            },
+                            '& .MuiDataGrid-columnHeaderTitle': {
+                                fontWeight: 'bold',
+                            },
+                        }}
+                    >
                         <DataGrid
                             rows={rows}
                             columns={columns}
                             rowCount={total}
                             paginationMode="server"
                             paginationModel={paginationModel}
-                            onPaginationModelChange={(newModel) => {
-                                setPaginationModel((prev) => ({
-                                    ...prev,
-                                    page: newModel.page,
-                                }));
-                            }}
-                            sx={{ border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                            onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
+                            disableRowSelectionOnClick
+                            autoHeight
                             getRowId={(row) => row.id}
-                            onRowClick={(params) => handleOpenModal(params.row.id)}
+                            loading={isLoading}
+                            sx={{
+                                '& .MuiDataGrid-row:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                },
+                            }}
                         />
                     </Paper>
 
-                    <Copyright sx={{ mt: 5 }} />
+                    <Box sx={{ mt: 'auto' }}>
+                        <Copyright />
+                    </Box>
                 </Box>
-            </Grid>
-            {/* Create Model Dialog */}
-            <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="xl">
-                <DialogTitle>Create New Model</DialogTitle>
-                <DialogContent sx={{ minHeight: '80vh' }}>
-                    {file3D && (
-                        <>
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                File: {file3D.name}
-                            </Typography>
-                            {openEditor && (
-                                <ModelEditor
-                                    action={'CreateModel'}
-                                    modelFile3D={URL.createObjectURL(file3D)}
-                                    modelFile3DToCreate={file3D}
-                                    handleCloseModal={handleCloseEditor}
-                                />
-                            )}
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog} disabled={isCreating}>
-                        Cancel
-                    </Button>
-                    {/* <Button onClick={handleCreateModel} disabled={isCreating}>
-                        {isCreating ? <CircularProgress size={24} /> : 'Create'}
-                    </Button> */}
-                </DialogActions>
-            </Dialog>
 
-            <Modal open={openUpdateModal} onClose={handleCloseUpdateModal}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '90vw', // Tăng chiều rộng lên 90% màn hình
-                        maxWidth: '3000px', // Đảm bảo không quá lớn trên màn hình rộng
-                        maxHeight: '90vh', // Giữ chiều cao tối đa
-                        overflowY: 'auto', // Bật cuộn nếu nội dung quá dài
-                        bgcolor: 'background.paper',
-                        borderRadius: '10px',
-                        boxShadow: 10,
-                        p: 3,
-                        textAlign: 'center',
-                    }}
-                >
-                    {openEditor && (
-                        <ModelEditor
-                            modelId={updatedModel ? updatedModel?.id : updatedModel}
-                            action={'UpdateModelManagement'}
-                            handleCloseModal={handleCloseEditor}
-                        />
-                    )}
-
-                    <Button
-                        onClick={handleCloseUpdateModal}
-                        variant="contained"
-                        color="error"
-                        sx={{ mt: 2, float: 'right', textTransform: 'none' }}
-                    >
-                        Close
-                    </Button>
-                </Box>
-            </Modal>
-
-            <Modal open={openModal} onClose={handleCloseModal}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 550,
-                        bgcolor: 'background.paper',
-                        borderRadius: 3,
-                        boxShadow: 10,
-                        p: 3,
-                        textAlign: 'center',
-                    }}
-                >
-                    {/* Tiêu đề */}
-                    <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
-                        Model Details
-                    </Typography>
-
-                    {/* Nội dung thông tin */}
-                    <Card elevation={3} sx={{ p: 2, borderRadius: 2 }}>
-                        <CardContent sx={{ textAlign: 'left' }}>
-                            <Typography variant="subtitle1">
-                                <strong>Model Type:</strong> {selectedModel.modelTypeName}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Model Code:</strong> {selectedModel.modelCode}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Status:</strong>{' '}
-                                {selectedModel.status === 'ACTIVE' ? (
-                                    <CheckCircleIcon color="success" />
-                                ) : (
-                                    <CancelIcon color="error" />
-                                )}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Name:</strong> {selectedModel.name}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Description:</strong> {selectedModel.description}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Scale:</strong> {selectedModel.scale}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Is Used:</strong> {selectedModel.isUsed ? 'Yes' : 'No'}
-                            </Typography>
-                            <Typography variant="subtitle1">
-                                <strong>Course Name:</strong> {selectedModel.courseName || 'N/A'}
-                            </Typography>
-                            {selectedModel.imageUrl && (
-                                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                                    <img
-                                        src={getImage(selectedModel?.imageUrl)}
-                                        alt="Model"
-                                        style={{
-                                            width: '100%', // Đảm bảo ảnh chiếm hết chiều ngang container
-                                            maxWidth: '100%', // Giữ ảnh không bị vỡ
-                                            maxHeight: '300px', // Tăng chiều cao tối đa để hiển thị rõ hơn
-                                            objectFit: 'contain', // Giữ nguyên tỉ lệ ảnh, tránh bị cắt
-                                            borderRadius: 8,
-                                            border: '2px solid #ddd',
-                                        }}
+                {/* Create Model Dialog */}
+                <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="xl">
+                    <DialogTitle sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AddIcon color="primary" />
+                        Create New Model
+                    </DialogTitle>
+                    <DialogContent sx={{ minHeight: '80vh' }}>
+                        {file3D && (
+                            <>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    File: {file3D.name}
+                                </Typography>
+                                {openEditor && (
+                                    <ModelEditor
+                                        action={'CreateModel'}
+                                        modelFile3D={URL.createObjectURL(file3D)}
+                                        modelFile3DToCreate={file3D}
+                                        handleCloseModal={handleCloseEditor}
                                     />
-                                </Box>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Divider sx={{ my: 3 }} />
-
-                    {/* Nút download file */}
-                    {selectedModel.file && (
+                                )}
+                            </>
+                        )}
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
                         <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            startIcon={<CloudDownloadIcon />}
                             sx={{
-                                borderRadius: 2,
-                                fontSize: '16px',
-                                fontWeight: 'bold',
                                 textTransform: 'none',
-                                background: 'linear-gradient(135deg, #3F51B5, #2196F3)',
-                                ':hover': {
-                                    background: 'linear-gradient(135deg, #303F9F, #1976D2)',
-                                },
+                                borderRadius: '8px',
                             }}
-                            onClick={() => window.open(getImage(selectedModel.file), '_blank')}
+                            onClick={handleCloseCreateDialog}
+                            disabled={isCreating}
                         >
-                            Download Model File
+                            Cancel
                         </Button>
-                    )}
+                    </DialogActions>
+                </Dialog>
 
-                    <Button
-                        onClick={handleOpenConfirmDelete}
-                        variant="contained"
-                        color="error"
-                        fullWidth
-                        startIcon={<DeleteIcon />}
+                {/* Update Model Modal */}
+                <Modal open={openUpdateModal} onClose={handleCloseUpdateModal}>
+                    <Box
                         sx={{
-                            mt: 2,
-                            borderRadius: 2,
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            textTransform: 'none',
-                            background: 'linear-gradient(135deg, #D32F2F, #B71C1C)',
-                            ':hover': {
-                                background: 'linear-gradient(135deg, #C62828, #880E4F)',
-                            },
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: '90vw',
+                            maxWidth: '3000px',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            bgcolor: 'background.paper',
+                            borderRadius: '10px',
+                            boxShadow: 10,
+                            p: 3,
+                            textAlign: 'center',
                         }}
                     >
-                        Delete Model
-                    </Button>
+                        {openEditor && (
+                            <ModelEditor
+                                modelId={updatedModel ? updatedModel?.id : updatedModel}
+                                action={'UpdateModelManagement'}
+                                handleCloseModal={handleCloseEditor}
+                            />
+                        )}
 
-                    {/* Nút Close */}
-                    <Button
-                        onClick={handleCloseModal}
-                        variant="contained"
-                        color="error"
-                        fullWidth
-                        startIcon={<CloseIcon />}
-                        sx={{ mt: 2, borderRadius: 2, fontSize: '16px', fontWeight: 'bold', textTransform: 'none' }}
-                    >
-                        Close
-                    </Button>
-                </Box>
-            </Modal>
+                        <Button
+                            onClick={handleCloseUpdateModal}
+                            variant="contained"
+                            color="error"
+                            startIcon={<CloseIcon />}
+                            sx={{
+                                mt: 2,
+                                float: 'right',
+                                textTransform: 'none',
+                                borderRadius: '8px',
+                            }}
+                        >
+                            Close
+                        </Button>
+                    </Box>
+                </Modal>
 
-            <Dialog
-                open={openStatusConfirmDialog}
-                onClose={() => setOpenStatusConfirmDialog(false)}
-                fullWidth
-                maxWidth="xs"
-            >
-                <DialogTitle>Confirm Action</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>Are you sure you want to change the status of this model?</DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button sx={{ textTransform: 'none' }} onClick={() => setOpenStatusConfirmDialog(false)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        sx={{ textTransform: 'none' }}
-                        onClick={handleChangeStatus}
-                        autoFocus
+                {/* View Model Modal */}
+                <Dialog open={openModal} onClose={handleCloseModal} fullWidth maxWidth="md">
+                    <DialogTitle
+                        sx={{
+                            fontWeight: 'bold',
+                            borderBottom: '1px solid #eee',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 1,
+                        }}
                     >
-                        Disable
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <PrecisionManufacturingIcon color="primary" />
+                            <Typography variant="h6">Model Details</Typography>
+                        </Box>
+                        <Chip
+                            icon={selectedModel.status === 'ACTIVE' ? <CheckCircleIcon /> : <CancelIcon />}
+                            label={selectedModel.status ? formatStatus(selectedModel.status) : ''}
+                            size="small"
+                            sx={{
+                                bgcolor:
+                                    selectedModel.status === 'ACTIVE'
+                                        ? 'rgba(46, 125, 50, 0.1)'
+                                        : 'rgba(211, 47, 47, 0.1)',
+                                color: selectedModel.status === 'ACTIVE' ? '#2E7D32' : '#D32F2F',
+                                fontWeight: 'medium',
+                                borderRadius: '16px',
+                                border:
+                                    selectedModel.status === 'ACTIVE'
+                                        ? '1px solid rgba(46, 125, 50, 0.2)'
+                                        : '1px solid rgba(211, 47, 47, 0.2)',
+                            }}
+                        />
+                    </DialogTitle>
+                    <DialogContent>
+                        {isLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : (
+                            <Grid container spacing={3} sx={{ mt: 0 }}>
+                                {/* Image */}
+                                {selectedModel.imageUrl && (
+                                    <Grid item xs={12} md={6}>
+                                        <Paper
+                                            elevation={0}
+                                            sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: '10px', height: '100%' }}
+                                        >
+                                            <Typography
+                                                variant="subtitle1"
+                                                fontWeight="bold"
+                                                color="#1976d2"
+                                                gutterBottom
+                                            >
+                                                Model Image
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    height: '250px',
+                                                    border: '1px solid #e0e0e0',
+                                                    borderRadius: '8px',
+                                                    overflow: 'hidden',
+                                                    backgroundColor: '#fff',
+                                                }}
+                                            >
+                                                <img
+                                                    src={getImage(selectedModel?.imageUrl)}
+                                                    alt={selectedModel.name}
+                                                    style={{
+                                                        maxWidth: '100%',
+                                                        maxHeight: '100%',
+                                                        objectFit: 'contain',
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Paper>
+                                    </Grid>
+                                )}
+
+                                {/* Model Information */}
+                                <Grid item xs={12} md={selectedModel.imageUrl ? 6 : 12}>
+                                    <Paper elevation={0} sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: '10px' }}>
+                                        <Typography variant="subtitle1" fontWeight="bold" color="#1976d2" gutterBottom>
+                                            Model Information
+                                        </Typography>
+
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12} sm={6}>
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Model Name
+                                                        </Typography>
+                                                        <Typography variant="body1" fontWeight="medium">
+                                                            {selectedModel.name}
+                                                        </Typography>
+                                                    </Box>
+
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Model Code
+                                                        </Typography>
+                                                        <Typography variant="body1">
+                                                            {selectedModel.modelCode || 'N/A'}
+                                                        </Typography>
+                                                    </Box>
+
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Status
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            {selectedModel.status === 'ACTIVE' ? (
+                                                                <CheckCircleIcon fontSize="small" color="success" />
+                                                            ) : (
+                                                                <CancelIcon fontSize="small" color="error" />
+                                                            )}
+                                                            <Typography variant="body1">
+                                                                {formatStatus(selectedModel.status)}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Scale
+                                                        </Typography>
+                                                        <Typography variant="body1">
+                                                            {selectedModel.scale || 'N/A'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+
+                                            <Grid item xs={12} sm={6}>
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Machine Type
+                                                        </Typography>
+                                                        <Typography variant="body1">
+                                                            {selectedModel.modelTypeName || 'N/A'}
+                                                        </Typography>
+                                                    </Box>
+
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Guideline
+                                                        </Typography>
+                                                        <Typography variant="body1">
+                                                            {selectedModel.courseName || 'Not assigned'}
+                                                        </Typography>
+                                                    </Box>
+
+                                                    <Box>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Used in Production
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            {selectedModel.isUsed ? (
+                                                                <CheckCircleIcon fontSize="small" color="success" />
+                                                            ) : (
+                                                                <CancelIcon fontSize="small" color="error" />
+                                                            )}
+                                                            <Typography variant="body1">
+                                                                {selectedModel.isUsed ? 'Yes' : 'No'}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </Paper>
+                                </Grid>
+
+                                {/* Description */}
+                                <Grid item xs={12}>
+                                    <Paper elevation={0} sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: '10px' }}>
+                                        <Typography variant="subtitle1" fontWeight="bold" color="#1976d2" gutterBottom>
+                                            Description
+                                        </Typography>
+                                        <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                                            {selectedModel.description || 'No description provided'}
+                                        </Typography>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        )}
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        {selectedModel.file && (
+                            <Button
+                                variant="outlined"
+                                startIcon={<CloudDownloadIcon />}
+                                onClick={() => window.open(getImage(selectedModel.file), '_blank')}
+                                sx={{
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                    mr: 'auto',
+                                }}
+                            >
+                                Download Model File
+                            </Button>
+                        )}
+
+                        <Button
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                                handleCloseModal();
+                                handleOpenUpdateModal(selectedModel.id);
+                            }}
+                            sx={{
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                            }}
+                        >
+                            Edit
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={handleOpenConfirmDelete}
+                            sx={{
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                            }}
+                        >
+                            Delete
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            startIcon={<CloseIcon />}
+                            onClick={handleCloseModal}
+                            sx={{
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                                bgcolor: '#051D40',
+                            }}
+                        >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Confirm Status Change Dialog */}
+                <Dialog
+                    open={openStatusConfirmDialog}
+                    onClose={() => setOpenStatusConfirmDialog(false)}
+                    fullWidth
+                    maxWidth="xs"
+                >
+                    <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {statusAction === 'disable' ? (
+                                <BlockIcon sx={{ color: 'orange', mr: 1 }} />
+                            ) : (
+                                <LockOpenIcon sx={{ color: 'green', mr: 1 }} />
+                            )}
+                            {statusAction === 'disable' ? 'Confirm Disable' : 'Confirm Activation'}
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to {statusAction === 'disable' ? 'disable' : 'activate'} this model?
+                            {statusAction === 'disable'
+                                ? ' This will make the model unavailable for use.'
+                                : ' This will make the model available for use.'}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: '8px',
+                            }}
+                            onClick={() => setOpenStatusConfirmDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color={statusAction === 'disable' ? 'warning' : 'success'}
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: '8px',
+                            }}
+                            onClick={handleChangeStatus}
+                            disabled={isLoading}
+                            startIcon={
+                                isLoading ? (
+                                    <CircularProgress size={20} color="inherit" />
+                                ) : statusAction === 'disable' ? (
+                                    <BlockIcon />
+                                ) : (
+                                    <LockOpenIcon />
+                                )
+                            }
+                        >
+                            {isLoading
+                                ? 'Processing...'
+                                : statusAction === 'disable'
+                                ? 'Yes, Disable'
+                                : 'Yes, Activate'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Confirm Delete Dialog */}
+                <Dialog open={confirmDeleteOpen} onClose={handleCloseConfirmDelete} fullWidth maxWidth="xs">
+                    <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <DeleteIcon sx={{ color: 'error.main', mr: 1 }} />
+                            Confirm Deletion
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to delete the model "{selectedModel.name}"? This action cannot be
+                            undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: '8px',
+                            }}
+                            onClick={handleCloseConfirmDelete}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: '8px',
+                            }}
+                            onClick={handleDeleteModel}
+                            disabled={isLoading}
+                            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+                        >
+                            {isLoading ? 'Deleting...' : 'Yes, Delete'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </Grid>
         </ThemeProvider>
     );
 }

@@ -755,13 +755,13 @@ export default function CoursesControlEdit() {
 
                     {/* Action Buttons */}
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        <Button
+                        {/* <Button
                             variant="contained"
                             sx={{ padding: '12px 20px', textTransform: 'none' }}
                             onClick={() => navigate(-1)}
                         >
                             {course?.status != 'ACTIVE' ? 'Save Draft' : 'Back'}
-                        </Button>
+                        </Button> */}
                         <Button
                             variant="contained"
                             disabled={isNotValidCourse}

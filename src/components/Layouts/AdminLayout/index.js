@@ -1,21 +1,55 @@
 import MenuIcon from '@mui/icons-material/Menu';
-import { Box, Button, Divider, IconButton, List, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Divider,
+    IconButton,
+    List,
+    Menu,
+    MenuItem,
+    Toolbar,
+    Typography,
+    Avatar,
+    Badge,
+    Chip,
+    useMediaQuery,
+    ListItemIcon,
+    ListItemText,
+    Paper,
+    Tooltip,
+    ListItemButton,
+} from '@mui/material';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
 import { createTheme, styled, ThemeProvider, useTheme } from '@mui/material/styles';
-import { AlignJustify } from 'lucide-react';
+import { AlignJustify, AppWindowMac } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useWallet } from '~/WalletContext'; // Import the WalletContext
 import { MainListItems, SecondaryListItems } from '~/components/listItems';
 import storageService from '~/components/StorageService/storageService';
 
-const drawerWidth = 240;
+// Icons
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
+import HelpIcon from '@mui/icons-material/Help';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import InputBase from '@mui/material/InputBase';
+
+const drawerWidth = 260;
 
 const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
     zIndex: theme.zIndex.drawer + 1,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
     transition: theme.transitions.create(['width', 'margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
@@ -35,6 +69,9 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
         position: 'relative',
         whiteSpace: 'nowrap',
         width: drawerWidth,
+        backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.background.default,
+        borderRight: `1px solid ${theme.palette.divider}`,
+        boxShadow: open ? '4px 0 10px rgba(0,0,0,0.05)' : 'none',
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -54,40 +91,307 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     },
 }));
 
-const defaultTheme = createTheme();
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+}));
 
-export function NavbarAdmin() {
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        transition: theme.transitions.create('width'),
+        width: '100%',
+        [theme.breakpoints.up('md')]: {
+            width: '20ch',
+        },
+    },
+}));
+
+// Custom styled list item button for sidebar
+const StyledListItemButton = styled(ListItemButton)(({ theme, active }) => ({
+    margin: '4px 8px',
+    borderRadius: '8px',
+    ...(active && {
+        backgroundColor: theme.palette.primary.light,
+        color: theme.palette.primary.main,
+        '& .MuiListItemIcon-root': {
+            color: theme.palette.primary.main,
+        },
+    }),
+}));
+
+export function NavbarAdmin({ open, toggleDrawer }) {
     const userInfo = storageService.getItem('userInfo')?.user || null;
-    const [open, setOpen] = useState(true);
     const [anchorElUser, setAnchorElUser] = useState(null);
+    const [anchorElNotifications, setAnchorElNotifications] = useState(null);
+    const { currentPoints } = useWallet();
+    const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const location = useLocation();
+
+    // Get page title based on current route
+    const getPageTitle = () => {
+        const path = location.pathname;
+        if (path.includes('/dashboard')) return 'Dashboard';
+        if (path.includes('/guideline')) return 'Guidelines';
+        if (path.includes('/machines-management')) return 'Machines';
+        if (path.includes('/account-management')) return 'Accounts';
+        if (path.includes('/wallet')) return 'Wallet';
+        if (path.includes('/profile')) return 'Profile';
+        // Add more page titles based on your routes
+        return 'Dashboard'; // Default title
+    };
+
+    const handleOpenUserMenu = (event) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
 
-    const toggleDrawer = () => {
-        setOpen(!open);
+    const handleOpenNotifications = (event) => {
+        setAnchorElNotifications(event.currentTarget);
+    };
+
+    const handleCloseNotifications = () => {
+        setAnchorElNotifications(null);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('userInfo');
+        navigate('/login');
+        handleCloseUserMenu();
+    };
+
+    const handleProfile = () => {
+        navigate('/profile');
+        handleCloseUserMenu();
+    };
+
+    const handleGoToWallet = () => {
+        navigate('/wallet');
+        handleCloseUserMenu();
+    };
+
+    const handleSettings = () => {
+        navigate('/settings');
+        handleCloseUserMenu();
+    };
+
+    const handleHelp = () => {
+        navigate('/help');
+        handleCloseUserMenu();
     };
 
     return (
-        <AppBar position="absolute" open={open}>
+        <AppBar position="fixed" open={open} color="default">
             <Toolbar
                 sx={{
                     pr: '24px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
                 }}
             >
-                <IconButton
-                    edge="start"
-                    color="inherit"
-                    aria-label="open drawer"
-                    onClick={toggleDrawer}
-                    sx={{
-                        marginRight: '36px',
-                        ...(open && { display: 'none' }),
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="open drawer"
+                        onClick={toggleDrawer}
+                        sx={{
+                            marginRight: '16px',
+                            ...(open && { display: 'none' }),
+                        }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+
+                    <Typography
+                        component="h1"
+                        variant="h6"
+                        color="inherit"
+                        sx={{
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {!isMobile && (
+                            <DashboardIcon
+                                sx={{
+                                    mr: 1,
+                                    color: theme.palette.primary.main,
+                                }}
+                            />
+                        )}
+                        {getPageTitle()}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {userInfo?.roleName === 'COMPANY' && (
+                        <Tooltip title="Current available points">
+                            <Chip
+                                icon={<AccountBalanceWalletIcon />}
+                                label={`${currentPoints} Points`}
+                                color="primary"
+                                variant="outlined"
+                                sx={{
+                                    bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                    fontWeight: 'bold',
+                                    borderColor: 'primary.light',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(25, 118, 210, 0.12)',
+                                    },
+                                    display: { xs: 'none', sm: 'flex' },
+                                }}
+                                onClick={() => navigate('/wallet')}
+                            />
+                        </Tooltip>
+                    )}
+
+                    <Tooltip title="Notifications">
+                        <IconButton
+                            color="inherit"
+                            onClick={handleOpenNotifications}
+                            sx={{
+                                backgroundColor: Boolean(anchorElNotifications) ? 'rgba(0,0,0,0.04)' : 'transparent',
+                                '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' },
+                            }}
+                        >
+                            <Badge badgeContent={2} color="error">
+                                <NotificationsIcon />
+                            </Badge>
+                        </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title={userInfo?.company?.companyName || userInfo?.email || 'User'}>
+                        <IconButton
+                            onClick={handleOpenUserMenu}
+                            color="inherit"
+                            sx={{
+                                ml: 1,
+                                backgroundColor: Boolean(anchorElUser) ? 'rgba(0,0,0,0.04)' : 'transparent',
+                                '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' },
+                            }}
+                        >
+                            {userInfo?.company?.companyName ? (
+                                <Avatar
+                                    alt={userInfo.company.companyName}
+                                    src="/static/company-logo.png" // Replace with actual logo path
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        bgcolor: 'primary.main',
+                                        fontSize: '0.875rem',
+                                    }}
+                                >
+                                    {userInfo.company.companyName.charAt(0)}
+                                </Avatar>
+                            ) : (
+                                <AccountCircleIcon />
+                            )}
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+
+                {/* Notifications Menu */}
+                <Menu
+                    sx={{ mt: '45px' }}
+                    id="menu-notifications"
+                    anchorEl={anchorElNotifications}
+                    anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    open={Boolean(anchorElNotifications)}
+                    onClose={handleCloseNotifications}
+                    PaperProps={{
+                        elevation: 2,
+                        sx: {
+                            minWidth: '320px',
+                            maxWidth: '400px',
+                            mt: 0.5,
+                            borderRadius: '8px',
+                            maxHeight: '70vh',
+                            overflowY: 'auto',
+                        },
                     }}
                 >
-                    <MenuIcon />
-                </IconButton>
+                    <Box
+                        sx={{ px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                        <Typography variant="subtitle1" fontWeight="bold">
+                            Notifications
+                        </Typography>
+                        <Button size="small" color="primary">
+                            Mark all as read
+                        </Button>
+                    </Box>
+                    <Divider />
 
+                    {/* Notification items */}
+                    <MenuItem onClick={handleCloseNotifications} sx={{ py: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                            <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 38, height: 38 }}>
+                                <NotificationsIcon fontSize="small" />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="body2" fontWeight="medium">
+                                    New payment received
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Payment of $150 has been processed successfully
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    2 hours ago
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </MenuItem>
+
+                    <MenuItem onClick={handleCloseNotifications} sx={{ py: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                            <Avatar sx={{ bgcolor: 'success.light', color: 'success.main', width: 38, height: 38 }}>
+                                <PersonIcon fontSize="small" />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="body2" fontWeight="medium">
+                                    New employee account created
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    John Doe has joined your company
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    1 day ago
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </MenuItem>
+
+                    <Divider />
+                    <Box sx={{ p: 1 }}>
+                        <Button fullWidth size="small">
+                            View all notifications
+                        </Button>
+                    </Box>
+                </Menu>
+
+                {/* User Menu */}
                 <Menu
                     sx={{ mt: '45px' }}
                     id="menu-appbar"
@@ -103,11 +407,66 @@ export function NavbarAdmin() {
                     }}
                     open={Boolean(anchorElUser)}
                     onClose={handleCloseUserMenu}
+                    PaperProps={{
+                        elevation: 2,
+                        sx: {
+                            minWidth: '220px',
+                            mt: 0.5,
+                            borderRadius: '8px',
+                            '& .MuiMenuItem-root': {
+                                py: 1,
+                            },
+                        },
+                    }}
                 >
-                    <MenuItem onClick={handleCloseUserMenu}>
-                        <Box>
-                            <Typography></Typography>
-                        </Box>
+                    <Box sx={{ px: 2, py: 1, mb: 1 }}>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                            {userInfo?.company?.companyName || userInfo?.email || 'User'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {userInfo?.roleName || 'User'}
+                        </Typography>
+                    </Box>
+
+                    <Divider />
+
+                    <MenuItem onClick={handleProfile}>
+                        <ListItemIcon>
+                            <PersonIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Profile</ListItemText>
+                    </MenuItem>
+
+                    {userInfo?.roleName === 'COMPANY' && (
+                        <MenuItem onClick={handleGoToWallet}>
+                            <ListItemIcon>
+                                <AccountBalanceWalletIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Wallet</ListItemText>
+                        </MenuItem>
+                    )}
+
+                    <MenuItem onClick={handleSettings}>
+                        <ListItemIcon>
+                            <SettingsIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Settings</ListItemText>
+                    </MenuItem>
+
+                    <MenuItem onClick={handleHelp}>
+                        <ListItemIcon>
+                            <HelpIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Help & Support</ListItemText>
+                    </MenuItem>
+
+                    <Divider />
+
+                    <MenuItem onClick={handleLogout}>
+                        <ListItemIcon>
+                            <ExitToAppIcon fontSize="small" color="error" />
+                        </ListItemIcon>
+                        <ListItemText primaryTypographyProps={{ color: 'error' }}>Logout</ListItemText>
                     </MenuItem>
                 </Menu>
             </Toolbar>
@@ -117,106 +476,277 @@ export function NavbarAdmin() {
 
 export function Sidebar() {
     const navigate = useNavigate();
+    const location = useLocation();
     const user = storageService.getItem('userInfo')?.user || null;
-    const { currentPoints, fetchWallet } = useWallet(); // Use WalletContext to get currentPoints
+    const { currentPoints, fetchWallet } = useWallet();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const handleLogout = () => {
-        // Remove user information from localStorage
         localStorage.removeItem('userInfo');
-
         navigate('/login');
     };
+
     const handleBuyPoints = () => {
-        // Navigate to buy points page
         navigate('/wallet/purchase');
     };
+
     useEffect(() => {
         fetchWallet();
     }, [user]);
-    const [open, setOpen] = useState(true);
+
+    const [open, setOpen] = useState(!isMobile);
+
     const toggleDrawer = () => {
         setOpen(!open);
     };
 
+    // Check if the route is active
+    const isRouteActive = (route) => {
+        return location.pathname === route || location.pathname.startsWith(route + '/');
+    };
+
+    // Adjust drawer state based on screen size
+    useEffect(() => {
+        setOpen(!isMobile);
+    }, [isMobile]);
+
     return (
-        <Drawer variant="permanent" open={open}>
-            <Toolbar
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    px: [1],
-                }}
-            >
-                <Box sx={{ flexGrow: 1 }}></Box>
-                <IconButton onClick={toggleDrawer} sx={{ mr: '14px' }}>
-                    <AlignJustify />
-                </IconButton>
-            </Toolbar>
-            <Divider />
-            <List component="nav">
-                <MainListItems />
-                <Divider sx={{ my: 1 }} />
-            </List>
-            <List component="nav">
-                <SecondaryListItems />
-                <Divider sx={{ my: 1 }} />
-            </List>
-            <Box
-                sx={{
-                    position: 'absolute',
-                    bottom: 40,
-                    left: 0,
-                    right: 0,
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    p: 2,
-                }}
-            >
-                <Box sx={{ mb: 1 }}>
-                    <Typography variant="body1">{user?.company?.companyName ?? user?.email ?? 'Admin'}</Typography>
-                    {user?.roleName === 'COMPANY' && (
-                        <Typography variant="contained" color="primary">
-                            Current Points: {currentPoints}
+        <>
+            <NavbarAdmin open={open} toggleDrawer={toggleDrawer} />
+            <Drawer variant="permanent" open={open}>
+                <Toolbar
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        px: [1],
+                        height: '64px',
+                    }}
+                >
+                    <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                        {open ? (
+                            <Typography
+                                variant="h6"
+                                fontWeight="bold"
+                                color="primary"
+                                sx={{ ml: 2, display: 'flex', alignItems: 'center' }}
+                            >
+                                ARGM
+                            </Typography>
+                        ) : (
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                <img src="/logo-icon.png" alt="AR" style={{ height: '28px' }} />
+                            </Box>
+                        )}
+                    </Box>
+                    <IconButton
+                        onClick={toggleDrawer}
+                        sx={{
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(0,0,0,0.04)',
+                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' },
+                        }}
+                    >
+                        {open ? <CloseIcon /> : <AlignJustify />}
+                    </IconButton>
+                </Toolbar>
+                <Divider />
+
+                {open && (
+                    <Box sx={{ px: 3, py: 2 }}>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2,
+                                borderRadius: '10px',
+                                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                                color: 'white',
+                            }}
+                        >
+                            <Typography variant="subtitle2" fontWeight="medium" gutterBottom>
+                                Welcome back,
+                            </Typography>
+                            <Typography variant="body1" fontWeight="bold" gutterBottom noWrap>
+                                {user?.company?.companyName || user?.email || 'User'}
+                            </Typography>
+                            {user?.roleName === 'COMPANY' && (
+                                <Chip
+                                    icon={<AccountBalanceWalletIcon fontSize="small" />}
+                                    label={`${currentPoints} Points`}
+                                    size="small"
+                                    sx={{
+                                        mt: 1,
+                                        bgcolor: 'rgba(255,255,255,0.2)',
+                                        color: 'white',
+                                        fontWeight: 'medium',
+                                        '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
+                                    }}
+                                />
+                            )}
+                        </Paper>
+                    </Box>
+                )}
+
+                <Box sx={{ overflow: 'auto', flexGrow: 1, px: open ? 2 : 0 }}>
+                    {open && (
+                        <Typography variant="body2" color="text.secondary" sx={{ px: 3, py: 1, fontWeight: 'medium' }}>
+                            MAIN MENU
                         </Typography>
                     )}
+                    <Divider sx={{ my: 1 }} />
+
+                    <List component="nav">
+                        <MainListItems />
+
+                        {open && (
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ px: 3, py: 1, mt: 2, fontWeight: 'medium' }}
+                            >
+                                MANAGEMENT
+                            </Typography>
+                        )}
+                        <Divider sx={{ my: 1 }} />
+
+                        <SecondaryListItems />
+                    </List>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+
+                <Box
+                    sx={{
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        p: open ? 2 : 1,
+                    }}
+                >
                     {user?.roleName === 'COMPANY' && (
-                        <Button variant="contained" color="primary" size="small" fullWidth onClick={handleBuyPoints}>
-                            Buy Points
-                        </Button>
+                        <>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                fullWidth
+                                size="medium"
+                                startIcon={open ? <ShoppingCartIcon /> : null}
+                                sx={{
+                                    mb: 1,
+                                    textTransform: 'none',
+                                    borderRadius: '8px',
+                                    boxShadow: 'none',
+                                    '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.15)' },
+                                }}
+                                onClick={handleBuyPoints}
+                            >
+                                {open ? 'Buy Points' : <ShoppingCartIcon />}
+                            </Button>
+                            <br />
+                        </>
                     )}
-                    <Button variant="outlined" color="secondary" size="small" fullWidth onClick={handleLogout}>
-                        Logout
+
+                    <Button
+                        variant="outlined"
+                        color="inherit"
+                        fullWidth
+                        size="medium"
+                        startIcon={open ? <ExitToAppIcon /> : null}
+                        sx={{
+                            textTransform: 'none',
+                            borderRadius: '8px',
+                            borderColor: 'rgba(0,0,0,0.12)',
+                        }}
+                        onClick={handleLogout}
+                    >
+                        {open ? 'Logout' : <ExitToAppIcon />}
                     </Button>
                 </Box>
-            </Box>
-        </Drawer>
+            </Drawer>
+        </>
     );
 }
+
+// Modified listItems.js for the sidebar to support the active state
+export const CustomMainListItems = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleNavigate = (path) => {
+        navigate(path);
+        window.scrollTo(0, 0);
+    };
+
+    const [userInfo, setUserInfo] = useState(storageService.getItem('userInfo')?.user || null);
+    const role = userInfo?.role?.roleName;
+
+    // Check if the route is active
+    const isRouteActive = (route) => {
+        return location.pathname === route || location.pathname.startsWith(route + '/');
+    };
+
+    const companyRoutes = [
+        {
+            route: '/company/guideline',
+            icon: <AppWindowMac />,
+            title: 'My Guidelines',
+        },
+    ];
+
+    const adminRoutes = [
+        {
+            route: '/admin/dashboard',
+            icon: <DashboardIcon />,
+            title: 'Dashboard',
+        },
+    ];
+
+    return (
+        <>
+            {role === 'COMPANY' &&
+                companyRoutes.map((route, index) => (
+                    <StyledListItemButton
+                        key={index}
+                        onClick={() => handleNavigate(route.route)}
+                        active={isRouteActive(route.route)}
+                    >
+                        <ListItemIcon>{route.icon}</ListItemIcon>
+                        <ListItemText primary={route.title} />
+                    </StyledListItemButton>
+                ))}
+
+            {role === 'ADMIN' &&
+                adminRoutes.map((route, index) => (
+                    <StyledListItemButton
+                        key={index}
+                        onClick={() => handleNavigate(route.route)}
+                        active={isRouteActive(route.route)}
+                    >
+                        <ListItemIcon>{route.icon}</ListItemIcon>
+                        <ListItemText primary={route.title} />
+                    </StyledListItemButton>
+                ))}
+        </>
+    );
+};
 
 export default function AdminLayout({ children }) {
     const theme = useTheme();
 
     return (
-        <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ display: 'flex' }}>
-                <Sidebar />
+        <Box sx={{ display: 'flex' }}>
+            <Sidebar />
 
-                <Box
-                    component="main"
-                    sx={{
-                        backgroundColor:
-                            theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[900],
-                        flexGrow: 1,
-                        height: '100vh',
-                        overflow: 'auto',
-                    }}
-                >
-                    {children}
-                </Box>
+            <Box
+                component="main"
+                sx={{
+                    backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.grey[900],
+                    flexGrow: 1,
+                    height: '100vh',
+                    overflow: 'auto',
+                    pt: '64px', // Add padding to account for AppBar height
+                }}
+            >
+                <Box sx={{ p: 3 }}>{children}</Box>
             </Box>
-        </ThemeProvider>
+        </Box>
     );
 }

@@ -34,6 +34,7 @@ import {
     ArrowDownward as ArrowDownwardIcon,
     Receipt as ReceiptIcon,
 } from '@mui/icons-material';
+import { type } from '@testing-library/user-event/dist/type';
 
 function Copyright(props) {
     return (
@@ -81,29 +82,19 @@ export default function WalletHistory() {
                     ...column,
                     renderCell: (params) => {
                         const isCredit = params.row.type === 'CREDIT';
+                        const value = typeof params.value === 'number' ? params.value : 0;
+                        const formattedValue = `${isCredit ? '+' : '-'}${value.toLocaleString('en-US')}`;
+
                         return (
                             <Box
                                 sx={{
                                     display: 'flex',
-                                    alignItems: 'center', // Try 'start' instead
-                                    height: '100%', // Ensure full height
+                                    alignItems: 'center',
+                                    height: '100%',
                                 }}
                             >
-                                {/* <AttachMoneyIcon
-                                    sx={{
-                                        color: isCredit ? 'success.main' : 'error.main',
-                                        mr: 0.5,
-                                        fontSize: '1rem',
-                                        alignSelf: 'center',
-                                    }}
-                                /> */}
                                 <Typography className={isCredit ? 'transaction-credit' : 'transaction-debit'}>
-                                    {typeof params.value === 'number'
-                                        ? params.value.toLocaleString('en-US', {
-                                              minimumFractionDigits: 2,
-                                              maximumFractionDigits: 2,
-                                          })
-                                        : params.value}
+                                    {formattedValue}
                                 </Typography>
                             </Box>
                         );
@@ -197,35 +188,33 @@ export default function WalletHistory() {
             field: 'amount',
             headerName: 'Amount',
             width: 150,
-            align: 'center',
-            headerAlign: 'center',
-            renderCell: (params) => {
-                const { row } = params;
-                const isDebit = row.type === 'DEBIT';
-                const formattedAmount = isDebit ? `-${row.amount}` : `+${row.amount}`;
-
-                return (
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: '100%',
-                            width: '100%',
-                        }}
-                    >
-                        <Typography
-                            sx={{
-                                color: isDebit ? 'red' : 'green',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                            }}
-                        >
-                            {formattedAmount}
-                        </Typography>
-                    </Box>
-                );
-            },
+            // renderCell: (params) => {
+            //     const { row } = params;
+            //     const isDebit = row.type === 'DEBIT';
+            //     const formattedAmount = isDebit ? `-${row.amount}` : `+${row.amount}`;
+            //     console.log('formattedAmount: ', formattedAmount);
+            //     return (
+            //         <Box
+            //             sx={{
+            //                 display: 'flex',
+            //                 justifyContent: 'center',
+            //                 alignItems: 'center',
+            //                 height: '100%',
+            //                 width: '100%',
+            //             }}
+            //         >
+            //             <Typography
+            //                 sx={{
+            //                     color: isDebit ? 'red' : 'green',
+            //                     fontWeight: 'bold',
+            //                     textAlign: 'center',
+            //                 }}
+            //             >
+            //                 {formattedAmount}
+            //             </Typography>
+            //         </Box>
+            //     );
+            // },
         },
         { field: 'balance', headerName: 'Balance', width: 150 },
         { field: 'createdDate', headerName: 'Created At', width: 200 },

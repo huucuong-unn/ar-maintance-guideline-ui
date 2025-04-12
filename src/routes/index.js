@@ -40,6 +40,7 @@ import PointOptionManagement from '~/pages/new/PointOptionManagement';
 import CompanyRequestSection from '~/pages/new/CompanyRequestSection';
 import RequestRevisionList from '~/components/Chat/RequestRevisionList';
 import Contact from '~/pages/new/Contact';
+import GuidelineCreation from '~/pages/new/GuidelineCreation';
 
 const publicRoutes = [
     //new
@@ -70,12 +71,22 @@ const adminRoutes = [
     { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
     { path: '/admin/service-price-management', component: ServicePriceManagement, layout: AdminLayout },
     { path: '/admin/point-options-management', component: PointOptionManagement, layout: AdminLayout },
-    { path: '/admin/point-options-management', component: PointOptionManagement, layout: AdminLayout },
 ];
 
 const companyRoutes = [
     { path: '/company/guideline', component: CoursesControl, layout: AdminLayout },
     { path: '/company/guideline/view/:id', component: CoursesControlEdit, layout: AdminLayout },
+    {
+        path: '/company/guideline/create',
+        component: GuidelineCreation,
+        layout: AdminLayout,
+    },
+    {
+        path: '/company/guideline/create/:id',
+        component: GuidelineCreation,
+        layout: AdminLayout,
+    },
+
     { path: '/company/blog-management', component: BlogsManagement, layout: AdminLayout },
     { path: '/company/account-management', component: EmployeesManagement, layout: AdminLayout },
     { path: '/company/payment-management', component: PaymentsManagement, layout: AdminLayout },

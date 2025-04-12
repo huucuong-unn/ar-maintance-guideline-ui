@@ -137,7 +137,7 @@ export default function PaymentAndSubscriptionManagement() {
 
     const columns = [
         { field: 'orderCode', headerName: 'Order Code', width: 200 },
-        { field: 'email', headerName: 'User Email', width: 200 },
+        { field: 'email', headerName: 'User Email', width: 250 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'amount', headerName: 'Amount', width: 200 },
         { field: 'point', headerName: 'Point', width: 100 },
@@ -630,16 +630,6 @@ export default function PaymentAndSubscriptionManagement() {
                                                     height: '100%', // Ensure full height
                                                 }}
                                             >
-                                                <AttachMoneyIcon
-                                                    // sx={{ color: 'success.main', mr: 0.5, fontSize: '1rem' }}
-                                                    sx={{
-                                                        color: 'success.main',
-                                                        opacity: 0.7,
-                                                        alignSelf: 'center',
-                                                        mr: 0.5,
-                                                        fontSize: '1rem',
-                                                    }}
-                                                />
                                                 <Typography fontWeight="medium">
                                                     {typeof params.value === 'number'
                                                         ? params.value.toLocaleString('en-US', {

@@ -155,7 +155,7 @@ export default function CoursesControl() {
 
     // Navigate to Course Edit
     const handleRedirectToCourseEdit = (courseId) => {
-        navigate(`/company/guideline/view/${courseId}`);
+        navigate(`/company/guideline/create/${courseId}`);
     };
 
     // ===========================
@@ -383,7 +383,9 @@ export default function CoursesControl() {
                     <Button
                         variant="contained"
                         sx={{ ml: 'auto', textTransform: 'none' }}
-                        onClick={handleOpenCreateDialog}
+                        onClick={() => {
+                            navigate('/company/guideline/create');
+                        }}
                     >
                         Create Guideline
                     </Button>
