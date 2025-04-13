@@ -18,6 +18,9 @@ import {
     Paper,
     Tooltip,
     ListItemButton,
+    DialogTitle,
+    Dialog,
+    DialogContent,
 } from '@mui/material';
 import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
@@ -42,6 +45,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import InputBase from '@mui/material/InputBase';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const drawerWidth = 260;
 
@@ -136,6 +140,7 @@ export function NavbarAdmin({ open, toggleDrawer }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const location = useLocation();
+    const [showHelpDialog, setShowHelpDialog] = useState(false);
 
     // Get page title based on current route
     const getPageTitle = () => {
@@ -143,7 +148,11 @@ export function NavbarAdmin({ open, toggleDrawer }) {
         if (path.includes('/dashboard')) return 'Dashboard';
         if (path.includes('/guideline')) return 'Guidelines';
         if (path.includes('/machines-management')) return 'Machines';
-        if (path.includes('/account-management')) return 'Accounts';
+        if (path.includes('/machines-type-management')) return 'Machine Types';
+        if (path.includes('/company-request-management')) return 'Company Requests';
+        if (path.includes('/model-management')) return 'Models';
+        if (path.includes('/point-request-management')) return 'Point Requests';
+        if (path.includes('/payment/history')) return 'Payment';
         if (path.includes('/wallet')) return 'Wallet';
         if (path.includes('/profile')) return 'Profile';
         // Add more page titles based on your routes
@@ -238,6 +247,107 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Tooltip title="View guideline creation help">
+                        <IconButton color="primary" onClick={() => setShowHelpDialog(true)} sx={{ ml: 1 }}>
+                            <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                    {/* Help Dialog */}
+                    <Dialog
+                        open={showHelpDialog}
+                        onClose={() => setShowHelpDialog(false)}
+                        maxWidth="md"
+                        fullWidth
+                        PaperProps={{
+                            sx: {
+                                borderRadius: 2,
+                                p: 2,
+                            },
+                        }}
+                    >
+                        <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#051D40', pb: 1 }}>
+                            Guideline Creation Guide
+                        </DialogTitle>
+                        <DialogContent>
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                                    Step 1: Create Basic Information
+                                </Typography>
+                                <Typography paragraph>
+                                    Fill in all the required fields to set up your guideline. This includes the title,
+                                    machine type, model, status, and a short description that summarizes what this
+                                    guideline is for.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 2: Create Instruction Detail
+                                </Typography>
+                                <Typography paragraph>
+                                    After saving the basic information, you'll be able to access the Instruction tab
+                                    where you can add detailed steps based on the 3D model. Each instruction detail
+                                    should provide clear guidance for a specific action.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 3: Publish Your Guideline
+                                </Typography>
+                                <Typography paragraph>
+                                    Once you've completed all necessary instructions, you can set the status to "Active"
+                                    to publish your guideline and make it available to employees. Remember that each
+                                    instruction detail will consume 3 points from your account balance.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
+                                    Important Information:
+                                </Typography>
+                                <Typography component="div">
+                                    <ul style={{ paddingLeft: '1.5rem' }}>
+                                        <li>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+                                                Machine & Model Selection:
+                                            </Typography>
+                                            <Typography paragraph>
+                                                Select the appropriate machine type and model to ensure your guideline
+                                                is correctly associated with the right equipment.
+                                            </Typography>
+                                        </li>
+                                        <li>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Image Upload:</Typography>
+                                            <Typography paragraph>
+                                                The image you upload will be displayed on the guideline card in the main
+                                                dashboard, helping users identify the guideline visually.
+                                            </Typography>
+                                        </li>
+                                        <li>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Points System:</Typography>
+                                            <Typography paragraph>
+                                                Creating detailed instructions uses points from your company account.
+                                                Make sure you have sufficient points before starting a complex
+                                                guideline.
+                                            </Typography>
+                                        </li>
+                                    </ul>
+                                </Typography>
+                            </Box>
+                        </DialogContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, pt: 1 }}>
+                            <Button
+                                onClick={() => setShowHelpDialog(false)}
+                                variant="contained"
+                                sx={{
+                                    textTransform: 'none',
+                                    borderRadius: 1.5,
+                                    px: 4,
+                                    backgroundColor: '#0f6cbf',
+                                    '&:hover': {
+                                        backgroundColor: '#0a5ca8',
+                                    },
+                                }}
+                            >
+                                Got It
+                            </Button>
+                        </Box>
+                    </Dialog>
                     {userInfo?.roleName === 'COMPANY' && (
                         <Tooltip title="Current available points">
                             <Chip
@@ -514,7 +624,35 @@ export function Sidebar() {
     return (
         <>
             <NavbarAdmin open={open} toggleDrawer={toggleDrawer} />
-            <Drawer variant="permanent" open={open}>
+            <Drawer
+                variant="permanent"
+                open={open}
+                sx={{
+                    height: '100%',
+                    '& .MuiDrawer-paper': {
+                        position: 'relative',
+                        whiteSpace: 'nowrap',
+                        width: open ? drawerWidth : theme.spacing(7),
+                        [theme.breakpoints.up('sm')]: {
+                            width: open ? drawerWidth : theme.spacing(9),
+                        },
+                        backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.background.default,
+                        borderRight: `1px solid ${theme.palette.divider}`,
+                        boxShadow: open ? '4px 0 10px rgba(0,0,0,0.05)' : 'none',
+                        transition: theme.transitions.create('width', {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.enteringScreen,
+                        }),
+                        boxSizing: 'border-box',
+                        overflowX: 'hidden',
+                        // Đảm bảo drawer có chiều cao đầy đủ
+                        height: '100vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                    },
+                }}
+            >
+                {/* Phần header giữ nguyên */}
                 <Toolbar
                     sx={{
                         display: 'flex',
@@ -522,6 +660,7 @@ export function Sidebar() {
                         justifyContent: 'flex-end',
                         px: [1],
                         height: '64px',
+                        flexShrink: 0, // Không cho phép phần này co lại
                     }}
                 >
                     <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
@@ -553,8 +692,11 @@ export function Sidebar() {
                 </Toolbar>
                 <Divider />
 
+                {/* Phần welcome card (nếu drawer mở) */}
                 {open && (
-                    <Box sx={{ px: 3, py: 2 }}>
+                    <Box sx={{ px: 3, py: 2, flexShrink: 0 }}>
+                        {' '}
+                        {/* Không cho phép phần này co lại */}
                         <Paper
                             elevation={0}
                             sx={{
@@ -588,17 +730,42 @@ export function Sidebar() {
                     </Box>
                 )}
 
-                <Box sx={{ overflow: 'auto', flexGrow: 1, px: open ? 2 : 0 }}>
-                    {open && (
-                        <Typography variant="body2" color="text.secondary" sx={{ px: 3, py: 1, fontWeight: 'medium' }}>
-                            MAIN MENU
-                        </Typography>
-                    )}
-                    <Divider sx={{ my: 1 }} />
+                {/* ĐÂY LÀ PHẦN THAY ĐỔI CHÍNH */}
+                {/* Phần menu sẽ tự động co giãn và có scroll riêng */}
+                <Box
+                    sx={{
+                        flexGrow: 1, // Sẽ chiếm hết không gian còn lại
+                        px: open ? 2 : 0,
+                        overflow: 'hidden', // Ẩn overflow tổng thể
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
+                >
+                    {/* MAIN MENU */}
+                    <Box sx={{ flexShrink: 0 }}>
+                        {' '}
+                        {/* Phần tiêu đề không co giãn */}
+                        {open && (
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ px: 3, py: 1, fontWeight: 'medium' }}
+                            >
+                                MAIN MENU
+                            </Typography>
+                        )}
+                        <Divider sx={{ my: 1 }} />
+                    </Box>
 
-                    <List component="nav">
+                    {/* MainListItems không cuộn riêng */}
+                    <List component="nav" sx={{ flexShrink: 0 }}>
                         <MainListItems />
+                    </List>
 
+                    {/* MANAGEMENT */}
+                    <Box sx={{ flexShrink: 0 }}>
+                        {' '}
+                        {/* Phần tiêu đề không co giãn */}
                         {open && (
                             <Typography
                                 variant="body2"
@@ -609,16 +776,38 @@ export function Sidebar() {
                             </Typography>
                         )}
                         <Divider sx={{ my: 1 }} />
+                    </Box>
 
-                        <SecondaryListItems />
-                    </List>
+                    {/* SecondaryListItems với scroll riêng */}
+                    <Box
+                        sx={{
+                            flexGrow: 1, // Chiếm hết phần còn lại
+                            overflow: 'auto', // Chỉ phần này có scroll
+                            '&::-webkit-scrollbar': {
+                                width: '6px',
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '3px',
+                            },
+                            '&::-webkit-scrollbar-track': {
+                                backgroundColor: 'rgba(0,0,0,0.05)',
+                            },
+                        }}
+                    >
+                        <List component="nav">
+                            <SecondaryListItems />
+                        </List>
+                    </Box>
                 </Box>
 
+                {/* Phần footer */}
                 <Box
                     sx={{
                         borderTop: '1px solid',
                         borderColor: 'divider',
                         p: open ? 2 : 1,
+                        flexShrink: 0, // Không cho phép phần này co lại
                     }}
                 >
                     {user?.roleName === 'COMPANY' && (

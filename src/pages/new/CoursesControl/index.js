@@ -13,13 +13,25 @@ import {
     Skeleton,
     TextField,
     Autocomplete,
+    Paper,
+    Container,
+    Divider,
+    IconButton,
+    Chip,
+    Stack,
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider, alpha } from '@mui/material/styles';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SearchIcon from '@mui/icons-material/Search';
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -33,7 +45,73 @@ import storageService from '~/components/StorageService/storageService';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useWallet } from '~/WalletContext'; // Import the WalletContext
 
-const defaultTheme = createTheme();
+// Create a custom theme with better colors
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#1976d2',
+            light: '#4791db',
+            dark: '#115293',
+        },
+        secondary: {
+            main: '#f50057',
+        },
+        background: {
+            default: '#f5f7fa',
+        },
+    },
+    typography: {
+        fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
+        h3: {
+            fontWeight: 700,
+        },
+        h4: {
+            fontWeight: 600,
+        },
+    },
+    components: {
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    boxShadow: 'none',
+                    '&:hover': {
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    },
+                },
+                containedPrimary: {
+                    backgroundColor: '#1976d2',
+                },
+            },
+        },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 12,
+                    boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                },
+            },
+        },
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    borderRadius: 16,
+                },
+            },
+        },
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 8,
+                    },
+                },
+            },
+        },
+    },
+});
 
 export default function CoursesControl() {
     const navigate = useNavigate();
@@ -41,7 +119,6 @@ export default function CoursesControl() {
     // Original states
     const [courses, setCourses] = useState([]);
     const [unusedModel, setUnusedModel] = useState([]);
-    // const [isLoading, setIsLoading] = useState(true);
 
     // States for filtering
     const [searchTerm, setSearchTerm] = useState('');
@@ -72,12 +149,13 @@ export default function CoursesControl() {
     });
     const { currentPoints, fetchWallet } = useWallet(); // Use WalletContext to get currentPoints
 
+    // Show filter section
+    const [showFilters, setShowFilters] = useState(false);
+
     useEffect(() => {
         const fetchModelUnused = async () => {
             try {
                 const response = await ModelAPI.getUnusedModelByCompany(userInfo?.company?.id);
-                console.log(response);
-
                 const data = response?.result || [];
                 setUnusedModel(data);
             } catch (error) {
@@ -87,18 +165,6 @@ export default function CoursesControl() {
         fetchModelUnused();
         fetchWallet();
     }, []);
-
-    // const fetchCourses = async () => {
-    //     try {
-    //         const response = await CourseAPI.getByCompanyId(userInfo?.company?.id);
-    //         const data = response?.result || [];
-    //         setCourses(data);
-    //     } catch (error) {
-    //         console.error('Failed to fetch courses:', error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
 
     const [machineTypes, setMachineTypes] = useState([]);
     const [selectedMachineType, setSelectedMachineType] = useState(null);
@@ -216,10 +282,6 @@ export default function CoursesControl() {
         fetchMachineTypeByCompanyId();
     }, []);
 
-    useEffect(() => {
-        console.log(machineTypeByCompanyId);
-    }, [machineTypeByCompanyId]);
-
     const handleOpenCreateDialog = () => {
         setNewTitle('');
         setNewDescription('');
@@ -247,7 +309,6 @@ export default function CoursesControl() {
                 alert('Please select a valid image file.');
                 return;
             }
-            console.log('first file', file);
             setSelectedImage(file);
             setImagePreview(URL.createObjectURL(file));
         }
@@ -300,167 +361,305 @@ export default function CoursesControl() {
         }
     };
 
-    useEffect(() => {
-        console.log(model);
-    }, [model]);
+    // Function to apply filters
+    const applyFilters = () => {
+        setParamsToSearch({
+            title: searchTerm,
+            status: statusFilter === 'ALL' ? '' : statusFilter,
+            machineTypeId: selectedMachineType ? selectedMachineType.id : '',
+        });
+    };
+
+    // Function to reset filters
+    const resetFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('');
+        setSelectedMachineType(null);
+        setParamsToSearch({
+            title: '',
+            status: '',
+            machineTypeId: '',
+        });
+    };
+
+    const hasActiveFilters = searchTerm || statusFilter || selectedMachineType;
+    const hasData = data?.pages && data.pages.some((page) => page.data.length > 0);
 
     return (
-        <ThemeProvider theme={defaultTheme}>
+        <ThemeProvider theme={theme}>
             <Box
-                container
                 component="main"
-                item
                 sx={{
+                    backgroundImage: `linear-gradient(rgba(245, 247, 250, 0.8), rgba(245, 247, 250, 0.8)), url(${adminLoginBackground})`,
                     backgroundRepeat: 'no-repeat',
-                    backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900]),
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     minHeight: '100vh',
                     width: '100%',
-                    padding: '5%',
-                    backgroundImage: `url(${adminLoginBackground})`,
+                    py: 4,
                 }}
             >
-                <Typography
-                    component="h1"
-                    variant="h4"
-                    sx={{
-                        fontWeight: '900',
-                        fontSize: '46px',
-                        color: '#051D40',
-                        textAlign: 'left',
-                        marginBottom: '3%',
-                    }}
-                >
-                    My Guidelines
-                </Typography>
-
-                {/* ===================== CREATE + SEARCH & FILTER ROW ===================== */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                    {/* Search by title */}
-                    <TextField
-                        variant="outlined"
-                        label="Search by Title"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        sx={{ width: '300px' }}
-                    />
-
-                    <Autocomplete
-                        options={machineTypes}
-                        getOptionLabel={(option) => option.name}
-                        sx={{ width: 300 }}
-                        renderInput={(params) => <TextField {...params} label="Machine Types" />}
-                        onChange={(event, newValue) => {
-                            setSelectedMachineType(newValue);
-                        }}
-                    />
-
-                    <FormControl sx={{ width: '200px' }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                            <MenuItem value="ALL">All</MenuItem>
-                            <MenuItem value="ACTIVE">Active</MenuItem>
-                            <MenuItem value="INACTIVE">Inactive</MenuItem>
-                            <MenuItem value="DRAFTED">Drafted</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <Button
-                        variant="contained"
-                        sx={{ textTransform: 'none' }}
-                        onClick={() => {
-                            setParamsToSearch({
-                                title: searchTerm,
-                                status: statusFilter === 'ALL' ? '' : statusFilter,
-                                machineTypeId: selectedMachineType ? selectedMachineType.id : '',
-                            });
+                <Container maxWidth="xl">
+                    {/* Header Section */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            mb: 3,
+                            borderRadius: 3,
+                            background: 'linear-gradient(135deg, #051D40 0%, #1976d2 100%)',
+                            display: 'flex',
+                            flexDirection: { xs: 'column', md: 'row' },
+                            justifyContent: 'space-between',
+                            alignItems: { xs: 'flex-start', md: 'center' },
                         }}
                     >
-                        Filter
-                    </Button>
+                        <Box>
+                            <Typography component="h1" variant="h3" sx={{ color: 'white', mb: 1 }}>
+                                My Guidelines
+                            </Typography>
+                            <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                                Manage and create machine operation guidelines for your team
+                            </Typography>
+                        </Box>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddCircleOutlineIcon />}
+                            sx={{
+                                mt: { xs: 2, md: 0 },
+                                bgcolor: 'white',
+                                color: '#051D40',
+                                '&:hover': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                },
+                            }}
+                            onClick={() => {
+                                navigate('/company/guideline/create');
+                            }}
+                        >
+                            Create New Guideline
+                        </Button>
+                    </Paper>
 
-                    {/* Create Course button */}
-                    <Button
-                        variant="contained"
-                        sx={{ ml: 'auto', textTransform: 'none' }}
-                        onClick={() => {
-                            navigate('/company/guideline/create');
-                        }}
-                    >
-                        Create Guideline
-                    </Button>
-                </Box>
-                {/* ===================== END CREATE + SEARCH & FILTER ROW ===================== */}
-                <Box
-                    sx={{
-                        borderRadius: '20px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                        py: 4,
-                        px: 2,
-                        margin: 'auto auto',
-                        minHeight: '50vh',
-                    }}
-                >
-                    {isLoading ? (
-                        <Grid container spacing={3}>
-                            {Array.from(new Array(8)).map((_, idx) => (
-                                <Grid item xs={12} sm={6} md={3} key={idx}>
-                                    <Skeleton
-                                        variant="rectangular"
-                                        sx={{
-                                            width: '100%',
-                                            aspectRatio: '16/9',
-                                            borderRadius: 2,
-                                            mb: 1,
-                                        }}
-                                    />
-                                    <Skeleton variant="text" height={30} width="80%" sx={{ mb: 1 }} />
-                                    <Skeleton variant="text" height={20} width="60%" />
-                                </Grid>
-                            ))}
-                        </Grid>
-                    ) : (
-                        <Grid container spacing={3}>
-                            {data?.pages
-                                .flatMap((page) => page.data)
-                                .map((course, index) => (
-                                    <Grid
-                                        item
-                                        xs={12}
-                                        sm={12}
-                                        md={6}
-                                        lg={3}
-                                        key={index}
-                                        sx={{ cursor: 'pointer' }}
-                                        onClick={() => handleRedirectToCourseEdit(course.id)}
-                                    >
-                                        <CardCourse
-                                            title={course.title}
-                                            description={course.description}
-                                            image={course.imageUrl}
-                                            status={course.status}
-                                            machineType={course.machineType}
-                                            modelName={course.modelName}
+                    {/* Search & Filter Section */}
+                    <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+                            <Typography variant="h6" sx={{}}>
+                                <ManageSearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                                Search & Filter
+                            </Typography>
+                            <Button
+                                variant="text"
+                                color="primary"
+                                startIcon={<FilterAltIcon />}
+                                onClick={() => setShowFilters(!showFilters)}
+                            >
+                                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                            </Button>
+                        </Box>
+
+                        {/* Basic Search */}
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Search guidelines by title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            InputProps={{
+                                startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />,
+                            }}
+                            sx={{ mb: 2 }}
+                        />
+
+                        {/* Advanced Filters */}
+                        {showFilters && (
+                            <Box sx={{ mt: 2, mb: 2 }}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} md={6}>
+                                        <Autocomplete
+                                            options={machineTypes}
+                                            getOptionLabel={(option) => option.name}
+                                            value={selectedMachineType}
+                                            onChange={(event, newValue) => {
+                                                setSelectedMachineType(newValue);
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField {...params} label="Machine Type" fullWidth />
+                                            )}
                                         />
                                     </Grid>
-                                ))}
-
-                            <div ref={loadMoreRef} style={{ height: 20, background: 'transparent' }}></div>
-                            {isFetchingNextPage && (
-                                <Grid item xs={12} textAlign="center">
-                                    <CircularProgress size={30} />
+                                    <Grid item xs={12} md={6}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Status</InputLabel>
+                                            <Select
+                                                label="Status"
+                                                value={statusFilter}
+                                                onChange={(e) => setStatusFilter(e.target.value)}
+                                            >
+                                                <MenuItem value="">All</MenuItem>
+                                                <MenuItem value="ACTIVE">Active</MenuItem>
+                                                <MenuItem value="INACTIVE">Inactive</MenuItem>
+                                                <MenuItem value="DRAFTED">Drafted</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
                                 </Grid>
+                            </Box>
+                        )}
+
+                        {/* Filter Actions */}
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
+                            {hasActiveFilters && (
+                                <Button variant="outlined" color="inherit" onClick={resetFilters}>
+                                    Clear Filters
+                                </Button>
                             )}
-                        </Grid>
-                    )}
-                </Box>
+                            <Button variant="contained" color="primary" onClick={applyFilters}>
+                                Apply Filters
+                            </Button>
+                        </Box>
+                    </Paper>
+
+                    {/* Content Section */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            borderRadius: 3,
+                            backgroundColor: 'white',
+                            minHeight: '60vh',
+                            position: 'relative',
+                        }}
+                    >
+                        {/* Current filters display */}
+                        {hasActiveFilters && (
+                            <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                <Typography variant="body2" sx={{ mr: 1, color: 'text.secondary' }}>
+                                    Active filters:
+                                </Typography>
+                                {searchTerm && (
+                                    <Chip
+                                        label={`Title: ${searchTerm}`}
+                                        size="small"
+                                        onDelete={() => setSearchTerm('')}
+                                    />
+                                )}
+                                {statusFilter && (
+                                    <Chip
+                                        label={`Status: ${statusFilter}`}
+                                        size="small"
+                                        onDelete={() => setStatusFilter('')}
+                                    />
+                                )}
+                                {selectedMachineType && (
+                                    <Chip
+                                        label={`Machine: ${selectedMachineType.name}`}
+                                        size="small"
+                                        onDelete={() => setSelectedMachineType(null)}
+                                    />
+                                )}
+                            </Box>
+                        )}
+
+                        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+                            Guideline Library
+                        </Typography>
+
+                        {isLoading ? (
+                            <Grid container spacing={3}>
+                                {Array.from(new Array(8)).map((_, idx) => (
+                                    <Grid item xs={12} sm={6} md={4} lg={3} key={idx}>
+                                        <Skeleton
+                                            variant="rectangular"
+                                            sx={{
+                                                width: '100%',
+                                                aspectRatio: '16/9',
+                                                borderRadius: 2,
+                                                mb: 1,
+                                            }}
+                                        />
+                                        <Skeleton variant="text" height={30} width="80%" sx={{ mb: 1 }} />
+                                        <Skeleton variant="text" height={20} width="60%" />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        ) : !hasData ? (
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    py: 8,
+                                    textAlign: 'center',
+                                    color: 'text.secondary',
+                                }}
+                            >
+                                <FolderOpenIcon sx={{ fontSize: 80, mb: 2, color: alpha('#1976d2', 0.3) }} />
+                                <Typography variant="h5" sx={{ mb: 1, color: 'text.primary' }}>
+                                    No Guidelines Found
+                                </Typography>
+                                <Typography variant="body1" sx={{ mb: 3, maxWidth: 500 }}>
+                                    {hasActiveFilters
+                                        ? 'No guidelines match your current filters. Try adjusting your search criteria.'
+                                        : "You haven't created any guidelines yet. Create your first guideline to get started."}
+                                </Typography>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddCircleOutlineIcon />}
+                                    onClick={() => navigate('/company/guideline/create')}
+                                >
+                                    Create Your First Guideline
+                                </Button>
+                            </Box>
+                        ) : (
+                            <Grid container spacing={3}>
+                                {data?.pages
+                                    .flatMap((page) => page.data)
+                                    .map((course, index) => (
+                                        <Grid
+                                            item
+                                            xs={12}
+                                            sm={6}
+                                            md={4}
+                                            lg={3}
+                                            key={index}
+                                            sx={{ cursor: 'pointer' }}
+                                            onClick={() => handleRedirectToCourseEdit(course.id)}
+                                        >
+                                            <CardCourse
+                                                title={course.title}
+                                                description={course.description}
+                                                image={course.imageUrl}
+                                                status={course.status}
+                                                machineType={course.machineType}
+                                                modelName={course.modelName}
+                                            />
+                                        </Grid>
+                                    ))}
+
+                                <div
+                                    ref={loadMoreRef}
+                                    style={{ height: 20, width: '100%', background: 'transparent' }}
+                                ></div>
+                                {isFetchingNextPage && (
+                                    <Grid item xs={12} textAlign="center">
+                                        <CircularProgress size={30} />
+                                    </Grid>
+                                )}
+                            </Grid>
+                        )}
+                    </Paper>
+                </Container>
 
                 {/* ===================== CREATE Guideline DIALOG ===================== */}
                 <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} fullWidth maxWidth="sm">
-                    <DialogTitle>Create New Guideline</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText sx={{ mb: 2 }}>
-                            Please fill out the form to create a new course.
+                    <DialogTitle sx={{ borderBottom: '1px solid #eee', pb: 2 }}>
+                        <Typography variant="h5">Create New Guideline</Typography>
+                    </DialogTitle>
+                    <DialogContent sx={{ pt: 3 }}>
+                        <DialogContentText sx={{ mb: 3 }}>
+                            Fill out the details below to create a new machine operation guideline.
                         </DialogContentText>
 
                         {/* Title Field */}
@@ -471,6 +670,8 @@ export default function CoursesControl() {
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             required
+                            placeholder="Enter a descriptive title (5-50 characters)"
+                            helperText={`${newTitle.length}/50 characters`}
                         />
 
                         <Autocomplete
@@ -495,70 +696,101 @@ export default function CoursesControl() {
                             />
                         )}
 
-                        {/* Model Field */}
-                        {/* <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-                            <InputLabel>Model*</InputLabel>
-                            <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
-                                {unusedModel.map((data, index) => (
-                                    <MenuItem value={data.id}>{data.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl> */}
-
                         {/* Image Upload Field */}
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            id="image-upload"
-                            onChange={handleImageUpload}
-                            multiple={false}
-                        />
-                        <label htmlFor="image-upload">
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                component="span"
-                                sx={{
-                                    border: '2px dashed darkgrey',
-                                    padding: 2,
-                                    backgroundColor: '#f5f5f5',
-                                    boxShadow: 'none',
-                                    color: '#0f6cbf',
-                                    textTransform: 'none',
-                                    ':hover': {
-                                        backgroundColor: '#f5f5f5',
-                                        border: '2px solid #0f6cbf',
+                        <Box sx={{ mt: 3, mb: 2 }}>
+                            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                                Cover Image
+                            </Typography>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="image-upload"
+                                onChange={handleImageUpload}
+                                multiple={false}
+                            />
+                            <label htmlFor="image-upload">
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    component="span"
+                                    sx={{
+                                        border: '2px dashed #1976d2',
+                                        padding: 3,
+                                        backgroundColor: alpha('#1976d2', 0.04),
                                         boxShadow: 'none',
-                                    },
-                                }}
-                            >
-                                {selectedImage ? 'Change Image' : 'Upload Image'}
-                            </Button>
-                        </label>
-                        {imagePreview && (
-                            <img src={imagePreview} alt="Preview" style={{ width: '100%', marginTop: 10 }} />
-                        )}
+                                        color: '#1976d2',
+                                        height: imagePreview ? 'auto' : 120,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        '&:hover': {
+                                            backgroundColor: alpha('#1976d2', 0.08),
+                                            border: '2px dashed #1976d2',
+                                        },
+                                    }}
+                                >
+                                    {!imagePreview && (
+                                        <>
+                                            <DescriptionIcon sx={{ fontSize: 40, mb: 1 }} />
+                                            <Typography>Click to upload a cover image</Typography>
+                                            <Typography variant="caption">Recommended size: 1280 x 720px</Typography>
+                                        </>
+                                    )}
+                                    {imagePreview && (
+                                        <Box sx={{ position: 'relative', width: '100%' }}>
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                style={{ width: '100%', borderRadius: 8 }}
+                                            />
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                sx={{
+                                                    position: 'absolute',
+                                                    bottom: 8,
+                                                    right: 8,
+                                                    backgroundColor: 'rgba(0,0,0,0.6)',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(0,0,0,0.8)',
+                                                    },
+                                                }}
+                                            >
+                                                Change
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Button>
+                            </label>
+                        </Box>
 
                         {/* Description Field */}
                         <TextField
                             margin="normal"
-                            label="Short Content"
+                            label="Description"
                             fullWidth
                             required
                             multiline
                             minRows={3}
                             value={newDescription}
                             onChange={(e) => setNewDescription(e.target.value)}
-                            sx={{ mt: 3 }}
+                            placeholder="Enter a brief description of this guideline (10-200 characters)"
+                            helperText={`${newDescription.length}/200 characters`}
                         />
                     </DialogContent>
-                    <DialogActions>
-                        <Button sx={{ textTransform: 'none' }} onClick={handleCloseCreateDialog} disabled={isCreating}>
+                    <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #eee' }}>
+                        <Button onClick={handleCloseCreateDialog} disabled={isCreating} variant="outlined">
                             Cancel
                         </Button>
-                        <Button sx={{ textTransform: 'none' }} onClick={handleCreateCourse} disabled={isCreating}>
-                            {isCreating ? <CircularProgress size={24} /> : 'Create'}
+                        <Button
+                            onClick={handleCreateCourse}
+                            disabled={isCreating}
+                            variant="contained"
+                            startIcon={isCreating ? <CircularProgress size={20} /> : <AddCircleOutlineIcon />}
+                        >
+                            {isCreating ? 'Creating...' : 'Create Guideline'}
                         </Button>
                     </DialogActions>
                 </Dialog>

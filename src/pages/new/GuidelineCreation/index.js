@@ -38,6 +38,7 @@ import ModelAPI from '~/API/ModelAPI';
 import storageService from '~/components/StorageService/storageService';
 import CoursesControlEdit from '../CoursesControlEdit';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
+import { getImage } from '~/Constant';
 
 const defaultTheme = createTheme();
 
@@ -545,7 +546,7 @@ export default function GuidelineCreation() {
                                                     src={
                                                         imagePreview.startsWith('blob:')
                                                             ? imagePreview
-                                                            : `${imagePreview}`
+                                                            : getImage(imagePreview)
                                                     }
                                                     alt="Preview"
                                                     style={{
