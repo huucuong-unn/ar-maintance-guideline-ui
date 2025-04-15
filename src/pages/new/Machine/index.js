@@ -60,6 +60,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import WarningIcon from '@mui/icons-material/Warning';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 import { getImage } from '~/Constant';
 import axios from 'axios';
@@ -110,18 +111,17 @@ export default function MachinesManagement() {
     const [machineToDelete, setMachineToDelete] = useState(null);
     const [openQrDialog, setOpenQrDialog] = useState(false);
     const [selectedMachineForQr, setSelectedMachineForQr] = useState(null);
-    const [qrCodes, setQrCodes] = useState([]);
+    const [qrCodes, setQrCodes] = useState('');
 
     const handleViewQrCodes = async (machineId) => {
         try {
             // Tìm machine từ danh sách hiện tại
             const machine = rows.find((m) => m.id === machineId);
             setSelectedMachineForQr(machine);
-            console.log(machineId);
 
             // Gọi API để lấy QR codes (giả định là có API này)
-            const response = await MachineAPI.getMachineQRByMachineId(machineId);
-            setQrCodes(response?.result || []);
+            const response = await MachineAPI.getById(machineId);
+            setQrCodes(response?.result?.qrCode || '');
 
             setOpenQrDialog(true);
         } catch (error) {
@@ -544,6 +544,14 @@ export default function MachinesManagement() {
         }
     };
 
+    //Show Create Machine Help
+
+    const [showMachineCreationHelpDialog, setShowMachineCreationHelpDialog] = useState(false);
+
+    useEffect(() => {
+        setShowMachineCreationHelpDialog(true);
+    }, []);
+
     useEffect(() => {
         console.log(updateMachineRequest);
     }, [updateMachineRequest]);
@@ -625,6 +633,17 @@ export default function MachinesManagement() {
                                             'Create Machine'
                                         )}
                                     </Button>
+                                    <Tooltip title="Machine Creation Help">
+                                        <IconButton
+                                            onClick={() => setShowMachineCreationHelpDialog(true)}
+                                            sx={{
+                                                ml: 1,
+                                                color: '#051D40',
+                                            }}
+                                        >
+                                            <HelpOutlineIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                 </Box>
                             </Box>
 
@@ -690,40 +709,6 @@ export default function MachinesManagement() {
                                     </Paper>
                                 </Grid>
 
-                                {/* <Grid item xs={12} sm={6} md={3}>
-                                    <Paper
-                                        elevation={0}
-                                        sx={{
-                                            p: 2,
-                                            borderRadius: '12px',
-                                            background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
-                                            border: '1px solid #FFCC80',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            height: '100%',
-                                        }}
-                                    >
-                                        <Typography variant="body2" color="text.secondary">
-                                            Recently Added
-                                        </Typography>
-                                        <Typography variant="h4" fontWeight="bold" color="#E65100" sx={{ mt: 1 }}>
-                                            {rows.filter((machine) => {
-                                                // This is a placeholder - you would need to add created date to your machine data
-                                                // and implement proper "recent" logic
-                                                return true;
-                                            }).length || 0}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', pt: 1 }}>
-                                            <NewReleasesIcon
-                                                sx={{ color: '#E65100', opacity: 0.7, fontSize: '1.2rem', mr: 0.5 }}
-                                            />
-                                            <Typography variant="body2" color="text.secondary">
-                                                Last 30 days
-                                            </Typography>
-                                        </Box>
-                                    </Paper>
-                                </Grid> */}
-
                                 <Grid item xs={12} sm={6} md={3}>
                                     <Paper
                                         elevation={0}
@@ -766,7 +751,6 @@ export default function MachinesManagement() {
                             </Grid>
                         </Grid>
                     </Grid>
-
                     {/* Search and Filters */}
                     <Paper
                         elevation={1}
@@ -951,30 +935,7 @@ export default function MachinesManagement() {
                                         flex: 1,
                                         minWidth: 180,
                                     },
-                                    {
-                                        field: 'qrCodes',
-                                        headerName: 'QR Codes',
-                                        flex: 0.8,
-                                        minWidth: 120,
-                                        renderCell: (params) => {
-                                            const qrCount = params.row.qrCodesCount || 0;
-                                            return (
-                                                <Chip
-                                                    icon={<QrCodeIcon />}
-                                                    label={qrCount}
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor:
-                                                            qrCount > 0
-                                                                ? 'rgba(46, 125, 50, 0.08)'
-                                                                : 'rgba(211, 47, 47, 0.08)',
-                                                        color: qrCount > 0 ? '#2E7D32' : '#D32F2F',
-                                                        fontWeight: 'medium',
-                                                    }}
-                                                />
-                                            );
-                                        },
-                                    },
+
                                     {
                                         field: 'action',
                                         headerName: 'Actions',
@@ -1079,7 +1040,7 @@ export default function MachinesManagement() {
                         <Copyright />
                     </Box>
                 </Box>
-                {/* Create Machine Dialog */}
+
                 {/* Create Machine Dialog */}
                 <Dialog
                     open={openCreateMachineDialog}
@@ -1265,7 +1226,7 @@ export default function MachinesManagement() {
                                     sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center' }}
                                 >
                                     <ApiIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
-                                    API Configuration
+                                    API Configuration (Optional)
                                 </Typography>
 
                                 <Grid container spacing={2}>
@@ -1465,7 +1426,7 @@ export default function MachinesManagement() {
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <InfoIcon sx={{ mr: 1.5 }} />
                             {machineById?.machineName
-                                ? `Machine Details: ${machineById.machineName}`
+                                ? `Machine Details: ${machineById?.machineName} #${machineById?.machineCode}`
                                 : 'Machine Details'}
                         </Box>
                         <IconButton
@@ -1833,86 +1794,67 @@ export default function MachinesManagement() {
                                         QR Codes
                                     </Typography>
 
-                                    {machineById.machineQrsResponses && machineById.machineQrsResponses.length > 0 ? (
+                                    {machineById.qrCode ? (
                                         <Grid container spacing={3} justifyContent="center">
-                                            {machineById.machineQrsResponses.map((qr, index) => (
-                                                <Grid
-                                                    item
-                                                    xs={12}
-                                                    sm={6}
-                                                    md={4}
-                                                    key={`qr-${index}-${qr.machineQrId || index}`}
+                                            <Grid item xs={12} sm={6} md={4}>
+                                                <Card
+                                                    sx={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        p: 2,
+                                                        height: '100%',
+                                                        borderRadius: '12px',
+                                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                                                        transition: 'all 0.3s ease',
+                                                        '&:hover': {
+                                                            transform: 'translateY(-4px)',
+                                                            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+                                                        },
+                                                    }}
                                                 >
-                                                    <Card
+                                                    <Box
                                                         sx={{
+                                                            width: '100%',
+                                                            padding: '12px',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid rgba(0, 0, 0, 0.08)',
                                                             display: 'flex',
-                                                            flexDirection: 'column',
+                                                            justifyContent: 'center',
                                                             alignItems: 'center',
-                                                            p: 2,
-                                                            height: '100%',
-                                                            borderRadius: '12px',
-                                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                                                            transition: 'all 0.3s ease',
-                                                            '&:hover': {
-                                                                transform: 'translateY(-4px)',
-                                                                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-                                                            },
+                                                            backgroundColor: 'white',
+                                                            mb: 2,
                                                         }}
                                                     >
-                                                        <Box
-                                                            sx={{
+                                                        <img
+                                                            src={getImage(machineById.qrCode)}
+                                                            style={{
                                                                 width: '100%',
-                                                                padding: '12px',
-                                                                borderRadius: '8px',
-                                                                border: '1px solid rgba(0, 0, 0, 0.08)',
-                                                                display: 'flex',
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center',
-                                                                backgroundColor: 'white',
-                                                                mb: 2,
+                                                                maxWidth: '150px',
+                                                                height: 'auto',
                                                             }}
-                                                        >
-                                                            <img
-                                                                src={getImage(qr.qrUrl)}
-                                                                alt={`QR for ${qr.guidelineName || 'Guideline'}`}
-                                                                style={{
-                                                                    width: '100%',
-                                                                    maxWidth: '150px',
-                                                                    height: 'auto',
-                                                                }}
-                                                            />
-                                                        </Box>
+                                                        />
+                                                    </Box>
 
-                                                        <Typography
-                                                            variant="subtitle1"
-                                                            align="center"
-                                                            sx={{
-                                                                mb: 2,
-                                                                fontWeight: 'bold',
-                                                                color: 'primary.dark',
-                                                            }}
-                                                        >
-                                                            {qr.guidelineName || 'Guideline QR'}
-                                                        </Typography>
-
-                                                        <Button
-                                                            variant="outlined"
-                                                            color="primary"
-                                                            startIcon={<DownloadIcon />}
-                                                            size="small"
-                                                            sx={{ mt: 'auto', textTransform: 'none' }}
-                                                            onClick={() =>
-                                                                handleDownloadQrCode(
-                                                                    qr.qrUrl,
-                                                                    `${qr.guidelineName || 'Guideline'}_QRCode.png`,
-                                                                )
-                                                            }
-                                                        >
-                                                            Download
-                                                        </Button>
-                                                    </Card>
-                                                </Grid>
-                                            ))}
+                                                    <Button
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        startIcon={<DownloadIcon />}
+                                                        size="small"
+                                                        sx={{ mt: 'auto', textTransform: 'none' }}
+                                                        onClick={() =>
+                                                            handleDownloadQrCode(
+                                                                machineById.qrCode,
+                                                                `${
+                                                                    machineById.machineCode || 'Machine Code'
+                                                                }_QRCode.png`,
+                                                            )
+                                                        }
+                                                    >
+                                                        Download
+                                                    </Button>
+                                                </Card>
+                                            </Grid>
                                         </Grid>
                                     ) : (
                                         <Box
@@ -2074,95 +2016,82 @@ export default function MachinesManagement() {
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <QrCodeIcon sx={{ mr: 1.5 }} />
-                            QR Codes for {selectedMachineForQr?.machineName || 'Machine'}
+                            QR Codes for {selectedMachineForQr?.machineName || 'Machine'} #
+                            {selectedMachineForQr?.machineCode}
                         </Box>
                         <IconButton edge="end" color="inherit" onClick={handleCloseQrDialog} aria-label="close">
                             <CloseIcon />
                         </IconButton>
                     </DialogTitle>
 
-                    <DialogContent sx={{ p: 3 }}>
-                        {qrCodes?.length > 0 ? (
-                            <Grid container spacing={3}>
-                                {qrCodes.map((qr) => (
-                                    <Grid item xs={12} sm={6} md={4} key={qr.id}>
-                                        <Card
-                                            sx={{
-                                                textAlign: 'center',
-                                                p: 2,
-                                                height: '100%',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                borderRadius: '8px',
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    transform: 'translateY(-4px)',
-                                                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-                                                },
+                    <DialogContent sx={{ p: 3, mt: 5 }}>
+                        {selectedMachineForQr?.qrCode ? (
+                            <Card
+                                sx={{
+                                    textAlign: 'center',
+                                    p: 2,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    borderRadius: '8px',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: '180px',
+                                            height: '180px',
+                                            border: '1px solid rgba(0, 0, 0, 0.08)',
+                                            borderRadius: '8px',
+                                            p: 1,
+                                            mb: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: '#f5f5f5',
+                                        }}
+                                    >
+                                        {/* <QrCodeIcon sx={{ fontSize: 120, color: 'rgba(0, 0, 0, 0.4)' }} /> */}
+                                        <img
+                                            src={getImage(selectedMachineForQr?.qrCode)}
+                                            alt={`QR for ${selectedMachineForQr?.machineCode || 'Machine Code'}`}
+                                            style={{
+                                                width: '100%',
+                                                maxWidth: '150px',
+                                                height: 'auto',
                                             }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    p: 2,
-                                                    flex: 1,
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        width: '180px',
-                                                        height: '180px',
-                                                        border: '1px solid rgba(0, 0, 0, 0.08)',
-                                                        borderRadius: '8px',
-                                                        p: 1,
-                                                        mb: 2,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        background: '#f5f5f5',
-                                                    }}
-                                                >
-                                                    {/* <QrCodeIcon sx={{ fontSize: 120, color: 'rgba(0, 0, 0, 0.4)' }} /> */}
-                                                    <img
-                                                        src={getImage(qr.qrUrl)}
-                                                        alt={`QR for ${qr.guidelineName || 'Guideline'}`}
-                                                        style={{
-                                                            width: '100%',
-                                                            maxWidth: '150px',
-                                                            height: 'auto',
-                                                        }}
-                                                    />
-                                                </Box>
-                                                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 1 }}>
-                                                    {qr.guidelineName}
-                                                </Typography>
-                                                <Button
-                                                    variant="outlined"
-                                                    size="small"
-                                                    startIcon={<DownloadIcon />}
-                                                    onClick={() =>
-                                                        // downloadQrCode(
-                                                        //     qr.url,
-                                                        //     selectedMachineForQr?.machineName,
-                                                        //     qr.guidelineName,
-                                                        // )
-                                                        handleDownloadQrCode(
-                                                            qr.qrUrl,
-                                                            `${qr.guidelineName || 'Guideline'}_QRCode.png`,
-                                                        )
-                                                    }
-                                                    sx={{ mt: 'auto', textTransform: 'none' }}
-                                                >
-                                                    Download
-                                                </Button>
-                                            </Box>
-                                        </Card>
-                                    </Grid>
-                                ))}
-                            </Grid>
+                                        />
+                                    </Box>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<DownloadIcon />}
+                                        onClick={() =>
+                                            handleDownloadQrCode(
+                                                selectedMachineForQr?.qrCode,
+                                                `${selectedMachineForQr?.machineCode || 'Machine Code'}_QRCode.png`,
+                                            )
+                                        }
+                                        sx={{ mt: 'auto', textTransform: 'none' }}
+                                    >
+                                        Download
+                                    </Button>
+                                </Box>
+                            </Card>
                         ) : (
                             <Box sx={{ py: 4, textAlign: 'center' }}>
                                 <Typography color="text.secondary">No QR codes available for this machine</Typography>
@@ -2180,6 +2109,89 @@ export default function MachinesManagement() {
                             Close
                         </Button>
                     </DialogActions>
+                </Dialog>
+                {/* Machine Creation Help Dialog */}
+                <Dialog
+                    open={showMachineCreationHelpDialog}
+                    onClose={() => setShowMachineCreationHelpDialog(false)}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            p: 2,
+                        },
+                    }}
+                >
+                    <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#051D40', pb: 1 }}>
+                        Machine Creation Guide
+                    </DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                                Step 1: Enter Machine Details
+                            </Typography>
+                            <Typography paragraph>
+                                Fill in all necessary information about the machine, including machine name, machine
+                                code, and relevant technical specifications.
+                            </Typography>
+
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                Step 2: Select Machine Type
+                            </Typography>
+                            <Typography paragraph>
+                                Choose the appropriate machine type from the list of Machine Types already created in
+                                the system.
+                            </Typography>
+
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                Step 3: Configure Realtime API (Optional)
+                            </Typography>
+                            <Typography paragraph>
+                                If your company has a Realtime API to display machine parameters, enter the API
+                                information in the API Configuration section.
+                            </Typography>
+
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
+                                Important Notes:
+                            </Typography>
+                            <Typography component="div">
+                                <ul style={{ paddingLeft: '1.5rem' }}>
+                                    <li>
+                                        <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Machine Code:</Typography>
+                                        <Typography paragraph>
+                                            The Machine Code must be unique and not duplicate any other Machine in the
+                                            Company. Please ensure the uniqueness of the machine code.
+                                        </Typography>
+                                    </li>
+                                    <li>
+                                        <Typography sx={{ fontWeight: 600, mb: 0.5 }}>API Verification:</Typography>
+                                        <Typography paragraph>
+                                            After entering all information in the API Configuration section, use the
+                                            Test API button to verify if the API is working correctly.
+                                        </Typography>
+                                    </li>
+                                </ul>
+                            </Typography>
+                        </Box>
+                    </DialogContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, pt: 1 }}>
+                        <Button
+                            onClick={() => setShowMachineCreationHelpDialog(false)}
+                            variant="contained"
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: 1.5,
+                                px: 4,
+                                backgroundColor: '#0f6cbf',
+                                '&:hover': {
+                                    backgroundColor: '#0a5ca8',
+                                },
+                            }}
+                        >
+                            Got It
+                        </Button>
+                    </Box>
                 </Dialog>
             </Grid>
         </ThemeProvider>

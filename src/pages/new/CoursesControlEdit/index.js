@@ -1098,7 +1098,7 @@ export default function CoursesControlEdit() {
                                 >
                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                         <QrCodeIcon sx={{ mr: 1.5 }} />
-                                        QR Codes for {machine.machineName}
+                                        QR Codes for {machine.machineName} #{machine.machineCode}
                                     </Box>
                                     <IconButton
                                         edge="end"
@@ -1110,7 +1110,7 @@ export default function CoursesControlEdit() {
                                     </IconButton>
                                 </DialogTitle>
                                 <DialogContent sx={{ p: 3 }}>
-                                    {machine.machineQrsResponse ? (
+                                    {machine.qrCode ? (
                                         <Box
                                             sx={{
                                                 display: 'flex',
@@ -1147,8 +1147,8 @@ export default function CoursesControlEdit() {
                                                     }}
                                                 >
                                                     <img
-                                                        src={getImage(machine.machineQrsResponse.qrUrl)}
-                                                        alt={`QR for ${machine.machineQrsResponse.guidelineName}`}
+                                                        src={getImage(machine?.qrCode)}
+                                                        alt={`QR for ${machine?.qrCode}`}
                                                         style={{
                                                             width: '100%',
                                                             maxWidth: '180px',
@@ -1159,24 +1159,14 @@ export default function CoursesControlEdit() {
                                                             padding: '8px',
                                                         }}
                                                     />
-                                                    <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 1 }}>
-                                                        {machine.machineQrsResponse.guidelineName}
-                                                    </Typography>
                                                     <Button
                                                         variant="outlined"
                                                         size="small"
                                                         startIcon={<DownloadIcon />}
                                                         onClick={() =>
-                                                            // downloadQR(
-                                                            //     machine.machineQrsResponse.qrUrl,
-                                                            //     `${machine.machineName}-${machine.machineQrsResponse.guidelineName}.png`,
-                                                            // )
                                                             handleDownloadQrCode(
-                                                                machine.machineQrsResponse.qrUrl,
-                                                                `${
-                                                                    machine.machineQrsResponse.guidelineName ||
-                                                                    'Guideline'
-                                                                }_QRCode.png`,
+                                                                machine.qrCode,
+                                                                `${machine.machineCode || 'Guideline'}_QRCode.png`,
                                                             )
                                                         }
                                                         sx={{ mt: 'auto', textTransform: 'none' }}

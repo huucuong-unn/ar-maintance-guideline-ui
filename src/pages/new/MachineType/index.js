@@ -39,7 +39,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MachineTypeAPI from '~/API/MachineTypeAPI';
-import { DeleteIcon } from 'lucide-react';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 function Copyright(props) {
     return (
@@ -356,6 +356,14 @@ export default function MachineTypeManagement() {
         }
     };
 
+    //Show Create Machine Type Help
+
+    const [showMachineTypeCreationHelpDialog, setShowMachineTypeCreationHelpDialog] = useState(false);
+
+    useEffect(() => {
+        setShowMachineTypeCreationHelpDialog(true);
+    }, []);
+
     useEffect(() => {
         console.log(searchTerm);
     }, [searchTerm]);
@@ -424,6 +432,17 @@ export default function MachineTypeManagement() {
                                     >
                                         Create Machine Type
                                     </Button>
+                                    <Tooltip title="Machine Type Creation Help">
+                                        <IconButton
+                                            onClick={() => setShowMachineTypeCreationHelpDialog(true)}
+                                            sx={{
+                                                ml: 1,
+                                                color: '#051D40',
+                                            }}
+                                        >
+                                            <HelpOutlineIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                 </Box>
                             </Box>
 
@@ -1041,6 +1060,78 @@ export default function MachineTypeManagement() {
                             Delete
                         </Button>
                     </DialogActions>
+                </Dialog>
+
+                {/* Machine Type Creation Help Dialog */}
+                <Dialog
+                    open={showMachineTypeCreationHelpDialog}
+                    onClose={() => setShowMachineTypeCreationHelpDialog(false)}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            p: 2,
+                        },
+                    }}
+                >
+                    <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#051D40', pb: 1 }}>
+                        Machine Type Creation Guide
+                    </DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                                Step 1: Name Your Machine Type
+                            </Typography>
+                            <Typography paragraph>
+                                Create a unique and descriptive name for the machine type that clearly represents the
+                                category of machines you are defining.
+                            </Typography>
+
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                Step 2: Add Attributes for Machine Type
+                            </Typography>
+                            <Typography paragraph>
+                                Define the specific attributes that characterize this machine type. These attributes
+                                will help in distinguishing and categorizing machines more precisely.
+                            </Typography>
+
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
+                                Important Note:
+                            </Typography>
+                            <Typography component="div">
+                                <ul style={{ paddingLeft: '1.5rem' }}>
+                                    <li>
+                                        <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+                                            Unique Machine Type Name:
+                                        </Typography>
+                                        <Typography paragraph>
+                                            The name of the Machine Type must be unique and cannot duplicate any
+                                            existing Machine Type in the system. Ensure you choose a distinctive name to
+                                            avoid conflicts.
+                                        </Typography>
+                                    </li>
+                                </ul>
+                            </Typography>
+                        </Box>
+                    </DialogContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, pt: 1 }}>
+                        <Button
+                            onClick={() => setShowMachineTypeCreationHelpDialog(false)}
+                            variant="contained"
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: 1.5,
+                                px: 4,
+                                backgroundColor: '#0f6cbf',
+                                '&:hover': {
+                                    backgroundColor: '#0a5ca8',
+                                },
+                            }}
+                        >
+                            Got It
+                        </Button>
+                    </Box>
                 </Dialog>
             </Grid>
         </ThemeProvider>

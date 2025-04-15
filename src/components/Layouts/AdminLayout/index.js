@@ -253,7 +253,7 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                         </IconButton>
                     </Tooltip>
                     {/* Help Dialog */}
-                    <Dialog
+                    {/* <Dialog
                         open={showHelpDialog}
                         onClose={() => setShowHelpDialog(false)}
                         maxWidth="md"
@@ -295,6 +295,130 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                                     Once you've completed all necessary instructions, you can set the status to "Active"
                                     to publish your guideline and make it available to employees. Remember that each
                                     instruction detail will consume 3 points from your account balance.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
+                                    Important Information:
+                                </Typography>
+                                <Typography component="div">
+                                    <ul style={{ paddingLeft: '1.5rem' }}>
+                                        <li>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+                                                Machine & Model Selection:
+                                            </Typography>
+                                            <Typography paragraph>
+                                                Select the appropriate machine type and model to ensure your guideline
+                                                is correctly associated with the right equipment.
+                                            </Typography>
+                                        </li>
+                                        <li>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Image Upload:</Typography>
+                                            <Typography paragraph>
+                                                The image you upload will be displayed on the guideline card in the main
+                                                dashboard, helping users identify the guideline visually.
+                                            </Typography>
+                                        </li>
+                                        <li>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Points System:</Typography>
+                                            <Typography paragraph>
+                                                Creating detailed instructions uses points from your company account.
+                                                Make sure you have sufficient points before starting a complex
+                                                guideline.
+                                            </Typography>
+                                        </li>
+                                    </ul>
+                                </Typography>
+                            </Box>
+                        </DialogContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, pt: 1 }}>
+                            <Button
+                                onClick={() => setShowHelpDialog(false)}
+                                variant="contained"
+                                sx={{
+                                    textTransform: 'none',
+                                    borderRadius: 1.5,
+                                    px: 4,
+                                    backgroundColor: '#0f6cbf',
+                                    '&:hover': {
+                                        backgroundColor: '#0a5ca8',
+                                    },
+                                }}
+                            >
+                                Got It
+                            </Button>
+                        </Box>
+                    </Dialog> */}
+                    {/* Help Dialog */}
+                    <Dialog
+                        open={showHelpDialog}
+                        onClose={() => setShowHelpDialog(false)}
+                        maxWidth="md"
+                        fullWidth
+                        PaperProps={{
+                            sx: {
+                                borderRadius: 2,
+                                p: 2,
+                            },
+                        }}
+                    >
+                        <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#051D40', pb: 1 }}>
+                            Guideline Creation Guide
+                        </DialogTitle>
+                        <DialogContent>
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                                    Step 1: Create Machine Type
+                                </Typography>
+                                <Typography paragraph>
+                                    Navigate to the Machine Types Management page and create a new Machine Type if it
+                                    doesn't already exist.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 2: Create Machine
+                                </Typography>
+                                <Typography paragraph>
+                                    Go to the Machine Management page and create a new Machine if it hasn't been added
+                                    yet.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 3: Request 3D Model Upload
+                                </Typography>
+                                <Typography paragraph>
+                                    Submit a request to upload a model and negotiate pricing with the platform's
+                                    Designer to obtain the 3D Model File.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 4: Create Guideline
+                                </Typography>
+                                <Typography paragraph>
+                                    Navigate to the My Guideline page to begin creating a new guideline.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 5: Create Basic Information
+                                </Typography>
+                                <Typography paragraph>
+                                    Fill in all the required fields to set up your guideline, including title, machine
+                                    type, model, status, and a short description.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 6: Create Instruction Details
+                                </Typography>
+                                <Typography paragraph>
+                                    In the Instruction tab within the guideline detail page, add detailed steps based on
+                                    the 3D model. Ensure each instruction provides clear guidance for a specific action.
+                                </Typography>
+
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                                    Step 7: Publish Your Guideline
+                                </Typography>
+                                <Typography paragraph>
+                                    Once you've completed all necessary instructions, set the status to "Active" to
+                                    publish your guideline and make it available to employees.
                                 </Typography>
 
                                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
