@@ -248,9 +248,12 @@ export function NavbarAdmin({ open, toggleDrawer }) {
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Tooltip title="View guideline creation help">
-                        <IconButton color="primary" onClick={() => setShowHelpDialog(true)} sx={{ ml: 1 }}>
+                        <Button color="primary" onClick={() => setShowHelpDialog(true)} sx={{ ml: 1 }}>
                             <HelpOutlineIcon />
-                        </IconButton>
+                            <Typography variant="body2" sx={{ ml: 0.5, textTransform: 'none' }}>
+                                How to use us
+                            </Typography>
+                        </Button>
                     </Tooltip>
                     {/* Help Dialog */}
                     {/* <Dialog

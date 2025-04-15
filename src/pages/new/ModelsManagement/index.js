@@ -555,7 +555,7 @@ export default function ModelsManagement() {
                                     Models Management
                                 </Typography>
 
-                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                {/* <Box sx={{ display: 'flex', gap: 2 }}>
                                     <Button
                                         variant="contained"
                                         component="label"
@@ -578,7 +578,7 @@ export default function ModelsManagement() {
                                         Create New Model
                                         <input type="file" hidden accept=".glb,.gltf" onChange={handle3DFileSelect} />
                                     </Button>
-                                </Box>
+                                </Box> */}
                             </Box>
 
                             {/* Stats Cards */}
