@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import * as THREE from 'three';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Grid, Environment, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, useGLTF, Grid, Environment, PerspectiveCamera, useProgress } from '@react-three/drei';
 import {
     Box,
     Typography,
@@ -34,6 +34,7 @@ import {
     DialogTitle,
     CircularProgress,
 } from '@mui/material';
+import LinearProgress from '@mui/material/LinearProgress';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -391,6 +392,66 @@ function DraggablePanel({ children, darkMode, viewerRef, minimized, onMinimizeTo
                 </Box>
             )}
         </Paper>
+    );
+}
+
+function LoadingOverlay({ darkMode }) {
+    const { progress, active } = useProgress();
+
+    if (!active) return null;
+
+    return (
+        <Box
+            sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: darkMode ? 'rgba(18, 18, 18, 0.8)' : 'rgba(248, 249, 250, 0.8)',
+                zIndex: 10,
+            }}
+        >
+            <Typography
+                variant="h4"
+                sx={{
+                    color: darkMode ? '#ffffff' : '#333333',
+                    marginBottom: 2,
+                }}
+            >
+                Loading Model
+            </Typography>
+
+            <Box sx={{ width: '60%', maxWidth: 400 }}>
+                <LinearProgress
+                    variant="determinate"
+                    value={progress}
+                    sx={{
+                        height: 10,
+                        borderRadius: 5,
+                        backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                        '& .MuiLinearProgress-bar': {
+                            backgroundColor: darkMode ? '#90caf9' : '#1976d2',
+                            borderRadius: 5,
+                        },
+                    }}
+                />
+            </Box>
+
+            <Typography
+                variant="h6"
+                sx={{
+                    color: darkMode ? '#ffffff' : '#333333',
+                    marginTop: 2,
+                }}
+            >
+                {Math.round(progress)}%
+            </Typography>
+        </Box>
     );
 }
 
@@ -960,43 +1021,46 @@ export default function SimplifiedModelViewer({
                             File is being uploaded, please wait a moment...
                         </Typography>
                     ) : (
-                        <Canvas style={{ background: darkMode ? '#121212' : '#f8f9fa' }}>
-                            <ambientLight intensity={0.5} />
-                            <directionalLight position={[5, 10, 7]} intensity={1} castShadow />
-                            <pointLight position={[-3, 2, -3]} intensity={0.5} />
+                        <>
+                            <LoadingOverlay darkMode={darkMode} />
+                            <Canvas style={{ background: darkMode ? '#121212' : '#f8f9fa' }}>
+                                <ambientLight intensity={0.5} />
+                                <directionalLight position={[5, 10, 7]} intensity={1} castShadow />
+                                <pointLight position={[-3, 2, -3]} intensity={0.5} />
 
-                            {showGrid && (
-                                <Grid
-                                    infiniteGrid
-                                    cellSize={0.5}
-                                    cellThickness={0.6}
-                                    sectionSize={3}
-                                    sectionThickness={1.2}
-                                    fadeDistance={30}
-                                    fadeStrength={1}
-                                    cellColor={darkMode ? '#555555' : '#e0e0e0'}
-                                    sectionColor={darkMode ? '#888888' : '#a0a0a0'}
-                                />
-                            )}
-
-                            {showEnvironment && <Environment preset="city" />}
-
-                            <Suspense fallback={null}>
-                                {modelById || modelFile3D ? (
-                                    <Scene
-                                        modelTransform={modelTransform}
-                                        viewMode={viewMode}
-                                        onMeshesLoaded={setMeshes}
-                                        onAnimationsLoaded={setAnimations}
-                                        activeAnimation={activeAnimation}
-                                        meshVisibility={meshVisibility}
-                                        model={modelById ? getImage(modelById?.file) : modelFile3D}
+                                {showGrid && (
+                                    <Grid
+                                        infiniteGrid
+                                        cellSize={0.5}
+                                        cellThickness={0.6}
+                                        sectionSize={3}
+                                        sectionThickness={1.2}
+                                        fadeDistance={30}
+                                        fadeStrength={1}
+                                        cellColor={darkMode ? '#555555' : '#e0e0e0'}
+                                        sectionColor={darkMode ? '#888888' : '#a0a0a0'}
                                     />
-                                ) : (
-                                    <></>
                                 )}
-                            </Suspense>
-                        </Canvas>
+
+                                {showEnvironment && <Environment preset="city" />}
+
+                                <Suspense fallback={null}>
+                                    {modelById || modelFile3D ? (
+                                        <Scene
+                                            modelTransform={modelTransform}
+                                            viewMode={viewMode}
+                                            onMeshesLoaded={setMeshes}
+                                            onAnimationsLoaded={setAnimations}
+                                            activeAnimation={activeAnimation}
+                                            meshVisibility={meshVisibility}
+                                            model={modelById ? getImage(modelById?.file) : modelFile3D}
+                                        />
+                                    ) : (
+                                        <></>
+                                    )}
+                                </Suspense>
+                            </Canvas>
+                        </>
                     )}
                 </Box>
 
