@@ -491,7 +491,7 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                                     },
                                     display: { xs: 'none', sm: 'flex' },
                                 }}
-                                onClick={() => navigate('/wallet')}
+                                onClick={() => navigate('/wallet/purchase')}
                             />
                         </Tooltip>
                     )}
@@ -667,7 +667,7 @@ export function NavbarAdmin({ open, toggleDrawer }) {
 
                     <Divider />
 
-                    <MenuItem onClick={handleProfile}>
+                    {/* <MenuItem onClick={handleProfile}>
                         <ListItemIcon>
                             <PersonIcon fontSize="small" />
                         </ListItemIcon>
@@ -697,7 +697,7 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                         <ListItemText>Help & Support</ListItemText>
                     </MenuItem>
 
-                    <Divider />
+                    <Divider /> */}
 
                     <MenuItem onClick={handleLogout}>
                         <ListItemIcon>
