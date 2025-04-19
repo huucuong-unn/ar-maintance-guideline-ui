@@ -181,17 +181,30 @@ export default function MachineTypeManagement() {
             }
 
             // Validate Machine Attributes
-            if (createMachineTypeRequest.machineTypeAttributeCreationRequestList.length === 0) {
+            const attrList = createMachineTypeRequest.machineTypeAttributeCreationRequestList;
+
+            if (attrList.length === 0) {
                 toast.error('At least one attribute is required.');
                 return;
             }
 
-            // Validate each attribute name length (2-100 characters)
-            for (const attr of createMachineTypeRequest.machineTypeAttributeCreationRequestList) {
+            // Validate each attribute name length
+            for (const attr of attrList) {
                 if (!attr.attributeName || attr.attributeName.length < 2 || attr.attributeName.length > 100) {
                     toast.error('Each attribute name must be between 2 and 100 characters.');
                     return;
                 }
+            }
+
+            // ✅ Validate duplicate attribute names
+            const nameSet = new Set();
+            for (const attr of attrList) {
+                const name = attr.attributeName.trim().toLowerCase();
+                if (nameSet.has(name)) {
+                    toast.error('Attribute names must be unique.');
+                    return;
+                }
+                nameSet.add(name);
             }
 
             setIsLoadingCreateMachineType(true);
