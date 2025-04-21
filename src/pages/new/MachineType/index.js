@@ -289,11 +289,19 @@ export default function MachineTypeManagement() {
         }
 
         // Validate Machine Attributes
+        const nameSet = new Set();
         for (const attr of updateMachineTypeRequest.machineTypeAttributeCreationRequestList) {
             if (!attr.attributeName || attr.attributeName.length < 2 || attr.attributeName.length > 100) {
                 toast.error('Each attribute name must be between 2 and 100 characters.');
                 return;
             }
+
+            const trimmedName = attr.attributeName.trim().toLowerCase(); // loại bỏ khoảng trắng và phân biệt hoa thường
+            if (nameSet.has(trimmedName)) {
+                toast.error('Attribute names must be unique.');
+                return;
+            }
+            nameSet.add(trimmedName);
         }
 
         if (updateMachineTypeRequest.machineTypeAttributeCreationRequestList.length === 0) {
