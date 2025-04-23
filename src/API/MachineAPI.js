@@ -30,8 +30,8 @@ const MachineAPI = {
     create(data) {
         return axiosClient.post('/v1/machine', data);
     },
-    update(id, data) {
-        return axiosClient.put(`/v1/machine/${id}`, data);
+    update(id, data, companyId) {
+        return axiosClient.put(`/v1/machine/${id}/company/${companyId}`, data);
     },
     delete(id) {
         return axiosClient.delete(`/v1/machine/${id}`);
