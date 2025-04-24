@@ -366,7 +366,7 @@ const CompanyDashboard = () => {
 
                 <Grid item xs={12} md={4}>
                     <Card elevation={3}>
-                        <CardHeader title="Accounts" />
+                        <CardHeader title="Employee Accounts" />
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                 <Chip

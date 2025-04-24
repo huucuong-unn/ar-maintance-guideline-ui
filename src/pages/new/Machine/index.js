@@ -354,6 +354,7 @@ export default function MachinesManagement() {
     const [isLoadingUpdateMachine, setIsLoadingUpdateMachine] = useState(false);
     const [showQrCodes, setShowQrCodes] = useState(false);
     const [testResponse, setTestResponse] = useState('');
+    const [isTestingApi, setIsTestingApi] = useState(false);
 
     const handleOpenUpdateMachineModal = async (id) => {
         try {
@@ -534,6 +535,8 @@ export default function MachinesManagement() {
             return;
         }
 
+        setIsTestingApi(true);
+        setTestResponse('');
         try {
             const headers = updateMachineRequest.headerRequests.reduce((acc, header) => {
                 if (header.keyHeader && header.valueOfKey) {
@@ -546,6 +549,8 @@ export default function MachinesManagement() {
             setTestResponse(JSON.stringify(response.data, null, 2));
         } catch (error) {
             setTestResponse(`Error: ${error.message}`);
+        } finally {
+            setIsTestingApi(false);
         }
     };
 
@@ -1357,6 +1362,8 @@ export default function MachinesManagement() {
                                                 startIcon={<PlayArrowIcon />}
                                                 sx={{ mt: 1, textTransform: 'none' }}
                                                 onClick={async () => {
+                                                    setIsTestingApi(true);
+                                                    setResponseMessage('');
                                                     try {
                                                         const response = await fetch(tempApiUrl, {
                                                             method: 'GET',
@@ -1368,6 +1375,8 @@ export default function MachinesManagement() {
                                                         setResponseMessage(JSON.stringify(data, null, 2));
                                                     } catch (error) {
                                                         setResponseMessage('Failed to fetch API: ' + error.message);
+                                                    } finally {
+                                                        setIsTestingApi(false);
                                                     }
                                                 }}
                                             >
@@ -1378,27 +1387,39 @@ export default function MachinesManagement() {
                                 </Grid>
 
                                 {/* Response Display */}
-                                {responseMessage && (
+                                {isTestingApi ? (
                                     <Box
                                         sx={{
                                             mt: 3,
-                                            p: 2,
-                                            border: '1px solid #ddd',
-                                            borderRadius: '8px',
-                                            bgcolor: '#f5f5f5',
-                                            maxHeight: '200px',
-                                            overflow: 'auto',
-                                            fontFamily: 'monospace',
+                                            display: 'flex',
+                                            justifyContent: 'center',
                                         }}
                                     >
-                                        <Typography
-                                            variant="subtitle2"
-                                            sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
-                                        >
-                                            API Response:
-                                        </Typography>
-                                        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{responseMessage}</pre>
+                                        <CircularProgress />
                                     </Box>
+                                ) : (
+                                    responseMessage && (
+                                        <Box
+                                            sx={{
+                                                mt: 3,
+                                                p: 2,
+                                                border: '1px solid #ddd',
+                                                borderRadius: '8px',
+                                                bgcolor: '#f5f5f5',
+                                                maxHeight: '200px',
+                                                overflow: 'auto',
+                                                fontFamily: 'monospace',
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="subtitle2"
+                                                sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
+                                            >
+                                                API Response:
+                                            </Typography>
+                                            <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{responseMessage}</pre>
+                                        </Box>
+                                    )
                                 )}
                             </Paper>
                         </Box>
@@ -1796,27 +1817,41 @@ export default function MachinesManagement() {
                                         </Grid>
 
                                         {/* Response Display */}
-                                        {testResponse && (
+                                        {isTestingApi ? (
                                             <Box
                                                 sx={{
                                                     mt: 3,
-                                                    p: 2,
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '8px',
-                                                    bgcolor: '#f8f9fa',
-                                                    maxHeight: '200px',
-                                                    overflow: 'auto',
-                                                    fontFamily: 'monospace',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
                                                 }}
                                             >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
-                                                >
-                                                    API Response:
-                                                </Typography>
-                                                <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{testResponse}</pre>
+                                                <CircularProgress />
                                             </Box>
+                                        ) : (
+                                            testResponse && (
+                                                <Box
+                                                    sx={{
+                                                        mt: 3,
+                                                        p: 2,
+                                                        border: '1px solid #ddd',
+                                                        borderRadius: '8px',
+                                                        bgcolor: '#f5f5f5',
+                                                        maxHeight: '200px',
+                                                        overflow: 'auto',
+                                                        fontFamily: 'monospace',
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
+                                                    >
+                                                        API Response:
+                                                    </Typography>
+                                                    <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                                                        {testResponse}
+                                                    </pre>
+                                                </Box>
+                                            )
                                         )}
                                     </Paper>
                                 </>

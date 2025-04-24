@@ -13,7 +13,7 @@ const MachineTypeAPI = {
         return config;
     },
     getByCompany(companyId, params) {
-        return axiosClient.get(`/v1/machine-type/company/${companyId}`, { params });
+        return axiosClient.get(`/v1/machine-type/company/${companyId}?page=1&size=999`, { params });
     },
     getById(id) {
         return axiosClient.get(`/v1/machine-type/${id}`);
