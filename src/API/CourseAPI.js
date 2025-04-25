@@ -22,8 +22,12 @@ const CourseAPI = {
     getById(id, includeAuthorization = false) {
         return axiosClient.get('/v1/course/' + id);
     },
-    update(data, includeAuthorization = false) {
-        return axiosClient.put('/v1/course/' + data.courseId, data);
+    update(guidelineId, data) {
+        return axiosClient.put(`/v1/course/${guidelineId}`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
     changeStatus(id) {
         return axiosClient.put(`/v1/course/status/${id}`);
