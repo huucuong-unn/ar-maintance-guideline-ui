@@ -37,12 +37,15 @@ const RevisionRequestDialog = ({
     const [errors, setErrors] = useState({});
 
     // Available revision request types
-    const revisionTypes = [
-        { value: 'Modification', label: 'Modification' },
-        { value: 'Additional Features', label: 'Additional Features' },
-        { value: 'Bug Fix', label: 'Bug Fix' },
-    ];
+    const revisionTypes = [];
 
+    if (isAnyPriceProposedHaveBeenAccepted) {
+        revisionTypes.push({ value: 'Modification', label: 'Modification' });
+
+        revisionTypes.push({ value: 'Additional Features', label: 'Additional Features' });
+
+        revisionTypes.push({ value: 'Bug Fix', label: 'Bug Fix' });
+    }
     if (!isAnyPriceProposedHaveBeenAccepted) {
         revisionTypes.push({ value: 'Price Proposal', label: 'Price Proposal' });
     }

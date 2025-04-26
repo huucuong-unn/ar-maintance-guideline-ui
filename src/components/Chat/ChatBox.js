@@ -381,7 +381,8 @@ const ChatBox = ({ requestId }) => {
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
                 (message?.requestRevisionResponse?.type == 'Price Proposal' &&
-                    message?.requestRevisionResponse?.status !== 'PENDING') ||
+                    message?.requestRevisionResponse?.status === 'PROCESSING' &&
+                    !message?.requestRevisionResponse?.modelFile) ||
                 message?.requestRevisionResponse?.modelFile,
         );
         console.log(isAnyPriceProposedHaveBeenAccepted);

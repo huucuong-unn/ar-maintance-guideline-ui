@@ -56,7 +56,7 @@ const RevisionRequestMessageCard = ({ revision, getStatusColor, handleOpenRevisi
             {/* Price proposal - only show if type is Modification and Price Proposal */}
             {(revision.type === 'Modification' || revision.type === 'Price Proposal') && revision.priceProposal && (
                 <Typography variant="body2" fontWeight="medium" sx={{ color: 'primary.main' }}>
-                    ${revision.priceProposal}
+                    {revision.priceProposal} point
                 </Typography>
             )}
             {/* View Details button */}
