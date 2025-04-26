@@ -39,6 +39,7 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { host } from '~/Constant'; // Adjust the import path as necessary
 
 function Copyright(props) {
     return (
@@ -406,7 +407,7 @@ export default function CompanyRequestManagement() {
         // Establish WebSocket connection
         const socket = new Client({
             //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
-            webSocketFactory: () => new SockJS('http://localhost:8086/ws'),
+            webSocketFactory: () => new SockJS(`${host}/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
 

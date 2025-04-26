@@ -38,6 +38,7 @@ import RevisionRequestDialog from './RevisionRequestDialog';
 import { toast } from 'react-toastify';
 import { m } from 'framer-motion';
 import { set } from 'date-fns';
+import { host } from '~/Constant';
 
 // Create a custom theme
 const theme = createTheme({
@@ -187,7 +188,7 @@ const ChatBox = ({ requestId }) => {
         // Establish WebSocket connection
         const socket = new Client({
             //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
-            webSocketFactory: () => new SockJS('http://localhost:8086/ws'),
+            webSocketFactory: () => new SockJS(`${host}/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
 

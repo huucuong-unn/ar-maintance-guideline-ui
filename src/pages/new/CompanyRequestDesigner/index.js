@@ -25,6 +25,7 @@ import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { host } from '~/Constant';
 
 function Copyright(props) {
     return (
@@ -238,7 +239,7 @@ export default function CompanyRequestDesigner() {
             }
         } catch (error) {
             console.error('Failed to update request status:', error);
-            toast.error('Failed to approve request. Please try again.');
+            toast.error(error.response.data.message || 'Failed to update request status. Please try again.');
         } finally {
             handleCloseApproveDialog();
             setIsLoading(false);
@@ -314,7 +315,7 @@ export default function CompanyRequestDesigner() {
         // Establish WebSocket connection
         const socket = new Client({
             //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
-            webSocketFactory: () => new SockJS('http://localhost:8086/ws'),
+            webSocketFactory: () => new SockJS(`${host}/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
 
