@@ -45,8 +45,7 @@ const RequestRevisionList = ({ revisionRequests = [], fetchRevisionRequests }) =
         <div className="min-h-screen bg-gray-100 p-6">
             <div className="max-w-6xl mx-auto">
                 <header className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">Design Request Dashboard</h1>
-                    <p className="text-gray-600">Review requests and propose pricing</p>
+                    <h1 className="text-2xl font-bold text-gray-800">Design Requests</h1>
                 </header>
 
                 <div className="space-y-6">

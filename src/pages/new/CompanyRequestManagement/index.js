@@ -109,10 +109,10 @@ export default function CompanyRequestManagement() {
                 if (params.value === 'ACTIVE') color = 'green';
                 else if (params.value === 'INACTIVE') color = 'gray';
                 else if (params.value === 'DRAFTED') color = '#9c27b0';
-                else if (params.value === 'PROCESSING') color = 'blue';
+                else if (params.value === 'PROCESSING') color = 'orange';
                 else if (params.value === 'PENDING') color = 'orange';
                 else if (params.value === 'APPROVED') color = 'green';
-                else if (params.value === 'CANCEL') color = 'red';
+                else if (params.value === 'CANCELLED') color = 'red';
                 return <Box sx={{ color, fontWeight: 'bold' }}>{formatStatus(params.value) || '-'}</Box>;
             },
         },

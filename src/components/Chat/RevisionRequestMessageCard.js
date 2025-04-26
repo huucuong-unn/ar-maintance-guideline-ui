@@ -22,6 +22,8 @@ const RevisionRequestMessageCard = ({ revision, getStatusColor, handleOpenRevisi
                     </Typography>
                 </Box>
             </Box>
+            {revision.modelFile && <Chip label={'Price Approved'} color={getStatusColor('APPROVED')} size="small" />}
+            {/* Status chip */}
             <Chip
                 label={
                     (revision.modelFile && revision.status == 'REJECTED' ? 'Model ' : '') +

@@ -148,6 +148,10 @@ const ChatBox = ({ requestId }) => {
                 return 'warning';
             case 'COMPLETED':
                 return 'success';
+            case 'APPROVED':
+                return 'success';
+            case 'DELIVERED':
+                return 'success';
             case 'REJECTED':
                 return 'error';
             default:
@@ -447,7 +451,7 @@ const ChatBox = ({ requestId }) => {
                         <Box>
                             {companyRequest?.status !== 'CANCELLED' &&
                                 companyRequest?.status !== 'APPROVED' &&
-                                checkIsAnyPriceProposedHaveBeenAccepted && (
+                                !checkIsAnyPriceProposedHaveBeenAccepted && (
                                     <IconButton onClick={handleOpenCancelDialog}>
                                         <DeleteIcon />
                                     </IconButton>
