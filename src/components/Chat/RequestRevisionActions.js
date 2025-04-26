@@ -12,7 +12,7 @@ const RequestRevisionActions = ({
     onOpenRejectDialog,
     onReviewModel,
     onHandle3DFileSelect,
-    onRejectProposal, // New prop for rejecting a proposal
+    revision,
 }) => {
     const userInfo = storageService.getItem('userInfo')?.user || null;
     const userRole = userInfo?.role.roleName || null;
@@ -42,7 +42,6 @@ const RequestRevisionActions = ({
                                 <Check size={16} className="mr-2" />
                                 Approve Model
                             </button>
-
                             <button
                                 className={`w-full flex items-center justify-center ${
                                     isSubmitting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
@@ -197,13 +196,15 @@ const RequestRevisionActions = ({
                                 </div>
                             </div>
                         </div>
-                        <button
-                            className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-200"
-                            onClick={() => onReviewModel(request.id)}
-                        >
-                            <Eye size={16} className="mr-2" />
-                            Review Model
-                        </button>
+                        {revision?.modelFile && (
+                            <button
+                                className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-200"
+                                onClick={() => onReviewModel(request.id)}
+                            >
+                                <Eye size={16} className="mr-2" />
+                                Review Model
+                            </button>
+                        )}
                     </div>
                 );
 
@@ -250,24 +251,39 @@ const RequestRevisionActions = ({
                                     </button>
                                 </div>
                             ) : (
-                                <button
-                                    className={`w-full flex items-center justify-center ${
-                                        isSubmitting
-                                            ? 'bg-blue-400 cursor-not-allowed'
-                                            : 'bg-blue-600 hover:bg-blue-700'
-                                    } text-white py-2 px-4 rounded-md transition duration-200`}
-                                    onClick={() => onSubmit(request.id, request.status, request.type)}
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? (
-                                        <>Processing...</>
-                                    ) : (
-                                        <>
-                                            <Send size={16} className="mr-2" />
-                                            Submit Proposal
-                                        </>
-                                    )}
-                                </button>
+                                <div className="space-y-3">
+                                    <button
+                                        className={`w-full flex items-center justify-center ${
+                                            isSubmitting
+                                                ? 'bg-blue-400 cursor-not-allowed'
+                                                : 'bg-blue-600 hover:bg-blue-700'
+                                        } text-white py-2 px-4 rounded-md transition duration-200`}
+                                        onClick={() => onSubmit(request.id, request.status, request.type)}
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting ? (
+                                            <>Processing...</>
+                                        ) : (
+                                            <>
+                                                <Send size={16} className="mr-2" />
+                                                Submit Proposal
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        className={`w-full flex items-center justify-center ${
+                                            isSubmitting
+                                                ? 'bg-red-400 cursor-not-allowed'
+                                                : 'bg-red-600 hover:bg-red-700'
+                                        } text-white py-2 px-4 rounded-md transition duration-200`}
+                                        onClick={() => onOpenRejectDialog(request.id, 'proposal')}
+                                        disabled={isSubmitting}
+                                    >
+                                        <ThumbsDown size={16} className="mr-2" />
+                                        Reject
+                                    </button>
+                                </div>
                             )}
                         </>
                     );

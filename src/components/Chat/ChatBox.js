@@ -22,6 +22,7 @@ import {
     Image as ImageIcon,
     Send as SendIcon,
     Info as InfoIcon,
+    ArrowBack,
 } from '@mui/icons-material';
 import { X, FileText, DeleteIcon } from 'lucide-react';
 import { Client } from '@stomp/stompjs';
@@ -234,6 +235,7 @@ const ChatBox = ({ requestId }) => {
                             // Append as a new message
                             return [...prevMessages, newMessage];
                         }
+                        fetchCompanyRequest();
                     });
                 });
 
@@ -368,6 +370,7 @@ const ChatBox = ({ requestId }) => {
 
             const response = await CompanyRequestAPI.createRequestRevision(formData);
 
+            toast.success('Revision request submitted successfully!');
             return true;
         } catch (error) {
             console.error('Failed to submit revision request:', error);
@@ -385,8 +388,7 @@ const ChatBox = ({ requestId }) => {
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
                 (message?.requestRevisionResponse?.type == 'Price Proposal' &&
-                    message?.requestRevisionResponse?.status === 'PROCESSING' &&
-                    !message?.requestRevisionResponse?.modelFile) ||
+                    message?.requestRevisionResponse?.status === 'PROCESSING') ||
                 message?.requestRevisionResponse?.modelFile,
         );
         console.log(isAnyPriceProposedHaveBeenAccepted);
@@ -426,7 +428,6 @@ const ChatBox = ({ requestId }) => {
                         borderRadius: 3,
                     }}
                 >
-                    {/* Chat Header */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -438,7 +439,12 @@ const ChatBox = ({ requestId }) => {
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton onClick={() => window.history.back()} sx={{ mr: 2 }}>
+                                {' '}
+                                <ArrowBack />
+                            </IconButton>
                             <Avatar alt="User Avatar" src="/api/placeholder/40/40" sx={{ mr: 2 }} />
+
                             <Box>
                                 <Typography variant="subtitle1" fontWeight="bold">
                                     Chat with{' '}
@@ -449,28 +455,23 @@ const ChatBox = ({ requestId }) => {
                             </Box>
                         </Box>
                         <Box>
-                            {companyRequest?.status !== 'CANCELLED' &&
-                                companyRequest?.status !== 'APPROVED' &&
-                                !checkIsAnyPriceProposedHaveBeenAccepted && (
-                                    <IconButton onClick={handleOpenCancelDialog}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                )}
+                            {!checkIsAnyPriceProposedHaveBeenAccepted() && (
+                                <IconButton onClick={handleOpenCancelDialog}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            )}
 
                             <IconButton onClick={handleOpenRevisionModal}>
                                 <InfoIcon />
                             </IconButton>
                         </Box>
                     </Box>
-
-                    {/* Messages Container */}
                     <ChatMessages
                         messages={messages}
                         username={username}
                         getStatusColor={getStatusColor}
                         renderRevisionRequest={renderRevisionRequest}
                     />
-
                     {/* Message Input */}
                     <Box
                         sx={{
@@ -482,13 +483,11 @@ const ChatBox = ({ requestId }) => {
                             gap: 1,
                         }}
                     >
-                        {userRole === 'COMPANY' &&
-                            companyRequest?.status !== 'CANCELLED' &&
-                            companyRequest?.status !== 'APPROVED' && (
-                                <IconButton onClick={handleOpenCreateRevision} title="Create Revision Request">
-                                    <AddIcon />
-                                </IconButton>
-                            )}
+                        {userRole === 'COMPANY' && !checkIsAnyPriceProposedHaveBeenAccepted() && (
+                            <IconButton onClick={handleOpenCreateRevision} title="Create Revision Request">
+                                <AddIcon />
+                            </IconButton>
+                        )}
 
                         <TextField
                             fullWidth
