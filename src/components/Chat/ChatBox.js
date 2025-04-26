@@ -390,7 +390,9 @@ const ChatBox = ({ requestId }) => {
 
     const checkIsAnyRequestProcessing = () => {
         const isAnyRequestProcessing = messages.some(
-            (message) => message?.requestRevisionResponse?.status === 'PROCESSING',
+            (message) =>
+                message?.requestRevisionResponse?.status === 'PROCESSING' ||
+                message?.requestRevisionResponse?.status === 'PENDING',
         );
         console.log(isAnyRequestProcessing);
         return isAnyRequestProcessing;
