@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const queryClient = new QueryClient();
-document.title = 'Tortee';
+document.title = 'AR Guideline Maintenance';
 root.render(
     <React.StrictMode>
         <GlobalStyles>

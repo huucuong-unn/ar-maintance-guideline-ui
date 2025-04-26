@@ -276,6 +276,7 @@ export default function EmployeesManagement() {
                 toast.success('Update status successfully');
             }
             fetchData();
+            fetchCountEmployeeActive();
         } catch (error) {
             console.error('Failed to update status:', error);
             toast.error('Failed to update status. ' + error?.response?.data?.message);

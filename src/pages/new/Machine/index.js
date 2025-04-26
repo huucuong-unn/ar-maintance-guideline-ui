@@ -333,8 +333,10 @@ export default function MachinesManagement() {
     const [machineById, setMachineById] = useState({});
     const [updateMachineRequest, setUpdateMachineRequest] = useState({
         machineName: '',
+        machineCode: '',
         apiUrl: '',
         token: '',
+        machineTypeId: '',
         machineTypeValueModifyRequests: [
             {
                 machineTypeValueId: '',
@@ -352,6 +354,7 @@ export default function MachinesManagement() {
     const [isLoadingUpdateMachine, setIsLoadingUpdateMachine] = useState(false);
     const [showQrCodes, setShowQrCodes] = useState(false);
     const [testResponse, setTestResponse] = useState('');
+    const [isTestingApi, setIsTestingApi] = useState(false);
 
     const handleOpenUpdateMachineModal = async (id) => {
         try {
@@ -359,8 +362,10 @@ export default function MachinesManagement() {
             const data = response?.result;
             setUpdateMachineRequest({
                 machineName: data.machineName,
+                machineCode: data.machineCode,
                 apiUrl: data.apiUrl,
                 token: data.token,
+                machineTypeId: data.machineTypeId,
                 machineTypeValueModifyRequests: data.machineTypeValueResponses.map((attr) => ({
                     machineTypeValueId: attr.id,
                     machineTypeAttributeId: attr.machineTypeAttributeId,
@@ -410,6 +415,18 @@ export default function MachinesManagement() {
             return;
         }
 
+        // ✅ Validate machineCode
+        if (!updateMachineRequest.machineCode || updateMachineRequest.machineCode.trim().length <= 1) {
+            toast.error('Machine code must be longer than 1 character.');
+            return;
+        }
+
+        // ✅ Validate machineTypeId
+        if (!updateMachineRequest.machineTypeId) {
+            toast.error('Machine type must be selected.');
+            return;
+        }
+
         // Kiểm tra nếu có ít nhất một header nhưng API URL trống
         if (updateMachineRequest.headerRequests.length > 0 && !updateMachineRequest.apiUrl.trim()) {
             toast.error('API URL is required when headers are provided.');
@@ -449,7 +466,7 @@ export default function MachinesManagement() {
 
         setIsLoadingUpdateMachine(true);
         try {
-            const response = await MachineAPI.update(machineById.id, updateMachineRequest);
+            const response = await MachineAPI.update(machineById.id, updateMachineRequest, userInfo?.company?.id);
 
             if (response?.result) {
                 toast.success('Update machine successfully');
@@ -463,6 +480,10 @@ export default function MachinesManagement() {
             setIsLoadingUpdateMachine(false);
         }
     };
+
+    useEffect(() => {
+        console.log(userInfo);
+    }, [userInfo]);
 
     async function handleDownloadQrCode(qrCodeUrl, fileName) {
         if (!qrCodeUrl) return;
@@ -514,6 +535,8 @@ export default function MachinesManagement() {
             return;
         }
 
+        setIsTestingApi(true);
+        setTestResponse('');
         try {
             const headers = updateMachineRequest.headerRequests.reduce((acc, header) => {
                 if (header.keyHeader && header.valueOfKey) {
@@ -526,6 +549,8 @@ export default function MachinesManagement() {
             setTestResponse(JSON.stringify(response.data, null, 2));
         } catch (error) {
             setTestResponse(`Error: ${error.message}`);
+        } finally {
+            setIsTestingApi(false);
         }
     };
 
@@ -551,6 +576,10 @@ export default function MachinesManagement() {
     useEffect(() => {
         setShowMachineCreationHelpDialog(true);
     }, []);
+
+    useEffect(() => {
+        console.log(machineTypes);
+    }, [machineTypes]);
 
     useEffect(() => {
         console.log(updateMachineRequest);
@@ -1333,6 +1362,8 @@ export default function MachinesManagement() {
                                                 startIcon={<PlayArrowIcon />}
                                                 sx={{ mt: 1, textTransform: 'none' }}
                                                 onClick={async () => {
+                                                    setIsTestingApi(true);
+                                                    setResponseMessage('');
                                                     try {
                                                         const response = await fetch(tempApiUrl, {
                                                             method: 'GET',
@@ -1344,6 +1375,8 @@ export default function MachinesManagement() {
                                                         setResponseMessage(JSON.stringify(data, null, 2));
                                                     } catch (error) {
                                                         setResponseMessage('Failed to fetch API: ' + error.message);
+                                                    } finally {
+                                                        setIsTestingApi(false);
                                                     }
                                                 }}
                                             >
@@ -1354,27 +1387,39 @@ export default function MachinesManagement() {
                                 </Grid>
 
                                 {/* Response Display */}
-                                {responseMessage && (
+                                {isTestingApi ? (
                                     <Box
                                         sx={{
                                             mt: 3,
-                                            p: 2,
-                                            border: '1px solid #ddd',
-                                            borderRadius: '8px',
-                                            bgcolor: '#f5f5f5',
-                                            maxHeight: '200px',
-                                            overflow: 'auto',
-                                            fontFamily: 'monospace',
+                                            display: 'flex',
+                                            justifyContent: 'center',
                                         }}
                                     >
-                                        <Typography
-                                            variant="subtitle2"
-                                            sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
-                                        >
-                                            API Response:
-                                        </Typography>
-                                        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{responseMessage}</pre>
+                                        <CircularProgress />
                                     </Box>
+                                ) : (
+                                    responseMessage && (
+                                        <Box
+                                            sx={{
+                                                mt: 3,
+                                                p: 2,
+                                                border: '1px solid #ddd',
+                                                borderRadius: '8px',
+                                                bgcolor: '#f5f5f5',
+                                                maxHeight: '200px',
+                                                overflow: 'auto',
+                                                fontFamily: 'monospace',
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="subtitle2"
+                                                sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
+                                            >
+                                                API Response:
+                                            </Typography>
+                                            <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{responseMessage}</pre>
+                                        </Box>
+                                    )
                                 )}
                             </Paper>
                         </Box>
@@ -1429,6 +1474,7 @@ export default function MachinesManagement() {
                                 ? `Machine Details: ${machineById?.machineName} #${machineById?.machineCode}`
                                 : 'Machine Details'}
                         </Box>
+
                         <IconButton
                             edge="end"
                             color="inherit"
@@ -1532,42 +1578,63 @@ export default function MachinesManagement() {
                                                     label="Machine Code"
                                                     fullWidth
                                                     variant="outlined"
-                                                    value={machineById.machineCode || ''}
+                                                    value={updateMachineRequest.machineCode || ''}
+                                                    onChange={(event) =>
+                                                        setUpdateMachineRequest((prev) => ({
+                                                            ...prev,
+                                                            machineCode: event.target.value,
+                                                        }))
+                                                    }
                                                     InputProps={{
                                                         startAdornment: (
                                                             <InputAdornment position="start">
                                                                 <CodeIcon fontSize="small" color="action" />
                                                             </InputAdornment>
                                                         ),
-                                                        readOnly: true,
                                                     }}
-                                                    disabled
-                                                    helperText="Machine code cannot be changed"
+                                                    helperText="Enter a name between 5-100 characters"
                                                 />
                                             </Grid>
 
                                             <Grid item xs={12} sm={6}>
-                                                <TextField
-                                                    label="Machine Type"
-                                                    fullWidth
-                                                    variant="outlined"
-                                                    value={machineById.machineType || ''}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <CategoryIcon fontSize="small" color="action" />
-                                                            </InputAdornment>
-                                                        ),
-                                                        readOnly: true,
+                                                <Autocomplete
+                                                    options={machineTypes}
+                                                    getOptionLabel={(option) => option.name || ''}
+                                                    value={
+                                                        machineTypes.find(
+                                                            (type) => type.id === updateMachineRequest.machineTypeId,
+                                                        ) || null
+                                                    }
+                                                    onChange={(event, newValue) => {
+                                                        setCurrentMachineType(newValue ? newValue.id : '');
+                                                        setUpdateMachineRequest((prev) => ({
+                                                            ...prev,
+                                                            machineTypeId: newValue ? newValue.id : '',
+                                                        }));
                                                     }}
-                                                    disabled
-                                                    helperText="Machine type cannot be changed"
+                                                    renderInput={(params) => (
+                                                        <TextField
+                                                            {...params}
+                                                            label="Machine Type"
+                                                            variant="outlined"
+                                                            fullWidth
+                                                            InputProps={{
+                                                                ...params.InputProps,
+                                                                startAdornment: (
+                                                                    <InputAdornment position="start">
+                                                                        <CategoryIcon fontSize="small" color="action" />
+                                                                    </InputAdornment>
+                                                                ),
+                                                            }}
+                                                            helperText="Select a machine type"
+                                                        />
+                                                    )}
                                                 />
                                             </Grid>
                                         </Grid>
                                     </Paper>
 
-                                    {updateMachineRequest.machineTypeValueModifyRequests?.length > 0 && (
+                                    {machineTypeAttributes.length > 0 && (
                                         <Paper
                                             elevation={0}
                                             sx={{
@@ -1592,28 +1659,25 @@ export default function MachinesManagement() {
                                             </Typography>
 
                                             <Grid container spacing={2}>
-                                                {updateMachineRequest.machineTypeValueModifyRequests?.map(
-                                                    (attr, index) => (
-                                                        <Grid
-                                                            item
-                                                            xs={12}
-                                                            sm={6}
-                                                            key={`attr-${index}-${attr.machineTypeValueId || index}`}
-                                                        >
+                                                {machineTypeAttributes.map((attr, index) => {
+                                                    const matchedValue =
+                                                        updateMachineRequest.machineTypeValueModifyRequests?.find(
+                                                            (val) => val.machineTypeAttributeId === attr.id,
+                                                        );
+
+                                                    return (
+                                                        <Grid item xs={12} sm={6} key={`machine-attr-${attr.id}`}>
                                                             <TextField
-                                                                label={
-                                                                    machineById.machineTypeValueResponses?.[index]
-                                                                        ?.machineTypeAttributeName || 'Attribute'
-                                                                }
-                                                                disabled={true}
+                                                                label={attr.attributeName || 'Attribute'}
+                                                                disabled
                                                                 fullWidth
                                                                 InputProps={{ readOnly: true }}
                                                                 variant="outlined"
                                                                 value={attr.valueAttribute || ''}
                                                             />
                                                         </Grid>
-                                                    ),
-                                                )}
+                                                    );
+                                                })}
                                             </Grid>
                                         </Paper>
                                     )}
@@ -1753,27 +1817,41 @@ export default function MachinesManagement() {
                                         </Grid>
 
                                         {/* Response Display */}
-                                        {testResponse && (
+                                        {isTestingApi ? (
                                             <Box
                                                 sx={{
                                                     mt: 3,
-                                                    p: 2,
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '8px',
-                                                    bgcolor: '#f8f9fa',
-                                                    maxHeight: '200px',
-                                                    overflow: 'auto',
-                                                    fontFamily: 'monospace',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
                                                 }}
                                             >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
-                                                >
-                                                    API Response:
-                                                </Typography>
-                                                <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{testResponse}</pre>
+                                                <CircularProgress />
                                             </Box>
+                                        ) : (
+                                            testResponse && (
+                                                <Box
+                                                    sx={{
+                                                        mt: 3,
+                                                        p: 2,
+                                                        border: '1px solid #ddd',
+                                                        borderRadius: '8px',
+                                                        bgcolor: '#f5f5f5',
+                                                        maxHeight: '200px',
+                                                        overflow: 'auto',
+                                                        fontFamily: 'monospace',
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}
+                                                    >
+                                                        API Response:
+                                                    </Typography>
+                                                    <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                                                        {testResponse}
+                                                    </pre>
+                                                </Box>
+                                            )
                                         )}
                                     </Paper>
                                 </>

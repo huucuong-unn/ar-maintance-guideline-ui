@@ -32,7 +32,6 @@ import InfoIcon from '@mui/icons-material/Info';
 
 // Import your API services
 import CourseAPI from '~/API/CourseAPI';
-import ModelTypeAPI from '~/API/ModelTypeAPI';
 import MachineTypeAPI from '~/API/MachineTypeAPI';
 import ModelAPI from '~/API/ModelAPI';
 import storageService from '~/components/StorageService/storageService';
@@ -62,6 +61,8 @@ function TabPanel(props) {
 export default function GuidelineCreation() {
     const navigate = useNavigate();
     const { id: guidelineId } = useParams();
+    console.log(guidelineId);
+
     const isEditing = !!guidelineId;
 
     // Tab state
@@ -108,7 +109,7 @@ export default function GuidelineCreation() {
         severity: 'info',
     });
 
-    // Load machine types on component mount
+    //Load machine types on component mount
     useEffect(() => {
         fetchMachineTypes();
         if (isEditing) {
@@ -291,6 +292,8 @@ export default function GuidelineCreation() {
 
             if (isEditing) {
                 // Update existing guideline
+                console.log(guidelineId);
+
                 response = await CourseAPI.update(guidelineId, formData);
                 if (response?.result) {
                     showToast('Guideline updated successfully', 'success');
