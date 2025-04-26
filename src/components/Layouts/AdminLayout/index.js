@@ -31,7 +31,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useWallet } from '~/WalletContext'; // Import the WalletContext
 import { MainListItems, SecondaryListItems } from '~/components/listItems';
 import storageService from '~/components/StorageService/storageService';
-
+import { NotificationsMenu } from './NotificationMenu'; // Import the NotificationsMenu component
+import NotificationAPI from '~/API/NotificationAPI'; // Import the NotificationAPI
 // Icons
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
@@ -141,6 +142,7 @@ export function NavbarAdmin({ open, toggleDrawer }) {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const location = useLocation();
     const [showHelpDialog, setShowHelpDialog] = useState(false);
+    const [notifications, setNotifications] = useState([]);
 
     // Get page title based on current route
     const getPageTitle = () => {
@@ -157,6 +159,16 @@ export function NavbarAdmin({ open, toggleDrawer }) {
         if (path.includes('/profile')) return 'Profile';
         // Add more page titles based on your routes
         return 'Dashboard'; // Default title
+    };
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await NotificationAPI.getAllNotificationsByUserId(userInfo.id);
+            setNotifications(res || []);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        } finally {
+        }
     };
 
     const handleOpenUserMenu = (event) => {
@@ -505,7 +517,12 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                                 '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' },
                             }}
                         >
-                            <Badge badgeContent={2} color="error">
+                            <Badge
+                                badgeContent={
+                                    notifications.filter((notification) => notification.status === 'Unread').length
+                                }
+                                color="error"
+                            >
                                 <NotificationsIcon />
                             </Badge>
                         </IconButton>
@@ -542,91 +559,12 @@ export function NavbarAdmin({ open, toggleDrawer }) {
                 </Box>
 
                 {/* Notifications Menu */}
-                <Menu
-                    sx={{ mt: '45px' }}
-                    id="menu-notifications"
-                    anchorEl={anchorElNotifications}
-                    anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    open={Boolean(anchorElNotifications)}
-                    onClose={handleCloseNotifications}
-                    PaperProps={{
-                        elevation: 2,
-                        sx: {
-                            minWidth: '320px',
-                            maxWidth: '400px',
-                            mt: 0.5,
-                            borderRadius: '8px',
-                            maxHeight: '70vh',
-                            overflowY: 'auto',
-                        },
-                    }}
-                >
-                    <Box
-                        sx={{ px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    >
-                        <Typography variant="subtitle1" fontWeight="bold">
-                            Notifications
-                        </Typography>
-                        <Button size="small" color="primary">
-                            Mark all as read
-                        </Button>
-                    </Box>
-                    <Divider />
-
-                    {/* Notification items */}
-                    <MenuItem onClick={handleCloseNotifications} sx={{ py: 1.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                            <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 38, height: 38 }}>
-                                <NotificationsIcon fontSize="small" />
-                            </Avatar>
-                            <Box>
-                                <Typography variant="body2" fontWeight="medium">
-                                    New payment received
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Payment of $150 has been processed successfully
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    2 hours ago
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </MenuItem>
-
-                    <MenuItem onClick={handleCloseNotifications} sx={{ py: 1.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                            <Avatar sx={{ bgcolor: 'success.light', color: 'success.main', width: 38, height: 38 }}>
-                                <PersonIcon fontSize="small" />
-                            </Avatar>
-                            <Box>
-                                <Typography variant="body2" fontWeight="medium">
-                                    New employee account created
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    John Doe has joined your company
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    1 day ago
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </MenuItem>
-
-                    <Divider />
-                    <Box sx={{ p: 1 }}>
-                        <Button fullWidth size="small">
-                            View all notifications
-                        </Button>
-                    </Box>
-                </Menu>
+                <NotificationsMenu
+                    anchorElNotifications={anchorElNotifications}
+                    handleCloseNotifications={handleCloseNotifications}
+                    fetchNotifications={fetchNotifications}
+                    notifications={notifications}
+                />
 
                 {/* User Menu */}
                 <Menu

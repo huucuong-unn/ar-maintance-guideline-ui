@@ -40,6 +40,7 @@ import { toast } from 'react-toastify';
 import { m } from 'framer-motion';
 import { set } from 'date-fns';
 import { host } from '~/Constant';
+import { useNavigate } from 'react-router-dom';
 
 // Create a custom theme
 const theme = createTheme({
@@ -61,6 +62,7 @@ const ChatBox = ({ requestId }) => {
     const [username] = useState(storageService.getItem('userInfo')?.user?.email || 'Unknown User');
     const [userId] = useState(storageService.getItem('userInfo')?.user?.id || 'Unknown User');
     const [messages, setMessages] = useState([]);
+    const navigate = useNavigate();
     const [messageInput, setMessageInput] = useState('');
     const stompClientRef = useRef(null);
     const [revisionRequests, setRevisionRequests] = useState([]);
@@ -351,6 +353,15 @@ const ChatBox = ({ requestId }) => {
         setIsCreateRevisionOpen(false);
     };
 
+    const handleBack = () => {
+        if (userRole === 'COMPANY') {
+            navigate('/company/company-request-management');
+        }
+        if (userRole === 'DESIGNER') {
+            navigate('/designer/company-request-management');
+        }
+    };
+
     // Submit revision request
     const handleSubmitRevision = async (formData) => {
         try {
@@ -387,6 +398,8 @@ const ChatBox = ({ requestId }) => {
     const checkIsAnyPriceProposedHaveBeenAccepted = () => {
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
+                companyRequest.status === 'CANCELLED' ||
+                companyRequest.status === 'APPROVED' ||
                 (message?.requestRevisionResponse?.type == 'Price Proposal' &&
                     message?.requestRevisionResponse?.status === 'PROCESSING') ||
                 message?.requestRevisionResponse?.modelFile,
@@ -439,7 +452,7 @@ const ChatBox = ({ requestId }) => {
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <IconButton onClick={() => window.history.back()} sx={{ mr: 2 }}>
+                            <IconButton onClick={() => handleBack()} sx={{ mr: 2 }}>
                                 {' '}
                                 <ArrowBack />
                             </IconButton>
