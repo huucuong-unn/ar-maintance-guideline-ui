@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -23,6 +23,8 @@ import CompanyRequestAPI from '~/API/CompanyRequestAPI'; // Your API
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 function Copyright(props) {
     return (
@@ -46,6 +48,7 @@ export default function CompanyRequestDesigner() {
     const [selectedRequestId, setSelectedRequestId] = useState(null);
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [openEditor, setOpenEditor] = useState(false);
+    const stompClientRef = useRef(null);
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
         setOpenEditor(false);
@@ -89,10 +92,6 @@ export default function CompanyRequestDesigner() {
                 // Check if the current user is the designer of the request
                 const isDesigner = currentUserEmail === designerEmail;
 
-                console.log(designerEmail);
-                console.log(currentUserEmail);
-                console.log(isDesigner);
-
                 // If not the designer, return a message or null
                 if (designerEmail && !isDesigner) {
                     return (
@@ -104,7 +103,7 @@ export default function CompanyRequestDesigner() {
 
                 return (
                     <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
-                        {currentStatus === 'PENDING' && (
+                        {currentStatus === 'PENDING' ? (
                             <Button
                                 variant="contained"
                                 size="small"
@@ -112,70 +111,17 @@ export default function CompanyRequestDesigner() {
                                 sx={{ width: '100px', textTransform: 'none' }}
                                 onClick={() => handleOpenApproveDialog(params.row.requestId)}
                             >
-                                Approve
+                                Join
                             </Button>
-                        )}
-
-                        {currentStatus === 'PROCESSING' && (
-                            <>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
-                                    onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
-                                >
-                                    Chat
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    sx={{ width: '100px', bgcolor: 'red', textTransform: 'none' }}
-                                    onClick={(e) => handleOpenCancelConfirm(params.row.requestId)}
-                                >
-                                    Cancel
-                                </Button>
-                            </>
-                        )}
-
-                        {currentStatus === 'DRAFTED' && (
-                            <>
-                                <Button sx={{ textTransform: 'none' }} variant="contained" component="label" disabled>
-                                    Waiting for approval
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    sx={{ width: '140px', bgcolor: 'blue', color: 'white', textTransform: 'none' }}
-                                >
-                                    Reupload
-                                    <input
-                                        type="file"
-                                        hidden
-                                        accept=".glb,.gltf"
-                                        onChange={(e) =>
-                                            handle3DFileSelect(
-                                                e,
-                                                params.row.requestId,
-                                                params.row.machineType?.machineTypeId,
-                                                params.row.company.id,
-                                            )
-                                        }
-                                    />
-                                </Button>
-                            </>
-                        )}
-
-                        {currentStatus === 'APPROVED' && (
-                            <>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    disabled
-                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
-                                >
-                                    Done
-                                </Button>
-                            </>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                component="label"
+                                sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
+                                onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
+                            >
+                                Chat
+                            </Button>
                         )}
                     </Box>
                 );
@@ -200,6 +146,18 @@ export default function CompanyRequestDesigner() {
             headerName: 'Machine Type',
             width: 200,
             renderCell: (params) => params.row.machineType?.machineTypeName || '-',
+        },
+        {
+            field: 'cancelReason',
+            headerName: 'Cancel Reason',
+            width: 200,
+            renderCell: (params) => params.row?.cancelReason || '-',
+        },
+        {
+            field: 'cancelledBy',
+            headerName: 'Cancelled By',
+            width: 200,
+            renderCell: (params) => params.row?.cancelledBy?.email || '-',
         },
         {
             field: 'createdAt',
@@ -351,6 +309,43 @@ export default function CompanyRequestDesigner() {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        // Establish WebSocket connection
+        const socket = new Client({
+            //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
+            webSocketFactory: () => new SockJS('http://localhost:8086/ws'),
+            onConnect: () => {
+                console.log('WebSocket Connected');
+
+                // Subscribe to the specific chat box topic
+                const subscription = socket.subscribe(`/topic/request/100`, (message) => {
+                    fetchData();
+                });
+
+                stompClientRef.current = socket;
+
+                // Cleanup subscription on unmount
+                return () => {
+                    subscription.unsubscribe();
+                };
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+            },
+        });
+
+        // Activate the connection
+        socket.activate();
+
+        // Cleanup on component unmount
+        return () => {
+            if (socket) {
+                socket.deactivate();
+            }
+        };
+    }, [userInfo]); // Add userInfo.email as a dependency
 
     return (
         <ThemeProvider theme={defaultTheme}>

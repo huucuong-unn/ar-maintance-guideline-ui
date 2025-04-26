@@ -8,6 +8,10 @@ const CompanyRequestAPI = {
         return axiosClient.get(`/v1/company-request`, { params });
     },
 
+    getCompanyRequestById(id) {
+        return axiosClient.get(`/v1/company-request/one/${id}`);
+    },
+
     createRequest(data) {
         return axiosClient.post('/v1/company-request', data, {
             headers: {
@@ -56,7 +60,11 @@ const CompanyRequestAPI = {
 
     createRequestRevision: async (request) => {
         try {
-            const response = await axiosClient.post('/v1/request-revisions', request);
+            const response = await axiosClient.post('/v1/request-revisions', request, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return response;
         } catch (error) {
             throw error;

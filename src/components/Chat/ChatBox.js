@@ -9,24 +9,36 @@ import {
     Stack,
     createTheme,
     ThemeProvider,
+    Button,
+    Chip,
+    Modal,
+    Snackbar,
+    Alert,
 } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import {
-    Phone as PhoneIcon,
-    Videocam as VideocamIcon,
-    Info as InfoIcon,
     Add as AddIcon,
     PhotoCamera as PhotoCameraIcon,
     Image as ImageIcon,
     Send as SendIcon,
+    Info as InfoIcon,
 } from '@mui/icons-material';
+import { X, FileText, DeleteIcon } from 'lucide-react';
 import { Client } from '@stomp/stompjs';
-import ChatBoxAPI from '~/API/ChatBoxAPI';
-import storageService from '~/components/StorageService/storageService';
 import SockJS from 'sockjs-client';
-import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip } from '@mui/material';
+
+import ChatBoxAPI from '~/API/ChatBoxAPI';
 import CompanyRequestAPI from '~/API/CompanyRequestAPI';
-import { X } from 'lucide-react'; // Import X icon directly
-import RequestRevisionList from './RequestRevisionList'; // Import the RequestRevisionList component
+import storageService from '~/components/StorageService/storageService';
+import RequestRevisionList from './RequestRevisionList';
+import ChatMessages from './ChatMessages';
+import RequestRevisionCard from './RequestRevisionCard';
+import RevisionRequestMessageCard from './RevisionRequestMessageCard';
+import RevisionRequestDialog from './RevisionRequestDialog';
+import { toast } from 'react-toastify';
+import { m } from 'framer-motion';
+import { set } from 'date-fns';
+
 // Create a custom theme
 const theme = createTheme({
     palette: {
@@ -45,34 +57,90 @@ const theme = createTheme({
 
 const ChatBox = ({ requestId }) => {
     const [username] = useState(storageService.getItem('userInfo')?.user?.email || 'Unknown User');
+    const [userId] = useState(storageService.getItem('userInfo')?.user?.id || 'Unknown User');
     const [messages, setMessages] = useState([]);
     const [messageInput, setMessageInput] = useState('');
-    const messagesEndRef = useRef(null);
     const stompClientRef = useRef(null);
     const [revisionRequests, setRevisionRequests] = useState([]);
     const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
-    const host = 'https://armaintance.ngrok.pro';
-    // Add these functions inside the ChatBox component
+    const [requestRevisionRequest, setRequestRevisionRequest] = useState(false);
+    const [userRole] = useState(storageService.getItem('userInfo')?.user?.role.roleName || 'USER');
+    const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [companyRequest, setCompanyRequest] = useState(null);
+    // New state for create revision dialog
+    const [isCreateRevisionOpen, setIsCreateRevisionOpen] = useState(false);
+    const [chatBoxId, setChatBoxId] = useState('');
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success',
+    });
+    // Open cancel dialog
+    const handleOpenCancelDialog = () => {
+        setIsCancelDialogOpen(true);
+    };
+
+    // Close cancel dialog
+    const handleCloseCancelDialog = () => {
+        setIsCancelDialogOpen(false);
+        setCancelReason('');
+    };
+
+    // Handle request cancellation
+    const handleCancelRequest = async () => {
+        if (!cancelReason.trim()) {
+            toast.error('Please provide a reason for cancellation');
+            return;
+        }
+
+        try {
+            // Payload for updating request status
+            const payload = {
+                status: 'CANCELLED', // Adjust this to match your backend status enum
+                cancelReason: cancelReason.trim(),
+                cancelledBy: userId,
+            };
+
+            // Call API to update request status
+            await CompanyRequestAPI.updateRequestStatus(requestId, payload);
+            fetchCompanyRequest();
+
+            // Close dialog and show success toast
+            handleCloseCancelDialog();
+            toast.success('Request successfully cancelled');
+        } catch (error) {
+            console.error('Failed to cancel request:', error);
+            toast.error('Failed to cancel request');
+        }
+    };
+
+    const fetchCompanyRequest = async () => {
+        try {
+            const response = await CompanyRequestAPI.getCompanyRequestById(requestId);
+            setCompanyRequest(response.result);
+        } catch (error) {
+            console.error('Failed to fetch company request:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCompanyRequest();
+    }, [requestId]);
+
+    // Fetch revision requests
     const fetchRevisionRequests = async () => {
         try {
-            console.log('revisionRequests', 'hello');
-
             const response = await CompanyRequestAPI.getRequestRevisionAllByCompanyRequestId(requestId);
-            setRevisionRequests(response || []);
+            const companyRequestResponse = await CompanyRequestAPI.getCompanyRequestById(requestId);
+            fetchCompanyRequest(requestId);
+            setRevisionRequests(response);
         } catch (error) {
             console.error('Failed to fetch revision requests:', error);
         }
     };
 
-    const handleOpenRevisionModal = () => {
-        fetchRevisionRequests();
-        setIsRevisionModalOpen(true);
-    };
-
-    const handleCloseRevisionModal = () => {
-        setIsRevisionModalOpen(false);
-    };
-
+    // Status color mapping
     const getStatusColor = (status) => {
         switch (status) {
             case 'PENDING':
@@ -85,41 +153,83 @@ const ChatBox = ({ requestId }) => {
                 return 'default';
         }
     };
-    // Scroll to the bottom of the chat
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+    const [selectedRevision, setSelectedRevision] = useState(null);
+    const [isRevisionDetailOpen, setIsRevisionDetailOpen] = useState(false);
+
+    const handleOpenRevisionDetail = (revision) => {
+        setSelectedRevision(revision);
+        setIsRevisionDetailOpen(true);
     };
 
     useEffect(() => {
-        scrollToBottom();
+        if (selectedRevision) {
+            const updatedSelectedRevvision = messages.find(
+                (message) => message.requestRevisionResponse?.id === selectedRevision?.id,
+            );
+            setSelectedRevision(updatedSelectedRevvision.requestRevisionResponse);
+        }
     }, [messages]);
+
+    // Inside ChatBox component
+    const renderRevisionRequest = (revision) => {
+        return (
+            <RevisionRequestMessageCard
+                revision={revision}
+                getStatusColor={getStatusColor}
+                handleOpenRevisionDetail={handleOpenRevisionDetail}
+            />
+        );
+    };
 
     // WebSocket Connection Effect
     useEffect(() => {
         // Establish WebSocket connection
         const socket = new Client({
-            webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
+            //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
+            webSocketFactory: () => new SockJS('http://localhost:8086/ws'),
             onConnect: () => {
                 console.log('WebSocket Connected');
 
                 // Subscribe to the specific chat box topic
                 const subscription = socket.subscribe(`/topic/chat/${requestId}`, (message) => {
                     const receivedMessage = JSON.parse(message.body);
-                    console.log('Received message:', receivedMessage);
-                    // Add received message to messages list
-                    setMessages((prevMessages) => [
-                        ...prevMessages,
-                        {
-                            id: prevMessages.length + 1,
+
+                    setMessages((prevMessages) => {
+                        const existingIndex = prevMessages.findIndex(
+                            (msg) => msg.timestampOrigin === receivedMessage.timestamp,
+                        );
+
+                        console.log(prevMessages[0]);
+
+                        console.log('Received message:', receivedMessage.timestamp);
+                        console.log('existingIndex:', existingIndex);
+
+                        const formattedTimestamp = new Date(receivedMessage.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        });
+
+                        const newMessage = {
+                            id: existingIndex !== -1 ? prevMessages[existingIndex].id : prevMessages.length + 1,
                             sender: receivedMessage.senderEmail,
                             content: receivedMessage.content,
-                            timestamp: new Date(receivedMessage.timestamp).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                            }),
+                            timestamp: formattedTimestamp,
+                            timestampOrigin: receivedMessage.timestamp,
+                            requestRevisionResponse: receivedMessage.requestRevisionResponse,
                             type: receivedMessage.senderEmail === username ? 'sent' : 'received',
-                        },
-                    ]);
+                        };
+
+                        if (existingIndex !== -1) {
+                            // Replace the existing message
+                            const updatedMessages = [...prevMessages];
+                            updatedMessages[existingIndex] = newMessage;
+                            return updatedMessages;
+                        } else {
+                            // Append as a new message
+                            return [...prevMessages, newMessage];
+                        }
+                    });
                 });
 
                 stompClientRef.current = socket;
@@ -143,6 +253,7 @@ const ChatBox = ({ requestId }) => {
             try {
                 if (requestId) {
                     const response = await ChatBoxAPI.getChatBoxMessages(requestId);
+                    setChatBoxId(response[0]?.requestRevisionResponse?.chatBoxId || '');
                     setMessages(
                         response.map((msg, index) => ({
                             id: index + 1,
@@ -152,6 +263,8 @@ const ChatBox = ({ requestId }) => {
                                 hour: '2-digit',
                                 minute: '2-digit',
                             }),
+                            timestampOrigin: msg.timestamp,
+                            requestRevisionResponse: msg.requestRevisionResponse,
                             type: msg.senderEmail === username ? 'sent' : 'received',
                         })),
                     );
@@ -173,53 +286,139 @@ const ChatBox = ({ requestId }) => {
 
     // Send a new message
     const sendMessage = () => {
+        console.log(requestId);
+
         if (messageInput.trim() && stompClientRef.current?.connected) {
             const newMessage = {
-                chatBoxId: requestId,
+                chatBoxId: chatBoxId,
                 userId: storageService.getItem('userInfo')?.user?.id,
                 content: messageInput,
                 senderEmail: username,
                 timestamp: new Date().toISOString(),
+                requestRevisionResponse: null,
             };
 
             stompClientRef.current.publish({
                 destination: `/app/chat/${requestId}`,
                 body: JSON.stringify(newMessage),
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
 
             setMessageInput('');
         }
     };
 
+    // Handle key press for sending message
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
             sendMessage();
         }
     };
 
-    // Rest of the component remains the same as in the original code
+    // Open/Close revision modal
+    const handleOpenRevisionModal = () => {
+        fetchRevisionRequests();
+        setIsRevisionModalOpen(true);
+    };
+
+    const handleCloseRevisionModal = () => {
+        setIsRevisionModalOpen(false);
+    };
+
+    const handleCloseRevisionDetail = () => {
+        setIsRevisionDetailOpen(false);
+    };
+
+    // Open/Close create revision dialog
+    const handleOpenCreateRevision = () => {
+        if (checkIsAnyRequestProcessing()) {
+            toast.warn('You have a pending revision request. Please wait for it to be processed.');
+        } else {
+            setIsCreateRevisionOpen(true);
+        }
+    };
+
+    const handleCloseCreateRevision = () => {
+        setIsCreateRevisionOpen(false);
+    };
+
+    // Submit revision request
+    const handleSubmitRevision = async (formData) => {
+        try {
+            formData.append('companyRequestId', requestId);
+            //  formData.append('userId', storageService.getItem('userInfo')?.user?.id);
+            formData.append('status', 'PENDING');
+            const newMessage = {
+                chatBoxId: chatBoxId,
+                userId: storageService.getItem('userInfo')?.user?.id,
+                content: messageInput,
+                senderEmail: username,
+                timestamp: new Date().toISOString(),
+            };
+
+            const sendResponse = await ChatBoxAPI.addMessageToChatBox(newMessage);
+            formData.append('chatMessageId', sendResponse.id);
+
+            const response = await CompanyRequestAPI.createRequestRevision(formData);
+
+            return true;
+        } catch (error) {
+            console.error('Failed to submit revision request:', error);
+            return false;
+        }
+    };
+
+    // Close snackbar
+    const handleCloseSnackbar = (_, reason) => {
+        if (reason === 'clickaway') return;
+        setSnackbar((prev) => ({ ...prev, open: false }));
+    };
+
+    const checkIsAnyPriceProposedHaveBeenAccepted = () => {
+        const isAnyPriceProposedHaveBeenAccepted = messages.some(
+            (message) =>
+                (message?.requestRevisionResponse?.type == 'Price Proposal' &&
+                    message?.requestRevisionResponse?.status !== 'PENDING') ||
+                message?.requestRevisionResponse?.modelFile,
+        );
+        console.log(isAnyPriceProposedHaveBeenAccepted);
+        return isAnyPriceProposedHaveBeenAccepted;
+    };
+
+    const checkIsAnyRequestProcessing = () => {
+        const isAnyRequestProcessing = messages.some(
+            (message) => message?.requestRevisionResponse?.status === 'PROCESSING',
+        );
+        console.log(isAnyRequestProcessing);
+        return isAnyRequestProcessing;
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <Box
                 sx={{
+                    marginTop: '5%',
+
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    height: '100vh',
+                    height: '70vh',
                     bgcolor: 'background.default',
                 }}
             >
                 <Paper
                     elevation={3}
                     sx={{
-                        width: 1000,
-                        height: 500,
+                        width: '100%',
+                        height: '130%',
                         display: 'flex',
                         flexDirection: 'column',
                         borderRadius: 3,
                     }}
                 >
-                    {/* Chat Header (unchanged) */}
+                    {/* Chat Header */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -234,80 +433,37 @@ const ChatBox = ({ requestId }) => {
                             <Avatar alt="User Avatar" src="/api/placeholder/40/40" sx={{ mr: 2 }} />
                             <Box>
                                 <Typography variant="subtitle1" fontWeight="bold">
-                                    Chat with {username}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    Online
+                                    Chat with{' '}
+                                    {userRole !== 'COMPANY'
+                                        ? companyRequest?.requester?.email
+                                        : companyRequest?.designer?.email}
                                 </Typography>
                             </Box>
                         </Box>
                         <Box>
+                            {companyRequest?.status !== 'CANCELLED' &&
+                                companyRequest?.status !== 'APPROVED' &&
+                                checkIsAnyPriceProposedHaveBeenAccepted && (
+                                    <IconButton onClick={handleOpenCancelDialog}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                )}
+
                             <IconButton onClick={handleOpenRevisionModal}>
                                 <InfoIcon />
                             </IconButton>
                         </Box>
                     </Box>
 
-                    {/* Messages Container (unchanged) */}
-                    <Box
-                        sx={{
-                            flexGrow: 1,
-                            overflowY: 'auto',
-                            p: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 1,
-                        }}
-                    >
-                        {messages.map((msg) => (
-                            <Box
-                                key={msg.id}
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: msg.type === 'sent' ? 'flex-end' : 'flex-start',
-                                    alignItems: 'flex-start',
-                                    mb: 1,
-                                }}
-                            >
-                                {msg.type === 'received' && (
-                                    <Avatar
-                                        alt="Sender Avatar"
-                                        src="/api/placeholder/32/32"
-                                        sx={{ mr: 1, width: 32, height: 32 }}
-                                    />
-                                )}
-                                <Stack>
-                                    <Box
-                                        sx={{
-                                            bgcolor: msg.type === 'sent' ? 'primary.main' : 'grey.300',
-                                            color: msg.type === 'sent' ? 'white' : 'text.primary',
-                                            px: 2,
-                                            py: 1,
-                                            borderRadius: 3,
-                                            borderBottomRightRadius: msg.type === 'sent' ? 4 : 12,
-                                            borderBottomLeftRadius: msg.type === 'received' ? 4 : 12,
-                                            maxWidth: 250,
-                                        }}
-                                    >
-                                        {msg.content}
-                                    </Box>
-                                    <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        sx={{
-                                            alignSelf: msg.type === 'sent' ? 'flex-end' : 'flex-start',
-                                            mt: 0.5,
-                                        }}
-                                    >
-                                        {msg.timestamp}
-                                    </Typography>
-                                </Stack>
-                            </Box>
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </Box>
+                    {/* Messages Container */}
+                    <ChatMessages
+                        messages={messages}
+                        username={username}
+                        getStatusColor={getStatusColor}
+                        renderRevisionRequest={renderRevisionRequest}
+                    />
 
-                    {/* Message Input (unchanged) */}
+                    {/* Message Input */}
                     <Box
                         sx={{
                             p: 2,
@@ -318,15 +474,13 @@ const ChatBox = ({ requestId }) => {
                             gap: 1,
                         }}
                     >
-                        <IconButton>
-                            <AddIcon />
-                        </IconButton>
-                        <IconButton>
-                            <PhotoCameraIcon />
-                        </IconButton>
-                        <IconButton>
-                            <ImageIcon />
-                        </IconButton>
+                        {userRole === 'COMPANY' &&
+                            companyRequest?.status !== 'CANCELLED' &&
+                            companyRequest?.status !== 'APPROVED' && (
+                                <IconButton onClick={handleOpenCreateRevision} title="Create Revision Request">
+                                    <AddIcon />
+                                </IconButton>
+                            )}
 
                         <TextField
                             fullWidth
@@ -360,48 +514,199 @@ const ChatBox = ({ requestId }) => {
                         </IconButton>
                     </Box>
                 </Paper>
-            </Box>
 
-            <Modal
-                open={isRevisionModalOpen}
-                onClose={handleCloseRevisionModal}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <Box sx={{ width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflow: 'auto' }}>
-                    <Paper
+                {/* Create Revision Request Dialog */}
+                <RevisionRequestDialog
+                    open={isCreateRevisionOpen}
+                    onClose={handleCloseCreateRevision}
+                    onSubmit={handleSubmitRevision}
+                    requestId={requestId}
+                    isAnyPriceProposedHaveBeenAccepted={checkIsAnyPriceProposedHaveBeenAccepted()}
+                    isAnyRequestProcessing={checkIsAnyRequestProcessing()}
+                />
+
+                {/* Revision Detail Modal */}
+                <Modal
+                    open={isRevisionDetailOpen}
+                    onClose={handleCloseRevisionDetail}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Box sx={{ width: '80%', maxHeight: '90vh', overflow: 'auto' }}>
+                        <Paper
+                            sx={{
+                                position: 'relative',
+                                bgcolor: 'background.paper',
+                                borderRadius: 2,
+                                p: 3,
+                            }}
+                        >
+                            <IconButton
+                                sx={{
+                                    position: 'absolute',
+                                    right: 8,
+                                    top: 8,
+                                    color: 'grey.500',
+                                    bgcolor: 'white',
+                                    '&:hover': { bgcolor: 'grey.100' },
+                                    zIndex: 10,
+                                }}
+                                onClick={handleCloseRevisionDetail}
+                            >
+                                <X size={20} />
+                            </IconButton>
+
+                            <Typography variant="h6" sx={{ mb: 3, pr: 4 }}>
+                                Revision Request Details
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <RequestRevisionCard
+                                    request={selectedRevision}
+                                    fetchRevisionRequests={() => {}}
+                                ></RequestRevisionCard>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleCloseRevisionDetail}
+                                        sx={{ minWidth: 120 }}
+                                    >
+                                        Close
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Paper>
+                    </Box>
+                </Modal>
+
+                {/* Revision Modal */}
+                <Modal
+                    open={isRevisionModalOpen}
+                    onClose={handleCloseRevisionModal}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Box sx={{ width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflow: 'auto' }}>
+                        <Paper
+                            sx={{
+                                position: 'relative',
+                                bgcolor: 'background.paper',
+                                borderRadius: 2,
+                                p: 0,
+                            }}
+                        >
+                            <IconButton
+                                sx={{
+                                    position: 'absolute',
+                                    right: 8,
+                                    top: 8,
+                                    color: 'grey.500',
+                                    bgcolor: 'white',
+                                    '&:hover': { bgcolor: 'grey.100' },
+                                    zIndex: 10,
+                                }}
+                                onClick={handleCloseRevisionModal}
+                            >
+                                <X size={20} />
+                            </IconButton>
+
+                            <RequestRevisionList
+                                revisionRequests={revisionRequests}
+                                fetchRevisionRequests={fetchRevisionRequests}
+                            />
+                        </Paper>
+                    </Box>
+                </Modal>
+
+                {/* Cancel Request Dialog */}
+                <Modal
+                    open={isCancelDialogOpen}
+                    onClose={handleCloseCancelDialog}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Box
                         sx={{
-                            position: 'relative',
+                            width: '90%',
+                            maxWidth: 500,
                             bgcolor: 'background.paper',
                             borderRadius: 2,
-                            p: 0,
+                            boxShadow: 24,
+                            p: 4,
                         }}
                     >
-                        <IconButton
-                            sx={{
-                                position: 'absolute',
-                                right: 8,
-                                top: 8,
-                                color: 'grey.500',
-                                bgcolor: 'white',
-                                '&:hover': { bgcolor: 'grey.100' },
-                                zIndex: 10,
-                            }}
-                            onClick={handleCloseRevisionModal}
-                        >
-                            <X size={20} />
-                        </IconButton>
-
-                        <RequestRevisionList
-                            revisionRequests={revisionRequests}
-                            fetchRevisionRequests={fetchRevisionRequests}
+                        <Typography variant="h6" sx={{ mb: 2 }}>
+                            Cancel Request
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                            Please provide a reason for cancelling this request.
+                        </Typography>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Cancellation Reason"
+                            fullWidth
+                            variant="outlined"
+                            multiline
+                            rows={4}
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                            required
+                            sx={{ mb: 3 }}
                         />
-                    </Paper>
-                </Box>
-            </Modal>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                            <Button
+                                sx={{
+                                    textTransform: 'none', // This will keep the text in its normal case
+                                    fontWeight: 'normal', // This ensures normal font weight
+                                }}
+                                textnormal
+                                onClick={handleCloseCancelDialog}
+                                color="primary"
+                                variant="outlined"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                sx={{
+                                    textTransform: 'none', // This will keep the text in its normal case
+                                    fontWeight: 'normal', // This ensures normal font weight
+                                }}
+                                onClick={handleCancelRequest}
+                                color="error"
+                                variant="contained"
+                            >
+                                Confirm
+                            </Button>
+                        </Box>
+                    </Box>
+                </Modal>
+                {/* Snackbar for notifications */}
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={6000}
+                    onClose={handleCloseSnackbar}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                >
+                    <Alert
+                        onClose={handleCloseSnackbar}
+                        severity={snackbar.severity}
+                        variant="filled"
+                        sx={{ width: '100%' }}
+                    >
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </Box>
         </ThemeProvider>
     );
 };

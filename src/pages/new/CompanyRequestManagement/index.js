@@ -37,6 +37,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 function Copyright(props) {
     return (
@@ -53,7 +55,7 @@ const defaultTheme = createTheme();
 export default function CompanyRequestManagement() {
     const userInfo = storageService.getItem('userInfo')?.user || null;
     const navigate = useNavigate(); // Declare navigate
-
+    const stompClientRef = useRef(null);
     // --------------------- FIRST DIALOG (Select Machine) ---------------------
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [machines, setMachines] = useState([]);
@@ -122,7 +124,7 @@ export default function CompanyRequestManagement() {
 
                 return (
                     <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
-                        {currentStatus === 'PROCESSING' && (
+                        {currentStatus !== 'PENDING' && (
                             <Button
                                 variant="contained"
                                 component="label"
@@ -131,42 +133,6 @@ export default function CompanyRequestManagement() {
                             >
                                 Chat
                             </Button>
-                        )}
-                        {currentStatus === 'DRAFTED' && (
-                            <>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
-                                    onClick={() => handleOpenEditor(params.row.assetModel?.id, params.row.requestId)}
-                                >
-                                    Review
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    color="error"
-                                    sx={{ width: '100px', textTransform: 'none' }}
-                                    onClick={() => handleOpenCancelConfirm(params.row.requestId)}
-                                >
-                                    Cancel
-                                </Button>
-                            </>
-                        )}
-                        {currentStatus === 'APPROVED' && (
-                            <>
-                                <Button
-                                    variant="contained"
-                                    component="label"
-                                    disabled
-                                    sx={{ width: '100px', bgcolor: 'orange', textTransform: 'none' }}
-                                >
-                                    Done
-                                </Button>
-                                <Typography variant="body2" sx={{ color: 'green', fontWeight: 'bold' }}>
-                                    {formatDateTime(params.row.completedAt)}
-                                </Typography>
-                            </>
                         )}
                     </Box>
                 );
@@ -191,6 +157,18 @@ export default function CompanyRequestManagement() {
             headerName: 'Machine Type',
             width: 200,
             renderCell: (params) => params.row.machineType?.machineTypeName || '-',
+        },
+        {
+            field: 'cancelReason',
+            headerName: 'Cancel Reason',
+            width: 200,
+            renderCell: (params) => params.row.cancelReason,
+        },
+        {
+            field: 'cancelledBy',
+            headerName: 'Cancelled By',
+            width: 200,
+            renderCell: (params) => params.row?.cancelledBy?.email || '-',
         },
         {
             field: 'createdAt',
@@ -423,6 +401,43 @@ export default function CompanyRequestManagement() {
     useEffect(() => {
         console.log(statusToSort);
     }, [statusToSort]);
+
+    useEffect(() => {
+        // Establish WebSocket connection
+        const socket = new Client({
+            //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
+            webSocketFactory: () => new SockJS('http://localhost:8086/ws'),
+            onConnect: () => {
+                console.log('WebSocket Connected');
+
+                // Subscribe to the specific chat box topic
+                const subscription = socket.subscribe(`/topic/request/100`, (message) => {
+                    fetchData();
+                });
+
+                stompClientRef.current = socket;
+
+                // Cleanup subscription on unmount
+                return () => {
+                    subscription.unsubscribe();
+                };
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+            },
+        });
+
+        // Activate the connection
+        socket.activate();
+
+        // Cleanup on component unmount
+        return () => {
+            if (socket) {
+                socket.deactivate();
+            }
+        };
+    }, [userInfo]); // Add userInfo.email as a dependency
 
     return (
         <ThemeProvider theme={defaultTheme}>

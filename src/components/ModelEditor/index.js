@@ -1156,29 +1156,6 @@ export default function SimplifiedModelViewer({
                                             />
                                         )}
 
-                                        {/* Hiển thị ảnh */}
-                                        {/* {(imageFile || previewImage) && !isDisable && (
-                                            <Box sx={{ mt: 2, textAlign: 'center' }}>
-                                                <Typography variant="subtitle1">Current Image</Typography>
-                                                <img
-                                                    src={
-                                                        imageFile
-                                                            ? URL.createObjectURL(imageFile)
-                                                            : getImage(previewImage)
-                                                    }
-                                                    alt="Preview"
-                                                    style={{
-                                                        width: '100%',
-                                                        maxWidth: '100%',
-                                                        maxHeight: '300px',
-                                                        objectFit: 'contain',
-                                                        borderRadius: 8,
-                                                        border: '2px solid #ddd',
-                                                    }}
-                                                />
-                                            </Box>
-                                        )} */}
-
                                         {/* Hiển thị ảnh - Ẩn nếu action là UpdateModelGuideline */}
                                         {(imageFile || previewImage) &&
                                             !isDisable &&
@@ -1284,30 +1261,6 @@ export default function SimplifiedModelViewer({
                                         }}
                                     />
 
-                                    {/* Code */}
-                                    {/* <TextField
-                                        label="Code"
-                                        variant="outlined"
-                                        name="code"
-                                        value={formData.code}
-                                        onChange={handleInputChange}
-                                        fullWidth
-                                        sx={{
-                                            input: { color: darkMode ? '#ffffff' : '#000000' },
-                                            '& .MuiOutlinedInput-root': {
-                                                '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
-                                                '&:hover fieldset': {
-                                                    borderColor: darkMode ? '#ffffff' : '#000000',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: darkMode ? '#ffffff' : '#000000',
-                                                },
-                                            },
-                                            label: { color: darkMode ? '#ffffff' : '#000000' },
-                                        }}
-                                    /> */}
-
-                                    {/* Hiển thị ảnh */}
                                     {(imageFile || previewImage) && (
                                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                                             <Typography variant="subtitle1">Current Image</Typography>
@@ -1355,54 +1308,6 @@ export default function SimplifiedModelViewer({
                                     <Typography variant="body1" sx={{ mt: 1, color: darkMode ? '#ffffff' : '#000000' }}>
                                         Course Name: {modelById?.courseName || 'N/A'}
                                     </Typography>
-
-                                    {/* Select Status */}
-                                    {/* <FormControl fullWidth sx={{ mt: 2 }}>
-                                        <InputLabel>Status</InputLabel>
-                                        <Select
-                                            value={formData.status || ''}
-                                            onChange={handleInputChange}
-                                            name="status"
-                                            label="Status"
-                                            sx={{
-                                                color: darkMode ? '#ffffff' : '#000000',
-                                                '& .MuiOutlinedInput-root': {
-                                                    '& fieldset': { borderColor: darkMode ? '#ffffff' : '#000000' },
-                                                    '&:hover fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
-                                                    },
-                                                    '&.Mui-focused fieldset': {
-                                                        borderColor: darkMode ? '#ffffff' : '#000000',
-                                                    },
-                                                },
-                                                '& .MuiInputLabel-root': {
-                                                    color: darkMode ? '#ffffff' : '#000000',
-                                                },
-                                            }}
-                                        >
-                                            {modelById?.isUsed && <MenuItem value="ARCHIVED">ARCHIVED</MenuItem>}
-
-                                            {!modelById?.isUsed && <MenuItem value="ACTIVE">ACTIVE</MenuItem>}
-
-                                            {!modelById?.isUsed && <MenuItem value="INACTIVE">INACTIVE</MenuItem>}
-                                        </Select>
-                                    </FormControl> */}
-                                    {/* <Button
-                                        onClick={handleOpenConfirmDelete}
-                                        variant="contained"
-                                        color="error" // Màu đỏ của Material UI
-                                        fullWidth
-                                        sx={{ mt: 2 }}
-                                        disabled={
-                                            isLoadingDeleteModel || modelById?.status === 'ACTIVE' || modelById?.isUsed
-                                        }
-                                    >
-                                        {isLoadingDeleteModel ? (
-                                            <CircularProgress size={24} sx={{ color: 'white' }} />
-                                        ) : (
-                                            'Delete Model'
-                                        )}
-                                    </Button> */}
                                 </>
                             )}
 
@@ -1543,27 +1448,29 @@ export default function SimplifiedModelViewer({
                                         },
                                     }}
                                 />
-                                {action !== 'UpdateModelGuideline' && action !== 'UploadModelRequest' && (
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{ width: '100%', textTransform: 'none' }}
-                                        onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
-                                        disabled={isLoading || isLoadingUpdateModelGuideline}
-                                    >
-                                        {action === 'CreateModel' ? (
-                                            isLoading ? (
+                                {action !== 'UpdateModelGuideline' &&
+                                    action !== 'UploadModelRequest' &&
+                                    action !== 'ReviewModel' && (
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            sx={{ width: '100%', textTransform: 'none' }}
+                                            onClick={action === 'CreateModel' ? handleCreateModel : updateModelInfo}
+                                            disabled={isLoading || isLoadingUpdateModelGuideline}
+                                        >
+                                            {action === 'CreateModel' ? (
+                                                isLoading ? (
+                                                    <CircularProgress size={24} sx={{ color: 'white' }} />
+                                                ) : (
+                                                    'Create Model'
+                                                )
+                                            ) : isLoadingUpdateModelGuideline ? (
                                                 <CircularProgress size={24} sx={{ color: 'white' }} />
                                             ) : (
-                                                'Create Model'
-                                            )
-                                        ) : isLoadingUpdateModelGuideline ? (
-                                            <CircularProgress size={24} sx={{ color: 'white' }} />
-                                        ) : (
-                                            'Save changes'
-                                        )}
-                                    </Button>
-                                )}
+                                                'Save changes'
+                                            )}
+                                        </Button>
+                                    )}
                                 {action === 'UploadModelRequest' && (
                                     <Button
                                         variant="contained"
