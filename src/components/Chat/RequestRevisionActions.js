@@ -120,8 +120,8 @@ const RequestRevisionActions = ({
                             <div>
                                 <h4 className="text-sm font-medium text-yellow-800">Price Proposed</h4>
                                 <p className="text-sm text-yellow-700">
-                                    Your price proposal of ${request.priceProposal} has been submitted and is awaiting
-                                    review.
+                                    Your price proposal of {request.priceProposal} point has been submitted and is
+                                    awaiting review.
                                 </p>
                             </div>
                         </div>
