@@ -381,13 +381,6 @@ export default function CompanyRequestDesigner() {
                     </Typography>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'right', gap: 2, mb: 2 }}>
-                        <TextField
-                            label="Search Designer Email"
-                            variant="outlined"
-                            value={searchDesignerEmail}
-                            onChange={(e) => setSearchDesignerEmail(e.target.value)}
-                            sx={{ width: 250 }}
-                        />
                         {/* TextField để nhập tên công ty */}
                         <TextField
                             label="Search Company Name"
