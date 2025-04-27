@@ -101,6 +101,7 @@ const RevisionRequestDialog = ({
             formData.append('reason', description);
             if (files.length === 0) {
                 toast.error('Please select at least one file.');
+                return;
             }
             // Add files to FormData
             files.forEach((file) => {
