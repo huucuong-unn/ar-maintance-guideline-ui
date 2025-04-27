@@ -188,9 +188,17 @@ const RequestRevisionActions = ({
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                             <div className="flex items-start">
                                 <AlertCircle size={16} className="text-red-500 mr-2 mt-1" />
-                                <div>
+                                <div className="flex-grow">
                                     <h4 className="text-sm font-medium text-red-800">Rejection Reason:</h4>
-                                    <p className="text-sm text-red-700">
+                                    <p
+                                        className="text-sm text-red-700"
+                                        style={{
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-word',
+                                            overflowWrap: 'anywhere',
+                                            maxWidth: '50ch',
+                                        }}
+                                    >
                                         {request.rejectionReason || 'No reason provided'}
                                     </p>
                                 </div>

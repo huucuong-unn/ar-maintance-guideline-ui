@@ -285,6 +285,7 @@ export default function CompanyRequestManagement() {
     const handleCloseMachineDialog = () => {
         setOpenMachineDialog(false);
         setSelectedMachine(null);
+        setRevisionFiles([]);
     };
 
     // 2) Confirm create request with subject/desc
@@ -294,7 +295,10 @@ export default function CompanyRequestManagement() {
             toast.error('Please enter both request subject and description.');
             return;
         }
-
+        if (revisionFiles.length === 0) {
+            toast.error('Please upload at least one revision file.');
+            return;
+        }
         try {
             setIsLoading(true);
 
@@ -321,6 +325,7 @@ export default function CompanyRequestManagement() {
                 fetchData(); // refresh the table
                 setRevisionFiles([]); // Reset files after successful submission
             }
+            setRevisionFiles([]);
         } catch (error) {
             console.error('Failed to create request:', error);
             toast.error('Failed to create request. Please try again.');
@@ -375,6 +380,7 @@ export default function CompanyRequestManagement() {
     const handleOpenCancelConfirm = (requestId) => {
         setOpenCancelConfirmDialog(true);
         setRequestId(requestId);
+        setRevisionFiles([]);
     };
     const handleCloseCancelConfirm = () => {
         setOpenCancelConfirmDialog(false);
@@ -390,6 +396,7 @@ export default function CompanyRequestManagement() {
                 toast.success('Request cancelled successfully!');
                 fetchData();
             }
+            setRevisionFiles([]);
         } catch (error) {
             console.error('Failed to cancel request:', error);
             toast.error('Failed to cancel request. Please try again.');

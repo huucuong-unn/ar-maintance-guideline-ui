@@ -239,7 +239,6 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                         </div>
                     </div>
                 </div>
-
                 {/* Content Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Left Column - Reason and Actions */}
@@ -308,7 +307,6 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                         />
                     </div>
                 </div>
-
                 {/* Dialogs */}
                 {/* Create/Upload Model Dialog */}
                 <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} fullWidth maxWidth="xl">
@@ -336,7 +334,6 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                         <Button onClick={() => setOpenCreateDialog(false)}>Cancel</Button>
                     </DialogActions>
                 </Dialog>
-
                 {/* Review Model Dialog */}
                 <Dialog open={openReviewDialog} onClose={() => setOpenReviewDialog(false)} fullWidth maxWidth="xl">
                     <DialogTitle>Review 3D Model</DialogTitle>
@@ -354,14 +351,10 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                         <Button onClick={() => setOpenReviewDialog(false)}>Close</Button>
                     </DialogActions>
                 </Dialog>
-
-                {/* Reject Model Dialog */}
                 <Dialog open={openRejectDialog} onClose={() => setOpenRejectDialog(false)} fullWidth maxWidth="sm">
-                    <DialogTitle>Reject Model</DialogTitle>
+                    <DialogTitle>Reject Reuqest</DialogTitle>
                     <DialogContent>
-                        <DialogContentText sx={{ mb: 2 }}>
-                            Please provide a reason for rejecting this model.
-                        </DialogContentText>
+                        <DialogContentText sx={{ mb: 2 }}>Please provide a reason for request.</DialogContentText>
                         <TextField
                             autoFocus
                             margin="dense"
@@ -370,6 +363,8 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                             fullWidth
                             multiline
                             rows={4}
+                            inputProps={{ maxLength: 150 }}
+                            helperText={`Max 150 characters`}
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             variant="outlined"
@@ -387,11 +382,17 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                                 }
 
                                 const handleRejectSubmit = async () => {
+                                    if (rejectionReason.length > 150) {
+                                        toast.error('Rejection reason cannot exceed 150 characters.');
+                                        return;
+                                    }
+
                                     setIsSubmitting(true);
                                     try {
                                         const requestData = {
                                             id: request.id,
                                             status: 'REJECTED',
+                                            userRejectId: userInfo.id,
                                             rejectionReason: rejectionReason,
                                         };
 
@@ -417,7 +418,6 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                         </Button>
                     </DialogActions>
                 </Dialog>
-
                 {/* Approve Model Dialog */}
                 <Dialog open={openApproveDialog} onClose={() => setOpenApproveDialog(false)} fullWidth maxWidth="sm">
                     <DialogTitle>Approve Model</DialogTitle>

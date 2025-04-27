@@ -679,7 +679,12 @@ const ChatBox = ({ requestId }) => {
                             multiline
                             rows={4}
                             value={cancelReason}
-                            onChange={(e) => setCancelReason(e.target.value)}
+                            helpText={`${cancelReason.length}/150`}
+                            onChange={(e) => {
+                                if (e.target.value.length <= 150) {
+                                    setCancelReason(e.target.value);
+                                }
+                            }}
                             required
                             sx={{ mb: 3 }}
                         />
