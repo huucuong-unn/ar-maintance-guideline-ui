@@ -10,10 +10,12 @@ import {
     Users,
     Monitor,
     FileType,
-    AppWindowMacIcon,
     Mail,
     DollarSign,
     History,
+    Gem,
+    GitPullRequest,
+    Container,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -143,13 +145,18 @@ export const SecondaryListItems = () => {
         },
         {
             route: '/admin/service-price-management',
-            icon: <CreditCard />,
+            icon: <Gem />,
             title: 'Service Price',
         },
         {
             route: '/admin/point-options-management',
-            icon: <CreditCard />,
+            icon: <Container />,
             title: 'Point Options',
+        },
+        {
+            route: '/admin/company-request',
+            icon: <GitPullRequest />,
+            title: 'Requests',
         },
     ];
 

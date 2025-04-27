@@ -41,6 +41,7 @@ import CompanyRequestSection from '~/pages/new/CompanyRequestSection';
 import RequestRevisionList from '~/components/Chat/RequestRevisionList';
 import Contact from '~/pages/new/Contact';
 import GuidelineCreation from '~/pages/new/GuidelineCreation';
+import CompanyRequestForAdmin from '~/pages/new/CompanyRequestForAdmin';
 
 const publicRoutes = [
     //new
@@ -71,6 +72,7 @@ const adminRoutes = [
     { path: '/admin/payment-management', component: PaymentAndSubscriptionManagement, layout: AdminLayout },
     { path: '/admin/service-price-management', component: ServicePriceManagement, layout: AdminLayout },
     { path: '/admin/point-options-management', component: PointOptionManagement, layout: AdminLayout },
+    { path: '/admin/company-request', component: CompanyRequestForAdmin, layout: AdminLayout },
 ];
 
 const companyRoutes = [

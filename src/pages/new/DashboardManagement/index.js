@@ -290,6 +290,97 @@ const AdminDashboard = () => {
                         </CardContent>
                     </Card>
                 </Grid>
+                {/* Thêm biểu đồ Company Request */}
+                <Grid item xs={12} md={4}>
+                    <Card elevation={3}>
+                        <CardHeader title="Company Requests" />
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 2 }}>
+                                <Chip
+                                    label={`Done: ${dashboardData.numberOfDoneRequests || 0}`}
+                                    color="success"
+                                    variant="outlined"
+                                    sx={{ mb: 1 }}
+                                />
+                                <Chip
+                                    label={`Processing: ${dashboardData.numberOfProcessingRequests || 0}`}
+                                    color="info"
+                                    variant="outlined"
+                                    sx={{ mb: 1 }}
+                                />
+                                <Chip
+                                    label={`Pending: ${dashboardData.numberOfPendingRequests || 0}`}
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ mb: 1 }}
+                                />
+                            </Box>
+                            <Box sx={{ height: 200, width: '100%' }}>
+                                {/* Kiểm tra xem có dữ liệu không */}
+                                {dashboardData.numberOfDoneRequests > 0 ||
+                                dashboardData.numberOfProcessingRequests > 0 ||
+                                dashboardData.numberOfPendingRequests > 0 ? (
+                                    <PieChart
+                                        series={[
+                                            {
+                                                data: [
+                                                    {
+                                                        id: 0,
+                                                        value: dashboardData.numberOfDoneRequests || 0,
+                                                        label: 'Done',
+                                                        color: theme.palette.success.main,
+                                                    },
+                                                    {
+                                                        id: 1,
+                                                        value: dashboardData.numberOfProcessingRequests || 0,
+                                                        label: 'Processing',
+                                                        color: theme.palette.info.main,
+                                                    },
+                                                    {
+                                                        id: 2,
+                                                        value: dashboardData.numberOfPendingRequests || 0,
+                                                        label: 'Pending',
+                                                        color: theme.palette.warning.main,
+                                                    },
+                                                ],
+                                                arcLabel: (item) => `${item.label}: ${item.value}`,
+                                                arcLabelMinAngle: 45,
+                                                innerRadius: 60,
+                                                outerRadius: 80,
+                                                paddingAngle: 5,
+                                                cornerRadius: 5,
+                                            },
+                                        ]}
+                                        height={200}
+                                        margin={{ right: 5 }}
+                                        sx={{
+                                            [`& .${pieArcLabelClasses.root}`]: {
+                                                fill: 'black',
+                                                fontWeight: 'bold',
+                                                fontSize: '0.75rem',
+                                            },
+                                        }}
+                                    >
+                                        <ChartsTooltip />
+                                    </PieChart>
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            height: '100%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="text.secondary">
+                                            No data available
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
                 <Grid item xs={12} md={4}>
                     <Card elevation={3}>
