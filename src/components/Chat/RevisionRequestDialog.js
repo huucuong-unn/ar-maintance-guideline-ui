@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { X, Upload, FileText } from 'lucide-react';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import toast from 'react-hot-toast';
 
 const RevisionRequestDialog = ({
     open,
@@ -98,7 +99,9 @@ const RevisionRequestDialog = ({
             const formData = new FormData();
             formData.append('type', type);
             formData.append('reason', description);
-
+            if (files.length === 0) {
+                toast.error('Please select at least one file.');
+            }
             // Add files to FormData
             files.forEach((file) => {
                 formData.append('revisionFiles', file); // Note the nested path
