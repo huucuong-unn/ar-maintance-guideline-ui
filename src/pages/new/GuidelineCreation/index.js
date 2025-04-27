@@ -459,6 +459,7 @@ export default function GuidelineCreation() {
                                             value={selectedMachineType}
                                             onChange={handleSelectMachineType}
                                             loading={isLoadingMachineTypes}
+                                            disabled
                                             renderInput={(params) => (
                                                 <TextField
                                                     {...params}
@@ -490,7 +491,8 @@ export default function GuidelineCreation() {
                                                 value={selectedModel}
                                                 label="Model"
                                                 onChange={(e) => setSelectedModel(e.target.value)}
-                                                disabled={isLoadingModels || models.length === 0}
+                                                // disabled={isLoadingModels || models.length === 0}
+                                                disabled
                                                 sx={{ borderRadius: 1.5 }}
                                             >
                                                 {models.map((model) => (

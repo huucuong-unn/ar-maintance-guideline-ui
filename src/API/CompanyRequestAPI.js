@@ -8,6 +8,10 @@ const CompanyRequestAPI = {
         return axiosClient.get(`/v1/company-request`, { params });
     },
 
+    getAllCompanyRequestsForAdmin(params) {
+        return axiosClient.get(`/v1/company-request/admin`, { params });
+    },
+
     getCompanyRequestById(id) {
         return axiosClient.get(`/v1/company-request/one/${id}`);
     },
