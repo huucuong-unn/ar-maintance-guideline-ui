@@ -149,6 +149,8 @@ const ChatBox = ({ requestId }) => {
         switch (status) {
             case 'PENDING':
                 return 'warning';
+            case 'PRICE PROPOSED':
+                return 'warning';
             case 'COMPLETED':
                 return 'success';
             case 'APPROVED':
@@ -408,6 +410,18 @@ const ChatBox = ({ requestId }) => {
         return isAnyPriceProposedHaveBeenAccepted;
     };
 
+    const checkIsAnyPriceProposedHaveBeenAcceptedForAdd = () => {
+        const isAnyPriceProposedHaveBeenAccepted = messages.some(
+            (message) =>
+                companyRequest.status === 'CANCELLED' ||
+                companyRequest.status === 'APPROVED' ||
+                (message?.requestRevisionResponse?.type == 'Price Proposal' &&
+                    message?.requestRevisionResponse?.status === 'PROCESSING'),
+        );
+        console.log(isAnyPriceProposedHaveBeenAccepted);
+        return isAnyPriceProposedHaveBeenAccepted;
+    };
+
     const checkIsAnyRequestProcessing = () => {
         const isAnyRequestProcessing = messages.some(
             (message) =>
@@ -496,7 +510,7 @@ const ChatBox = ({ requestId }) => {
                             gap: 1,
                         }}
                     >
-                        {userRole === 'COMPANY' && !checkIsAnyPriceProposedHaveBeenAccepted() && (
+                        {userRole === 'COMPANY' && !checkIsAnyPriceProposedHaveBeenAcceptedForAdd() && (
                             <IconButton onClick={handleOpenCreateRevision} title="Create Revision Request">
                                 <AddIcon />
                             </IconButton>

@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { X, Upload, FileText } from 'lucide-react';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const RevisionRequestDialog = ({
     open,
