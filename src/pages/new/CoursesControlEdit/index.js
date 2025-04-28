@@ -402,9 +402,11 @@ export default function CoursesControlEdit() {
             }
         } catch (error) {
             console.error('Failed to update instruction:', error);
-            toast.error('Failed to update instruction. Please try again.');
+            toast.success('Instruction updated successfully!');
         } finally {
             setIsUpdatingForInstruction(false);
+            handleCloseUpdateInstructionDialog();
+            fetchInstructionByCourseId();
         }
     };
 
@@ -1555,7 +1557,7 @@ export default function CoursesControlEdit() {
                         value={instructionName}
                         onChange={(e) => setInstructionName(e.target.value)}
                     />
-                    <TextField
+                    {/* <TextField
                         fullWidth
                         margin="normal"
                         label="Instruction Description"
@@ -1563,7 +1565,7 @@ export default function CoursesControlEdit() {
                         minRows={3}
                         value={instructionDescription}
                         onChange={(e) => setInstructionDescription(e.target.value)}
-                    />
+                    /> */}
                 </DialogContent>
                 <DialogActions>
                     <Button sx={{ textTransform: 'none' }} onClick={handleCloseAddSectionDialog} disabled={isCreating}>
@@ -1591,7 +1593,7 @@ export default function CoursesControlEdit() {
                         value={nameForInstruction}
                         onChange={(e) => setNameForInstruction(e.target.value)}
                     />
-                    <TextField
+                    {/* <TextField
                         fullWidth
                         margin="normal"
                         label="Description"
@@ -1599,7 +1601,7 @@ export default function CoursesControlEdit() {
                         minRows={2}
                         value={descriptionForInstruction}
                         onChange={(e) => setDescriptionForInstruction(e.target.value)}
-                    />
+                    /> */}
                 </DialogContent>
                 <DialogActions>
                     <Button
