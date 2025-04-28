@@ -1201,7 +1201,7 @@ export default function CoursesControlEdit() {
                         ))}
 
                         {/* Machines List Section */}
-                        <Paper
+                        {/* <Paper
                             elevation={2}
                             sx={{
                                 borderRadius: '12px',
@@ -1291,7 +1291,7 @@ export default function CoursesControlEdit() {
                                     </AccordionSummary>
                                 </Accordion>
                             </Box>
-                        </Paper>
+                        </Paper> */}
                     </Box>
                 </TabPanel>
 
