@@ -459,7 +459,7 @@ export default function GuidelineCreation() {
                                             value={selectedMachineType}
                                             onChange={handleSelectMachineType}
                                             loading={isLoadingMachineTypes}
-                                            disabled
+                                            disabled={Boolean(guidelineId)}
                                             renderInput={(params) => (
                                                 <TextField
                                                     {...params}
