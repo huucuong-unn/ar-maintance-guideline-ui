@@ -492,7 +492,7 @@ export default function GuidelineCreation() {
                                                 label="Model"
                                                 onChange={(e) => setSelectedModel(e.target.value)}
                                                 // disabled={isLoadingModels || models.length === 0}
-                                                disabled
+                                                disabled={Boolean(guidelineId)}
                                                 sx={{ borderRadius: 1.5 }}
                                             >
                                                 {models.map((model) => (
