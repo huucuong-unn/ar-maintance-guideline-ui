@@ -788,15 +788,6 @@ export default function GuidelineCreation() {
                                 </Typography>
                             </Box>
 
-                            <Box sx={{ bgcolor: '#f5f9ff', p: 2, borderRadius: 1.5 }}>
-                                <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
-                                    Your Current Balance
-                                </Typography>
-                                <Typography variant="body2">
-                                    Your company has <strong>144 points</strong> available.
-                                </Typography>
-                            </Box>
-
                             <Typography variant="body1" sx={{ mt: 3, fontWeight: 600 }}>
                                 Need more points?
                             </Typography>
