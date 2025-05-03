@@ -38,6 +38,8 @@ import storageService from '~/components/StorageService/storageService';
 import CoursesControlEdit from '../CoursesControlEdit';
 import adminLoginBackground from '~/assets/images/adminlogin.webp';
 import { getImage } from '~/Constant';
+import ServicePriceAPI from '~/API/ServicePriceAPI';
+import { set } from 'date-fns';
 
 const defaultTheme = createTheme();
 
@@ -95,6 +97,7 @@ export default function GuidelineCreation() {
     const [isLoadingMachineTypes, setIsLoadingMachineTypes] = useState(true);
     const [isLoadingModels, setIsLoadingModels] = useState(false);
     const [isLoadingGuideline, setIsLoadingGuideline] = useState(isEditing);
+    const [pointConsume, setPointConsume] = useState(0); // Points consumption for creating instructions
 
     // Help dialog
     const [showHelpDialog, setShowHelpDialog] = useState(false);
@@ -115,6 +118,15 @@ export default function GuidelineCreation() {
         if (isEditing) {
             fetchGuidelineData();
         }
+    }, []);
+    const getConsumePoints = async () => {
+        const reponse = await ServicePriceAPI.getServicePriceById('4c7346ab-e985-4933-9d96-35936935b4a6');
+
+        setPointConsume(reponse?.result?.price);
+    };
+
+    useEffect(() => {
+        getConsumePoints();
     }, []);
 
     // Effect to show help dialog when switching to tab 2 for the first time
@@ -670,7 +682,7 @@ export default function GuidelineCreation() {
                             <Typography paragraph>
                                 Once you've completed all necessary instructions, you can set the status to "Active" to
                                 publish your guideline and make it available to employees. Remember that each
-                                instruction detail will consume 3 points from your account balance.
+                                instruction detail will consume {pointConsume} points from your account balance.
                             </Typography>
 
                             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
@@ -762,8 +774,8 @@ export default function GuidelineCreation() {
                     <DialogContent>
                         <Box sx={{ mt: 2 }}>
                             <Typography variant="body1" paragraph>
-                                Each guideline instruction you create will consume <strong>3 points</strong> from your
-                                company account.
+                                Each guideline instruction you create will consume{' '}
+                                <strong>{pointConsume} points</strong> from your company account.
                             </Typography>
 
                             <Typography variant="body1" paragraph>
@@ -781,10 +793,11 @@ export default function GuidelineCreation() {
 
                             <Box sx={{ bgcolor: '#f5f9ff', p: 2, borderRadius: 1.5, mb: 2 }}>
                                 <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
-                                    Each Instruction Step: 3 points
+                                    Each Instruction Step: {pointConsume} points
                                 </Typography>
                                 <Typography variant="body2">
-                                    Every individual instruction step you add to your guideline will consume 3 points.
+                                    Every individual instruction step you add to your guideline will consume{' '}
+                                    {pointConsume} points.
                                 </Typography>
                             </Box>
 
