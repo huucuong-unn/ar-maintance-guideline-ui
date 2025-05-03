@@ -159,16 +159,18 @@ const RequestRevisionActions = ({
                 }
                 return null;
 
-            case 'COMPLETED':
+            case 'APPROVED':
                 return (
-                    <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-md">
-                        <div className="flex items-start">
-                            <CheckCircle size={16} className="text-emerald-500 mr-2 mt-1" />
-                            <div>
-                                <h4 className="text-sm font-medium text-emerald-800">Completed</h4>
-                                <p className="text-sm text-emerald-700">
-                                    The model has been approved and the request is completed.
-                                </p>
+                    <div className="space-y-3">
+                        <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-md">
+                            <div className="flex items-start">
+                                <CheckCircle size={16} className="text-emerald-500 mr-2 mt-1" />
+                                <div>
+                                    <h4 className="text-sm font-medium text-emerald-800">Completed</h4>
+                                    <p className="text-sm text-emerald-700">
+                                        The model has been approved and the request is completed.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

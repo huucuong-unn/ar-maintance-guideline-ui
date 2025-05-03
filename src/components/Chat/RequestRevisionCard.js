@@ -217,14 +217,14 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                                         ? 'bg-purple-100 text-purple-800'
                                         : request.status === 'DELIVERED'
                                         ? 'bg-green-100 text-green-800'
-                                        : request.status === 'COMPLETED'
-                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : request.status === 'APPROVED'
+                                        ? 'bg-green-100 text-green-800'
                                         : request.status === 'REJECTED'
                                         ? 'bg-red-100 text-red-800'
                                         : 'bg-gray-100 text-gray-800'
                                 } rounded-full`}
                             >
-                                {request.status || 'pending'}
+                                {request.status.charAt(0).toUpperCase() + request.status.slice(1).toLowerCase()}
                             </span>
                         </div>
                         <p className="text-gray-700 mt-1">

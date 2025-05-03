@@ -74,6 +74,7 @@ const ChatBox = ({ requestId }) => {
     const [companyRequest, setCompanyRequest] = useState(null);
     // New state for create revision dialog
     const [isCreateRevisionOpen, setIsCreateRevisionOpen] = useState(false);
+    const [isCompanyRequestSubmitted, setIsCompanyRequestSubmitted] = useState(false);
     const [chatBoxId, setChatBoxId] = useState('');
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -422,6 +423,18 @@ const ChatBox = ({ requestId }) => {
         return isAnyPriceProposedHaveBeenAccepted;
     };
 
+    const checkICompanyRequestSubmitted = () => {
+        const isCompanyRequestSubmitted = companyRequest.status === 'CANCELLED' || companyRequest.status === 'APPROVED';
+
+        return isCompanyRequestSubmitted;
+    };
+
+    useEffect(() => {
+        if (companyRequest) {
+            setIsCompanyRequestSubmitted(companyRequest.status === 'CANCELLED' || companyRequest.status === 'APPROVED');
+        }
+    }, [companyRequest]);
+
     const checkIsAnyRequestProcessing = () => {
         const isAnyRequestProcessing = messages.some(
             (message) =>
@@ -515,37 +528,40 @@ const ChatBox = ({ requestId }) => {
                                 <AddIcon />
                             </IconButton>
                         )}
+                        {!isCompanyRequestSubmitted && (
+                            <>
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    placeholder="Type a message..."
+                                    value={messageInput}
+                                    onChange={(e) => setMessageInput(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    InputProps={{
+                                        sx: {
+                                            borderRadius: 10,
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'grey.300',
+                                            },
+                                        },
+                                    }}
+                                />
 
-                        <TextField
-                            fullWidth
-                            variant="outlined"
-                            placeholder="Type a message..."
-                            value={messageInput}
-                            onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            InputProps={{
-                                sx: {
-                                    borderRadius: 10,
-                                    '& .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: 'grey.300',
-                                    },
-                                },
-                            }}
-                        />
-
-                        <IconButton
-                            color="primary"
-                            onClick={sendMessage}
-                            sx={{
-                                bgcolor: 'primary.main',
-                                color: 'white',
-                                '&:hover': {
-                                    bgcolor: 'primary.dark',
-                                },
-                            }}
-                        >
-                            <SendIcon />
-                        </IconButton>
+                                <IconButton
+                                    color="primary"
+                                    onClick={sendMessage}
+                                    sx={{
+                                        bgcolor: 'primary.main',
+                                        color: 'white',
+                                        '&:hover': {
+                                            bgcolor: 'primary.dark',
+                                        },
+                                    }}
+                                >
+                                    <SendIcon />
+                                </IconButton>
+                            </>
+                        )}
                     </Box>
                 </Paper>
 
