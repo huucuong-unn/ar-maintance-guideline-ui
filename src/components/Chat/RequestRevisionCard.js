@@ -139,18 +139,27 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
         }
     };
 
+    const getMediaType = (file) => {
+        const ext = file.split('.').pop().toLowerCase();
+        if (['mp4', 'webm', 'ogg'].includes(ext)) return 'VIDEO';
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return 'IMAGE';
+        if (ext === 'pdf') return 'PDF';
+        if (['doc', 'docx'].includes(ext)) return 'DOCX';
+        return 'UNKNOWN';
+    };
     // Media overlay render
     const MediaOverlay = () => {
         if (!fullViewMode || !request.revisionFiles) return null;
 
         const currentMedia = request.revisionFiles[selectedImageIndex];
-
+        const type = getMediaType(currentMedia);
+        const mediaUrl = getImage(currentMedia);
         return (
             <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
                 <div className="bg-white rounded-lg p-6 max-w-4xl w-full">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold">
-                            Image {selectedImageIndex + 1} of {request.revisionFiles.length}
+                            File {selectedImageIndex + 1} of {request.revisionFiles.length}
                         </h3>
                         <button
                             className="text-gray-500 hover:text-gray-700 flex items-center"
@@ -160,35 +169,46 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                         </button>
                     </div>
 
-                    <div className="bg-gray-200 h-96 flex items-center justify-center rounded-lg mb-4">
-                        {request.revisionFiles[selectedImageIndex] && (
-                            <img
-                                src={getImage(currentMedia)}
-                                alt="Revision Media"
-                                className="max-h-full max-w-full object-contain"
-                            />
+                    <div className="bg-gray-200 h-96 flex items-center justify-center rounded-lg mb-4 overflow-auto">
+                        {type === 'IMAGE' && (
+                            <img src={mediaUrl} alt="Revision Media" className="max-h-full max-w-full object-contain" />
                         )}
+
+                        {type === 'VIDEO' && (
+                            <video src={mediaUrl} controls className="max-h-full max-w-full rounded-lg" />
+                        )}
+
+                        {type === 'PDF' && (
+                            <iframe src={mediaUrl} title="PDF Viewer" className="w-full h-full rounded-lg" />
+                        )}
+
+                        {type === 'DOCX' && (
+                            <div className="text-center">
+                                <p className="text-gray-700 mb-2">
+                                    DOCX files are not previewable. Click below to download.
+                                </p>
+                                <a href={mediaUrl} download className="text-blue-600 hover:underline">
+                                    Download Document
+                                </a>
+                            </div>
+                        )}
+
+                        {type === 'UNKNOWN' && <p className="text-red-500">Unsupported file type.</p>}
                     </div>
 
                     <div className="flex justify-between">
                         <button
                             className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg"
-                            onClick={() => {
-                                if (selectedImageIndex > 0) {
-                                    setSelectedImageIndex(selectedImageIndex - 1);
-                                }
-                            }}
+                            onClick={() => setSelectedImageIndex((prev) => Math.max(prev - 1, 0))}
                             disabled={selectedImageIndex === 0}
                         >
                             Previous
                         </button>
                         <button
                             className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg"
-                            onClick={() => {
-                                if (selectedImageIndex < request.revisionFiles.length - 1) {
-                                    setSelectedImageIndex(selectedImageIndex + 1);
-                                }
-                            }}
+                            onClick={() =>
+                                setSelectedImageIndex((prev) => Math.min(prev + 1, request.revisionFiles.length - 1))
+                            }
                             disabled={selectedImageIndex === request.revisionFiles.length - 1}
                         >
                             Next
