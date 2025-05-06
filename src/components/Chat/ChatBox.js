@@ -429,14 +429,17 @@ const ChatBox = ({ requestId }) => {
     };
 
     const checkICompanyRequestSubmitted = () => {
-        const isCompanyRequestSubmitted = companyRequest.status === 'CANCELLED' || companyRequest.status === 'APPROVED';
+        const isCompanyRequestSubmitted =
+            companyRequest?.status === 'CANCELLED' || companyRequest?.status === 'APPROVED';
 
         setIsCompanyRequestSubmitted(isCompanyRequestSubmitted);
     };
 
     useEffect(() => {
         if (companyRequest) {
-            setIsCompanyRequestSubmitted(companyRequest.status === 'CANCELLED' || companyRequest.status === 'APPROVED');
+            setIsCompanyRequestSubmitted(
+                companyRequest?.status === 'CANCELLED' || companyRequest?.status === 'APPROVED',
+            );
             checkIsAnyPriceProposedHaveBeenAccepted();
             checkIsAnyPriceProposedHaveBeenAcceptedForAdd();
             checkIsAnyRequestProcessing();

@@ -874,6 +874,7 @@ export default function SimplifiedModelViewer({
 
     useEffect(() => {
         fetchInstructionDetail();
+        setActiveAnimation(null); // Reset active animation when fetching new instruction detail
     }, [currentInstructionDetailId]);
 
     useEffect(() => {
