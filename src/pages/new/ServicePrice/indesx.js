@@ -142,7 +142,7 @@ export default function ServicePriceManagement() {
             renderCell: (params) => (
                 <Chip
                     icon={<MonetizationOnIcon />}
-                    label={params.value}
+                    label={params.value === 0 ? 'No Cost' : `${params.value}`}
                     size="small"
                     sx={{
                         bgcolor: 'rgba(255, 193, 7, 0.1)',
