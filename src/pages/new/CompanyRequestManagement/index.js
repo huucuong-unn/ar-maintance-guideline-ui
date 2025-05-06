@@ -364,9 +364,32 @@ export default function CompanyRequestManagement() {
     ];
 
     // Handle file upload
+
     const handleFileChange = (event) => {
-        const newFiles = Array.from(event.target.files);
-        setRevisionFiles([...revisionFiles, ...newFiles]);
+        const allowedExtensions = ['mp4', 'webm', 'ogg', 'jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'];
+
+        const files = Array.from(event.target.files);
+
+        const validFiles = [];
+        const invalidFiles = [];
+
+        files.forEach((file) => {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (allowedExtensions.includes(ext)) {
+                validFiles.push(file);
+            } else {
+                invalidFiles.push(file.name);
+            }
+        });
+
+        if (invalidFiles.length > 0) {
+            toast.warn(`Some files were not allowed: ${invalidFiles.join(', ')}`, {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        }
+
+        setRevisionFiles([...revisionFiles, ...validFiles]);
     };
 
     const handleRemoveFile = (indexToRemove) => {
@@ -1143,7 +1166,11 @@ export default function CompanyRequestManagement() {
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 Please upload any relevant files that will help us understand your request better (e.g.,
-                                sketches, diagrams, specifications).
+                                pictures sketches, diagrams, specifications).
+                            </Typography>
+
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Only allow .mp4,.webm,.ogg,.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx files.
                             </Typography>
 
                             <input
@@ -1151,6 +1178,7 @@ export default function CompanyRequestManagement() {
                                 multiple
                                 ref={fileInputRef}
                                 style={{ display: 'none' }}
+                                accept=".mp4,.webm,.ogg,.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
                                 onChange={handleFileChange}
                             />
 

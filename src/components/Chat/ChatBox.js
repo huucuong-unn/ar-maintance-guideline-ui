@@ -205,6 +205,10 @@ const ChatBox = ({ requestId }) => {
                 // Subscribe to the specific chat box topic
                 const subscription = socket.subscribe(`/topic/chat/${requestId}`, (message) => {
                     const receivedMessage = JSON.parse(message.body);
+                    checkIsAnyPriceProposedHaveBeenAccepted();
+                    checkIsAnyPriceProposedHaveBeenAcceptedForAdd();
+                    checkIsAnyRequestProcessing();
+                    checkICompanyRequestSubmitted();
 
                     setMessages((prevMessages) => {
                         const existingIndex = prevMessages.findIndex(
@@ -345,7 +349,7 @@ const ChatBox = ({ requestId }) => {
 
     // Open/Close create revision dialog
     const handleOpenCreateRevision = () => {
-        if (checkIsAnyRequestProcessing()) {
+        if (isAnyRequestProcessing) {
             toast.warn('You have a pending revision request. Please wait for it to be processed.');
         } else {
             setIsCreateRevisionOpen(true);
@@ -398,6 +402,8 @@ const ChatBox = ({ requestId }) => {
         setSnackbar((prev) => ({ ...prev, open: false }));
     };
 
+    const [isAnyPriceProposedHaveBeenAccepted, setIsAnyPriceProposedHaveBeenAccepted] = useState(false);
+
     const checkIsAnyPriceProposedHaveBeenAccepted = () => {
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
@@ -407,10 +413,10 @@ const ChatBox = ({ requestId }) => {
                     message?.requestRevisionResponse?.status === 'PROCESSING') ||
                 message?.requestRevisionResponse?.modelFile,
         );
-        console.log(isAnyPriceProposedHaveBeenAccepted);
-        return isAnyPriceProposedHaveBeenAccepted;
+        setIsAnyPriceProposedHaveBeenAccepted(isAnyPriceProposedHaveBeenAccepted);
     };
 
+    const [isAnyPriceProposedHaveBeenAcceptedForAdd, setIsAnyPriceProposedHaveBeenAcceptedForAdd] = useState(false);
     const checkIsAnyPriceProposedHaveBeenAcceptedForAdd = () => {
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
@@ -419,21 +425,26 @@ const ChatBox = ({ requestId }) => {
                 (message?.requestRevisionResponse?.type == 'Price Proposal' &&
                     message?.requestRevisionResponse?.status === 'PROCESSING'),
         );
-        console.log(isAnyPriceProposedHaveBeenAccepted);
-        return isAnyPriceProposedHaveBeenAccepted;
+        setIsAnyPriceProposedHaveBeenAcceptedForAdd(isAnyPriceProposedHaveBeenAccepted);
     };
 
     const checkICompanyRequestSubmitted = () => {
         const isCompanyRequestSubmitted = companyRequest.status === 'CANCELLED' || companyRequest.status === 'APPROVED';
 
-        return isCompanyRequestSubmitted;
+        setIsCompanyRequestSubmitted(isCompanyRequestSubmitted);
     };
 
     useEffect(() => {
         if (companyRequest) {
             setIsCompanyRequestSubmitted(companyRequest.status === 'CANCELLED' || companyRequest.status === 'APPROVED');
+            checkIsAnyPriceProposedHaveBeenAccepted();
+            checkIsAnyPriceProposedHaveBeenAcceptedForAdd();
+            checkIsAnyRequestProcessing();
+            checkICompanyRequestSubmitted();
         }
     }, [companyRequest]);
+
+    const [isAnyRequestProcessing, setIsAnyRequestProcessing] = useState(false);
 
     const checkIsAnyRequestProcessing = () => {
         const isAnyRequestProcessing = messages.some(
@@ -441,8 +452,7 @@ const ChatBox = ({ requestId }) => {
                 message?.requestRevisionResponse?.status === 'PROCESSING' ||
                 message?.requestRevisionResponse?.status === 'PENDING',
         );
-        console.log(isAnyRequestProcessing);
-        return isAnyRequestProcessing;
+        setIsAnyRequestProcessing(isAnyRequestProcessing);
     };
 
     return (
@@ -495,11 +505,12 @@ const ChatBox = ({ requestId }) => {
                             </Box>
                         </Box>
                         <Box>
-                            {!checkIsAnyPriceProposedHaveBeenAccepted() && (
-                                <IconButton onClick={handleOpenCancelDialog}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            )}
+                            {!isAnyPriceProposedHaveBeenAccepted ||
+                                (!isCompanyRequestSubmitted && (
+                                    <IconButton onClick={handleOpenCancelDialog}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                ))}
 
                             <IconButton onClick={handleOpenRevisionModal}>
                                 <InfoIcon />
@@ -523,7 +534,7 @@ const ChatBox = ({ requestId }) => {
                             gap: 1,
                         }}
                     >
-                        {userRole === 'COMPANY' && !checkIsAnyPriceProposedHaveBeenAcceptedForAdd() && (
+                        {userRole === 'COMPANY' && !isAnyPriceProposedHaveBeenAcceptedForAdd && (
                             <IconButton onClick={handleOpenCreateRevision} title="Create Revision Request">
                                 <AddIcon />
                             </IconButton>
@@ -571,8 +582,8 @@ const ChatBox = ({ requestId }) => {
                     onClose={handleCloseCreateRevision}
                     onSubmit={handleSubmitRevision}
                     requestId={requestId}
-                    isAnyPriceProposedHaveBeenAccepted={checkIsAnyPriceProposedHaveBeenAccepted()}
-                    isAnyRequestProcessing={checkIsAnyRequestProcessing()}
+                    isAnyPriceProposedHaveBeenAccepted={isAnyPriceProposedHaveBeenAccepted}
+                    isAnyRequestProcessing={isAnyRequestProcessing}
                 />
 
                 {/* Revision Detail Modal */}
