@@ -20,10 +20,8 @@ export const NotificationsMenu = ({
     const stompClientRef = useRef(null);
     const navigate = useNavigate();
     useEffect(() => {
-        if (anchorElNotifications) {
-            fetchNotifications();
-        }
-    }, [anchorElNotifications]);
+        fetchNotifications();
+    }, []);
 
     useEffect(() => {
         const socket = new Client({

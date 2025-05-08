@@ -184,7 +184,7 @@ export default function WalletHistory() {
         { field: 'guidelineName', headerName: 'Guideline Name', width: 200 },
         { field: 'optionName', headerName: 'Option Name', width: 200 },
         { field: 'receiverName', headerName: 'Receiver Name', width: 200 },
-        { field: 'modelRequestId', headerName: 'Model Request Id', width: 200 },
+        { field: 'modelRequestId', headerName: 'Model Request Code', width: 200 },
         { field: 'revisionType', headerName: 'Revision Type', width: 200 },
         {
             field: 'amount',

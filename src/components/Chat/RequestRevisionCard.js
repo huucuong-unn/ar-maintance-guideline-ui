@@ -43,11 +43,16 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
     // Helper function to format date
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
-        console.log('hl');
 
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
         } catch (e) {
             return 'Invalid Date';
         }
