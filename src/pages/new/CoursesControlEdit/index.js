@@ -1015,7 +1015,7 @@ export default function CoursesControlEdit() {
                                                                 sx={{ mr: 1.5, color: 'primary.main', opacity: 0.8 }}
                                                             />
                                                             <Typography fontWeight={500}>
-                                                                {machine.machineName}
+                                                                {machine?.machineCode}
                                                             </Typography>
                                                         </Box>
                                                     </Grid>

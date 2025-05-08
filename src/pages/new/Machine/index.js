@@ -1078,7 +1078,7 @@ export default function MachinesManagement() {
                                 </Typography>
 
                                 <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid item xs={12} sm={12} md={12}>
                                         <TextField
                                             label="Machine Code"
                                             name="machineCode"
