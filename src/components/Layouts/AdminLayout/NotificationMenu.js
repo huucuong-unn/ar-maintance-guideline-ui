@@ -25,7 +25,7 @@ export const NotificationsMenu = ({
 
     useEffect(() => {
         const socket = new Client({
-            webSocketFactory: () => new SockJS(`${host}/ws`),
+            webSocketFactory: () => new SockJS(`http://localhost:8086/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
                 const subscription = socket.subscribe(`/topic/notification/${userId}`, (message) => {

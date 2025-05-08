@@ -198,7 +198,7 @@ const ChatBox = ({ requestId }) => {
         // Establish WebSocket connection
         const socket = new Client({
             //  webSocketFactory: () => new SockJS('https://armaintance.ngrok.pro/ws'),
-            webSocketFactory: () => new SockJS(`${host}/ws`),
+            webSocketFactory: () => new SockJS(`http://localhost:8086/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
 
