@@ -54,6 +54,7 @@ import AssignEmployee from '~/components/AssignEmployee';
 import ModelEditor from '~/components/ModelEditor';
 import storageService from '~/components/StorageService/storageService';
 import { getImage } from '~/Constant';
+import { HdrEnhancedSelectSharp } from '@mui/icons-material';
 
 // ====== A sample fallback model if needed ======
 // import modelTest from '~/assets/models/mouseclean.glb'; // If you need a local fallback
@@ -154,15 +155,21 @@ export default function CoursesControlEdit() {
 
     const handleStartCourse = async () => {
         try {
-            if (course.status !== 'DRAFTED') {
-                setIsLoadingStartCourse(true);
-                await CourseAPI.changeStatus(courseId);
-            } else {
-                setIsLoadingStartCourse(true);
-                await CourseAPI.publishFirstTime(courseId, userInfo.id);
-            }
+            // if (course.status !== 'DRAFTED') {
+            setIsLoadingStartCourse(true);
+            const response = await CourseAPI.changeStatus(courseId);
+            // } else {
+            //     setIsLoadingStartCourse(true);
+            //     await CourseAPI.publishFirstTime(courseId, userInfo.id);
+            // }
             // After toggling, refresh or navigate
-            window.location.reload();
+
+            fetchCourse();
+            if (course?.status === 'ACTIVE') {
+                toast.success('Guideline activated successfully!');
+            } else {
+                toast.success('Guideline deactivated successfully!');
+            }
         } catch (error) {
             if (error?.response?.data?.code === 1096) {
                 toast.error('Cannot activate this guideline as its model is inactive.');
@@ -780,7 +787,7 @@ export default function CoursesControlEdit() {
                                             : 'darkred',
                                 },
                             }}
-                            onClick={handleClickToggleCourseStatus}
+                            onClick={handleStartCourse}
                         >
                             {isLoadingStartCourse ? (
                                 <CircularProgress size={24} />
