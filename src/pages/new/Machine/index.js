@@ -137,7 +137,6 @@ export default function MachinesManagement() {
     };
 
     const columns = [
-        { field: 'machineName', headerName: 'Name', width: 300 },
         { field: 'machineCode', headerName: 'Code', width: 250 },
         { field: 'machineType', headerName: 'Machine Type', width: 300 },
         {
@@ -271,11 +270,6 @@ export default function MachinesManagement() {
     }, [currentMachineType]);
 
     const handleCreateMachine = async () => {
-        if (createMachineRequest.machineName.length < 5 || createMachineRequest.machineName.length > 100) {
-            toast.error('Machine name must be between 5 and 100 characters.');
-            return;
-        }
-
         if (!createMachineRequest.modelTypeId) {
             toast.error('Please select a machine type.');
             return;
@@ -410,11 +404,6 @@ export default function MachinesManagement() {
     };
 
     const handleUpdateMachine = async () => {
-        if (updateMachineRequest.machineName.length < 5 || updateMachineRequest.machineName.length > 100) {
-            toast.error('Machine name must be between 5 and 100 characters.');
-            return;
-        }
-
         // ✅ Validate machineCode
         if (!updateMachineRequest.machineCode || updateMachineRequest.machineCode.trim().length <= 1) {
             toast.error('Machine code must be longer than 1 character.');
@@ -907,40 +896,6 @@ export default function MachinesManagement() {
                                 rows={rows}
                                 columns={[
                                     {
-                                        field: 'machineName',
-                                        headerName: 'Machine Name',
-                                        flex: 1.5,
-                                        minWidth: 200,
-                                        renderCell: (params) => (
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center', // Try 'start' instead
-                                                    height: '100%', // Ensure full height
-                                                }}
-                                            >
-                                                <DeviceHubIcon
-                                                    sx={{
-                                                        color: '#051D40',
-                                                        mr: 1.5,
-                                                        opacity: 0.7,
-                                                        alignSelf: 'center', // Center the icon vertically
-                                                    }}
-                                                />
-                                                <Typography
-                                                    sx={{
-                                                        fontWeight: 'medium',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        height: '100%',
-                                                    }}
-                                                >
-                                                    {params.value}
-                                                </Typography>
-                                            </Box>
-                                        ),
-                                    },
-                                    {
                                         field: 'machineCode',
                                         headerName: 'Code',
                                         flex: 1,
@@ -1123,30 +1078,6 @@ export default function MachinesManagement() {
                                 </Typography>
 
                                 <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Machine Name"
-                                            name="machineName"
-                                            fullWidth
-                                            variant="outlined"
-                                            value={createMachineRequest.machineName}
-                                            onChange={(event) => {
-                                                setCreateMachineRequest((prev) => ({
-                                                    ...prev,
-                                                    machineName: event.target.value,
-                                                }));
-                                            }}
-                                            InputProps={{
-                                                startAdornment: (
-                                                    <InputAdornment position="start">
-                                                        <TitleIcon fontSize="small" color="action" />
-                                                    </InputAdornment>
-                                                ),
-                                            }}
-                                            helperText="Enter a name between 5-100 characters"
-                                        />
-                                    </Grid>
-
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             label="Machine Code"
@@ -1550,30 +1481,7 @@ export default function MachinesManagement() {
                                         </Typography>
 
                                         <Grid container spacing={2}>
-                                            <Grid item xs={12} sm={6}>
-                                                <TextField
-                                                    label="Machine Name"
-                                                    fullWidth
-                                                    variant="outlined"
-                                                    value={updateMachineRequest.machineName || ''}
-                                                    onChange={(event) =>
-                                                        setUpdateMachineRequest((prev) => ({
-                                                            ...prev,
-                                                            machineName: event.target.value,
-                                                        }))
-                                                    }
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <TitleIcon fontSize="small" color="action" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                    helperText="Enter a name between 5-100 characters"
-                                                />
-                                            </Grid>
-
-                                            <Grid item xs={12} sm={6}>
+                                            <Grid item xs={12}>
                                                 <TextField
                                                     label="Machine Code"
                                                     fullWidth

@@ -681,8 +681,7 @@ export default function GuidelineCreation() {
                             </Typography>
                             <Typography paragraph>
                                 Once you've completed all necessary instructions, you can set the status to "Active" to
-                                publish your guideline and make it available to employees. Remember that each
-                                instruction detail will consume {pointConsume} points from your account balance.
+                                publish your guideline and make it available to employees.
                             </Typography>
 
                             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>

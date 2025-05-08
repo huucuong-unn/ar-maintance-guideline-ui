@@ -1139,21 +1139,6 @@ export default function ModelsManagement() {
                         )}
                     </DialogContent>
                     <DialogActions sx={{ px: 3, pb: 3 }}>
-                        {selectedModel.file && (
-                            <Button
-                                variant="outlined"
-                                startIcon={<CloudDownloadIcon />}
-                                onClick={() => window.open(getImage(selectedModel.file), '_blank')}
-                                sx={{
-                                    borderRadius: '8px',
-                                    textTransform: 'none',
-                                    mr: 'auto',
-                                }}
-                            >
-                                Download Model File
-                            </Button>
-                        )}
-
                         <Button
                             variant="outlined"
                             startIcon={<EditIcon />}
