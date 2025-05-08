@@ -798,7 +798,7 @@ export default function CoursesControlEdit() {
                             )}
                         </Button>
                         <Button
-                            disabled={isPaid}
+                            disabled={course?.status === 'ACTIVE'}
                             variant="contained"
                             color="error"
                             sx={{ padding: '12px 20px', textTransform: 'none' }}
