@@ -120,9 +120,9 @@ export default function GuidelineCreation() {
         }
     }, []);
     const getConsumePoints = async () => {
-        const reponse = await ServicePriceAPI.getServicePriceById('4c7346ab-e985-4933-9d96-35936935b4a6');
+        // const reponse = await ServicePriceAPI.getServicePriceById('4c7346ab-e985-4933-9d96-35936935b4a6');
 
-        setPointConsume(reponse?.result?.price);
+        setPointConsume(0);
     };
 
     useEffect(() => {
