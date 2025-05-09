@@ -158,18 +158,14 @@ export default function CoursesControlEdit() {
             // if (course.status !== 'DRAFTED') {
             setIsLoadingStartCourse(true);
             const response = await CourseAPI.changeStatus(courseId);
-            // } else {
-            //     setIsLoadingStartCourse(true);
-            //     await CourseAPI.publishFirstTime(courseId, userInfo.id);
-            // }
-            // After toggling, refresh or navigate
-
             fetchCourse();
+
             if (course?.status === 'ACTIVE') {
-                toast.success('Guideline activated successfully!');
-            } else {
                 toast.success('Guideline deactivated successfully!');
+            } else {
+                toast.success('Guideline activated successfully!');
             }
+            
         } catch (error) {
             if (error?.response?.data?.code === 1096) {
                 toast.error('Cannot activate this guideline as its model is inactive.');

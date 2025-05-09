@@ -513,7 +513,7 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
                             color="success"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? <CircularProgress size={24} /> : 'Approve'}
+                            {isSubmitting ? <CircularProgress size={24} /> : 'Confirm'}
                         </Button>
                     </DialogActions>
                 </Dialog>

@@ -1483,6 +1483,7 @@ export default function MachinesManagement() {
                                         <Grid container spacing={2}>
                                             <Grid item xs={12}>
                                                 <TextField
+                                                    disabled={true}
                                                     label="Machine Code"
                                                     fullWidth
                                                     variant="outlined"

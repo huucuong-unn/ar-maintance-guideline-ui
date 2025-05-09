@@ -293,6 +293,18 @@ export default function CompanyRequestManagement() {
             ),
         },
         {
+            field: 'cancelReason',
+            headerName: 'Cancel Reason',
+            width: 200,
+            renderCell: (params) => params.row?.cancelReason || '-',
+        },
+        {
+            field: 'cancelledBy',
+            headerName: 'Cancelled By',
+            width: 200,
+            renderCell: (params) => params.row?.cancelledBy?.email || '-',
+        },
+        {
             field: 'createdAt',
             headerName: 'Created Date',
             width: 170,

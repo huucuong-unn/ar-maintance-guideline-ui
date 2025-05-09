@@ -526,7 +526,7 @@ const CompanyDashboard = () => {
                                         series={[
                                             {
                                                 data: monthlyChartData.data,
-                                                label: 'Revenue',
+                                                label: 'Scan times',
                                                 color: theme.palette.primary.main,
                                                 highlightScope: {
                                                     highlighted: 'item',

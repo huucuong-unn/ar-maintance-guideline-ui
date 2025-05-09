@@ -131,6 +131,7 @@ const ChatBox = ({ requestId }) => {
 
     useEffect(() => {
         fetchCompanyRequest();
+        fetchMessages();
     }, [requestId]);
 
     // Fetch revision requests
@@ -193,6 +194,32 @@ const ChatBox = ({ requestId }) => {
         );
     };
 
+    // Fetch existing messages
+    const fetchMessages = async () => {
+        try {
+            if (requestId) {
+                const response = await ChatBoxAPI.getChatBoxMessages(requestId);
+                setChatBoxId(response[0]?.requestRevisionResponse?.chatBoxId || '');
+                setMessages(
+                    response.map((msg, index) => ({
+                        id: index + 1,
+                        sender: msg.senderEmail,
+                        content: msg.content,
+                        timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        }),
+                        timestampOrigin: msg.timestamp,
+                        requestRevisionResponse: msg.requestRevisionResponse,
+                        type: msg.senderEmail === username ? 'sent' : 'received',
+                    })),
+                );
+            }
+        } catch (error) {
+            console.error('Failed to fetch messages:', error);
+        }
+    };
+
     // WebSocket Connection Effect
     useEffect(() => {
         // Establish WebSocket connection
@@ -205,10 +232,6 @@ const ChatBox = ({ requestId }) => {
                 // Subscribe to the specific chat box topic
                 const subscription = socket.subscribe(`/topic/chat/${requestId}`, (message) => {
                     const receivedMessage = JSON.parse(message.body);
-                    checkIsAnyPriceProposedHaveBeenAccepted();
-                    checkIsAnyPriceProposedHaveBeenAcceptedForAdd();
-                    checkIsAnyRequestProcessing();
-                    checkICompanyRequestSubmitted();
 
                     setMessages((prevMessages) => {
                         const existingIndex = prevMessages.findIndex(
@@ -239,12 +262,15 @@ const ChatBox = ({ requestId }) => {
                             // Replace the existing message
                             const updatedMessages = [...prevMessages];
                             updatedMessages[existingIndex] = newMessage;
+                            fetchCompanyRequest();
+
                             return updatedMessages;
                         } else {
+                            fetchCompanyRequest();
+
                             // Append as a new message
                             return [...prevMessages, newMessage];
                         }
-                        fetchCompanyRequest();
                     });
                 });
 
@@ -263,32 +289,6 @@ const ChatBox = ({ requestId }) => {
 
         // Activate the connection
         socket.activate();
-
-        // Fetch existing messages
-        const fetchMessages = async () => {
-            try {
-                if (requestId) {
-                    const response = await ChatBoxAPI.getChatBoxMessages(requestId);
-                    setChatBoxId(response[0]?.requestRevisionResponse?.chatBoxId || '');
-                    setMessages(
-                        response.map((msg, index) => ({
-                            id: index + 1,
-                            sender: msg.senderEmail,
-                            content: msg.content,
-                            timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                            }),
-                            timestampOrigin: msg.timestamp,
-                            requestRevisionResponse: msg.requestRevisionResponse,
-                            type: msg.senderEmail === username ? 'sent' : 'received',
-                        })),
-                    );
-                }
-            } catch (error) {
-                console.error('Failed to fetch messages:', error);
-            }
-        };
 
         fetchMessages();
 
@@ -404,7 +404,22 @@ const ChatBox = ({ requestId }) => {
 
     const [isAnyPriceProposedHaveBeenAccepted, setIsAnyPriceProposedHaveBeenAccepted] = useState(false);
 
-    const checkIsAnyPriceProposedHaveBeenAccepted = () => {
+    const checkIsAnyPriceProposedHaveBeenAccepted = async () => {
+        const response = await ChatBoxAPI.getChatBoxMessages(requestId);
+
+        const messages = response.map((msg, index) => ({
+            id: index + 1,
+            sender: msg.senderEmail,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+            timestampOrigin: msg.timestamp,
+            requestRevisionResponse: msg.requestRevisionResponse,
+            type: msg.senderEmail === username ? 'sent' : 'received',
+        }));
+
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
                 companyRequest.status === 'CANCELLED' ||
@@ -413,11 +428,29 @@ const ChatBox = ({ requestId }) => {
                     message?.requestRevisionResponse?.status === 'PROCESSING') ||
                 message?.requestRevisionResponse?.modelFile,
         );
+        console.log(messages);
+
+        console.log(isAnyPriceProposedHaveBeenAccepted);
+
         setIsAnyPriceProposedHaveBeenAccepted(isAnyPriceProposedHaveBeenAccepted);
     };
 
     const [isAnyPriceProposedHaveBeenAcceptedForAdd, setIsAnyPriceProposedHaveBeenAcceptedForAdd] = useState(false);
-    const checkIsAnyPriceProposedHaveBeenAcceptedForAdd = () => {
+    const checkIsAnyPriceProposedHaveBeenAcceptedForAdd = async () => {
+        const response = await ChatBoxAPI.getChatBoxMessages(requestId);
+
+        const messages = response.map((msg, index) => ({
+            id: index + 1,
+            sender: msg.senderEmail,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+            timestampOrigin: msg.timestamp,
+            requestRevisionResponse: msg.requestRevisionResponse,
+            type: msg.senderEmail === username ? 'sent' : 'received',
+        }));
         const isAnyPriceProposedHaveBeenAccepted = messages.some(
             (message) =>
                 companyRequest.status === 'CANCELLED' ||
@@ -449,7 +482,23 @@ const ChatBox = ({ requestId }) => {
 
     const [isAnyRequestProcessing, setIsAnyRequestProcessing] = useState(false);
 
-    const checkIsAnyRequestProcessing = () => {
+    const checkIsAnyRequestProcessing = async () => {
+        const response = await ChatBoxAPI.getChatBoxMessages(requestId);
+
+        const messages = response.map((msg, index) => ({
+            id: index + 1,
+            sender: msg.senderEmail,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+            timestampOrigin: msg.timestamp,
+            requestRevisionResponse: msg.requestRevisionResponse,
+            type: msg.senderEmail === username ? 'sent' : 'received',
+        }));
+        console.log(messages);
+
         const isAnyRequestProcessing = messages.some(
             (message) =>
                 message?.requestRevisionResponse?.status === 'PROCESSING' ||
@@ -508,12 +557,13 @@ const ChatBox = ({ requestId }) => {
                             </Box>
                         </Box>
                         <Box>
-                            {!isAnyPriceProposedHaveBeenAccepted ||
-                                (!isCompanyRequestSubmitted && (
+                            {userRole !== 'ADMIN' &&
+                                !isAnyPriceProposedHaveBeenAccepted &&
+                                !isCompanyRequestSubmitted && (
                                     <IconButton onClick={handleOpenCancelDialog}>
                                         <DeleteIcon />
                                     </IconButton>
-                                ))}
+                                )}
 
                             <IconButton onClick={handleOpenRevisionModal}>
                                 <InfoIcon />
@@ -542,7 +592,7 @@ const ChatBox = ({ requestId }) => {
                                 <AddIcon />
                             </IconButton>
                         )}
-                        {!isCompanyRequestSubmitted && (
+                        {userRole !== 'ADMIN' && !isCompanyRequestSubmitted && (
                             <>
                                 <TextField
                                     fullWidth

@@ -26,6 +26,8 @@ import storageService from '~/components/StorageService/storageService';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { host } from '~/Constant';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ChatIcon from '@mui/icons-material/Chat';
 
 function Copyright(props) {
     return (
@@ -106,6 +108,51 @@ export default function CompanyRequestForAdmin() {
             headerName: 'Created Date',
             width: 200,
             renderCell: (params) => formatDateTime(params.value),
+        },
+        {
+            field: 'actions',
+            headerName: 'Actions',
+            width: 280,
+            renderCell: (params) => {
+                const currentStatus = params.row.status;
+
+                return (
+                    <Box sx={{ display: 'flex', gap: 1, height: '100%', alignItems: 'center' }}>
+                        {currentStatus !== 'PENDING' && (
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<ChatIcon />}
+                                onClick={() => navigate(`/company-request-section/${params.row.requestId}`)}
+                                sx={{
+                                    borderColor: '#4caf50',
+                                    color: '#4caf50',
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                }}
+                            >
+                                Chat
+                            </Button>
+                        )}
+                        {/* 
+                                {(currentStatus === 'PENDING' || currentStatus === 'PROCESSING') && (
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        color="error"
+                                        startIcon={<CancelIcon />}
+                                        onClick={() => handleOpenCancelConfirm(params.row.requestId)}
+                                        sx={{
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                )} */}
+                    </Box>
+                );
+            },
         },
     ];
 

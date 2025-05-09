@@ -722,7 +722,7 @@ export default function SimplifiedModelViewer({
         formDataToCreate.append('modelFile', modelFile3DToCreate);
 
         const response = await CompanyRequestAPI.updateRequestRevision(requestId, formDataToCreate);
-        toast.success('Model created successfully!', { position: 'top-right' });
+        toast.success('Model upload successfully!', { position: 'top-right' });
         setIsLoading(false);
 
         handleCloseModal();
@@ -769,7 +769,7 @@ export default function SimplifiedModelViewer({
                     };
                     const responseUpdateRequest = await CompanyRequestAPI.updateRequestStatus(requestId, payload);
                 }
-                toast.success('Model created successfully!', { position: 'top-right' });
+                toast.success('Model upload successfully!', { position: 'top-right' });
                 handleCloseModal();
                 resetFormData();
             }
