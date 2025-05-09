@@ -431,8 +431,8 @@ export default function PointRequestManagement() {
                 toast.success('Request approved successfully!');
             }
         } catch (error) {
-            console.error('Failed to approve request:', error);
-            toast.error('Failed to approve request. ' + error?.response?.data?.message);
+            toast.error('Insufficient points to approve this request.');
+            toast.error('Do');
         } finally {
             handleCloseApproveConfirm();
             setIsLoading(false);

@@ -138,7 +138,7 @@ const RequestRevisionCard = ({ request, fetchRevisionRequests }) => {
             fetchRevisionRequests();
         } catch (error) {
             console.error('Error submitting proposal:', error);
-            toast.error(`Failed to submit proposal: ${error.message || 'Unknown error'}`);
+            toast.error('Insufficient points to approve this price proposal.');
         } finally {
             setIsSubmitting(false);
         }
