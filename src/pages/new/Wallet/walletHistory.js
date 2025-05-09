@@ -163,7 +163,7 @@ export default function WalletHistory() {
                                     alignSelf: 'center', // Center the icon vertically
                                 }}
                             />
-                            <Typography variant="body2">{params.value}</Typography>
+                            <Typography variant="body2">{params.value || 'System'}</Typography>
                         </Box>
                     ),
                 };
@@ -191,33 +191,6 @@ export default function WalletHistory() {
             field: 'amount',
             headerName: 'Amount',
             width: 150,
-            // renderCell: (params) => {
-            //     const { row } = params;
-            //     const isDebit = row.type === 'DEBIT';
-            //     const formattedAmount = isDebit ? `-${row.amount}` : `+${row.amount}`;
-            //     console.log('formattedAmount: ', formattedAmount);
-            //     return (
-            //         <Box
-            //             sx={{
-            //                 display: 'flex',
-            //                 justifyContent: 'center',
-            //                 alignItems: 'center',
-            //                 height: '100%',
-            //                 width: '100%',
-            //             }}
-            //         >
-            //             <Typography
-            //                 sx={{
-            //                     color: isDebit ? 'red' : 'green',
-            //                     fontWeight: 'bold',
-            //                     textAlign: 'center',
-            //                 }}
-            //             >
-            //                 {formattedAmount}
-            //             </Typography>
-            //         </Box>
-            //     );
-            // },
         },
         { field: 'balance', headerName: 'Balance', width: 150 },
         { field: 'createdDate', headerName: 'Created At', width: 200 },
