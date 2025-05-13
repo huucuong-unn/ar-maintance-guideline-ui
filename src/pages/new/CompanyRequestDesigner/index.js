@@ -556,7 +556,7 @@ export default function CompanyRequestDesigner() {
     // WebSocket connection
     useEffect(() => {
         const socket = new Client({
-            webSocketFactory: () => new SockJS(`http://localhost:8086/ws`),
+            webSocketFactory: () => new SockJS(`${host}/ws`),
             onConnect: () => {
                 console.log('WebSocket Connected');
 
